@@ -1,0 +1,54 @@
+{
+  "name": "challenge4-backend",
+  "version": "1.0.0",
+  "description": "Backend API for Challenge",
+  "main": "dist/server.js",
+  "scripts": {
+    "start": "node dist/server.js",
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "build": "tsc",
+    "lint": "eslint --ext .ts src/",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:studio": "prisma studio"
+  },
+  "keywords": [
+    "express",
+    "typescript",
+    "prisma",
+    "postgres",
+    "api"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/client": "6.4.1",
+    "bcryptjs": "^3.0.2",
+    "compression": "1.8.0",
+    "cors": "2.8.5",
+    "dotenv": "16.4.7",
+    "express": "4.21.2",
+    "express-validator": "7.2.1",
+    "helmet": "8.0.0",
+    "jsonwebtoken": "9.0.2",
+    "luxon": "3.5.0",
+    "morgan": "1.10.0",
+    "prisma": "6.4.1",
+    "ulid": "2.3.0",
+    "winston": "3.17.0"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "5.0.2",
+    "@types/compression": "1.7.5",
+    "@types/cors": "2.8.17",
+    "@types/express": "5.0.0",
+    "@types/helmet": "4.0.0",
+    "@types/jsonwebtoken": "9.0.9",
+    "@types/luxon": "3.4.2",
+    "@types/morgan": "1.9.9",
+    "@types/node": "22.13.8",
+    "nodemon": "3.1.9",
+    "ts-node-dev": "2.0.0",
+    "typescript": "5.8.2"
+  }
+}
