@@ -1,6 +1,6 @@
-# Jagolomba Backend
+# Challenge 4 Backend
 
-A RESTful API backend for Jagolomba built with Express, TypeScript, Prisma, and PostgreSQL.
+A RESTful API backend for Challenge 4 built with Express, TypeScript, Prisma, and PostgreSQL.
 
 ## Features
 
@@ -50,7 +50,7 @@ src/
 ### Prerequisites
 
 - Node.js (v16+)
-- pnpm
+- pnpm (install with `npm install -g pnpm` or `curl -fsSL https://get.pnpm.io/install.sh | sh -`)
 - PostgreSQL
 
 ### Installation
@@ -58,8 +58,8 @@ src/
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/yourusername/jagolomba-backend.git
-   cd jagolomba-backend
+   git clone https://github.com/RafieAmandio/CH-4-BE.git
+   cd CH-4-BE
    ```
 
 2. Install dependencies:
