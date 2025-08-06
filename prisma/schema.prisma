@@ -23,7 +23,4 @@ model User {
   mobileNumber     String?
   createdAt        DateTime             @default(now())
   updatedAt        DateTime             @updatedAt
-  userClasses      UserClass[]
-  moduleProgress   UserModuleProgress[]
-  eventRegistrations EventRegistration[]
 }
