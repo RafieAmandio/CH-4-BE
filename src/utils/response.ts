@@ -15,8 +15,9 @@ export const sendSuccess = <T>(
   statusCode = 200
 ): void => {
   const response: ApiResponse<T> = {
+    success: true,
     message,
-    content: data,
+    data: data,
     errors: [],
   };
 
@@ -37,8 +38,9 @@ export const sendPaginatedSuccess = <T>(
   statusCode = 200
 ): void => {
   const response: ApiResponse<ListResponse<T>> = {
+    success: true,
     message,
-    content: data,
+    data: data,
     errors: [],
   };
 
@@ -59,8 +61,9 @@ export const sendError = (
   statusCode = 400
 ): void => {
   const response: ApiResponse<null> = {
+    success: false,
     message,
-    content: null,
+    data: null,
     errors,
   };
 

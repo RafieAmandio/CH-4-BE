@@ -2,8 +2,9 @@ import { Request } from 'express';
 import { User } from '@prisma/client';
 
 export interface ApiResponse<T = any> {
+  success: boolean;
   message: string;
-  content: T;
+  data: T;
   errors: Error[];
 }
 

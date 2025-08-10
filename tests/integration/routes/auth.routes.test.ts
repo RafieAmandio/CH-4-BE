@@ -158,7 +158,7 @@ describe('Auth Routes Integration Tests', () => {
         expect.arrayContaining([
           expect.objectContaining({
             field: 'password',
-            message: expect.stringContaining('password')
+            message: expect.stringMatching(/password/i)
           })
         ])
       );

@@ -53,7 +53,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     });
 
     // Return user data (excluding password)
-    const { ...userWithoutPassword } = newUser;
+    const { passwordHash: _passwordHash, ...userWithoutPassword } = newUser;
 
     sendSuccess(
       res,
@@ -142,7 +142,7 @@ export const getProfile = async (
     }
 
     // Return user data (excluding password)
-    const { ...userWithoutPassword } = user;
+    const { passwordHash: _passwordHash, ...userWithoutPassword } = user;
 
     sendSuccess(
       res,

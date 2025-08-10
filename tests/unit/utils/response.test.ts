@@ -25,8 +25,9 @@ describe('Response Utils', () => {
 
       expect(mockStatus).toHaveBeenCalledWith(200);
       expect(mockJson).toHaveBeenCalledWith({
+        success: true,
         message,
-        content: data,
+        data: data,
         errors: []
       });
     });
@@ -40,8 +41,9 @@ describe('Response Utils', () => {
 
       expect(mockStatus).toHaveBeenCalledWith(201);
       expect(mockJson).toHaveBeenCalledWith({
+        success: true,
         message,
-        content: data,
+        data: data,
         errors: []
       });
     });
@@ -54,8 +56,9 @@ describe('Response Utils', () => {
 
       expect(mockStatus).toHaveBeenCalledWith(200);
       expect(mockJson).toHaveBeenCalledWith({
+        success: true,
         message,
-        content: null,
+        data: null,
         errors: []
       });
     });
@@ -68,8 +71,9 @@ describe('Response Utils', () => {
 
       expect(mockStatus).toHaveBeenCalledWith(200);
       expect(mockJson).toHaveBeenCalledWith({
+        success: true,
         message,
-        content: data,
+        data: data,
         errors: []
       });
     });
@@ -88,8 +92,9 @@ describe('Response Utils', () => {
 
       expect(mockStatus).toHaveBeenCalledWith(200);
       expect(mockJson).toHaveBeenCalledWith({
+        success: true,
         message,
-        content: data,
+        data: data,
         errors: []
       });
     });
@@ -107,8 +112,9 @@ describe('Response Utils', () => {
 
       expect(mockStatus).toHaveBeenCalledWith(201);
       expect(mockJson).toHaveBeenCalledWith({
+        success: true,
         message,
-        content: data,
+        data: data,
         errors: []
       });
     });
@@ -125,8 +131,9 @@ describe('Response Utils', () => {
 
       expect(mockStatus).toHaveBeenCalledWith(200);
       expect(mockJson).toHaveBeenCalledWith({
+        success: true,
         message,
-        content: data,
+        data: data,
         errors: []
       });
     });
@@ -144,8 +151,9 @@ describe('Response Utils', () => {
 
       expect(mockStatus).toHaveBeenCalledWith(400);
       expect(mockJson).toHaveBeenCalledWith({
+        success: false,
         message,
-        content: null,
+        data: null,
         errors
       });
     });
@@ -161,8 +169,9 @@ describe('Response Utils', () => {
 
       expect(mockStatus).toHaveBeenCalledWith(401);
       expect(mockJson).toHaveBeenCalledWith({
+        success: false,
         message,
-        content: null,
+        data: null,
         errors
       });
     });
@@ -174,8 +183,9 @@ describe('Response Utils', () => {
 
       expect(mockStatus).toHaveBeenCalledWith(400);
       expect(mockJson).toHaveBeenCalledWith({
+        success: false,
         message,
-        content: null,
+        data: null,
         errors: []
       });
     });
@@ -191,8 +201,9 @@ describe('Response Utils', () => {
 
       expect(mockStatus).toHaveBeenCalledWith(500);
       expect(mockJson).toHaveBeenCalledWith({
+        success: false,
         message,
-        content: null,
+        data: null,
         errors
       });
     });

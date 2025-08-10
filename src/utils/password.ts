@@ -1,4 +1,5 @@
 import bcrypt from 'bcryptjs';
+import { logger } from '../config/logger';
 
 /**
  * Hash a password using bcrypt
@@ -26,10 +27,11 @@ export const verifyPassword = async (
   if (!bcryptHashRegex.test(hashedPassword)) {
     throw new Error('Invalid hash format');
   }
-  
+
   try {
     return await bcrypt.compare(plainPassword, hashedPassword);
   } catch (error) {
+    logger.error('Error comparing passwords:', error);
     throw new Error('Invalid hash format');
   }
 };

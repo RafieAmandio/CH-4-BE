@@ -98,10 +98,11 @@ describe('Auth Controller', () => {
         id: mockNewUser.id,
         email: mockNewUser.email
       });
+      const { passwordHash, ...expectedUser } = mockNewUser;
       expect(mockSendSuccess).toHaveBeenCalledWith(
         mockRes,
         'User registered successfully',
-        { user: mockNewUser, token: mockToken },
+        { user: expectedUser, token: mockToken },
         201
       );
     });
@@ -298,10 +299,11 @@ describe('Auth Controller', () => {
 
       await getProfile(mockAuthReq as AuthRequest, mockRes as Response);
 
+      const { passwordHash, ...expectedUser } = mockUser;
       expect(mockSendSuccess).toHaveBeenCalledWith(
         mockRes,
         'Profile retrieved successfully',
-        mockUser,
+        expectedUser,
         200
       );
     });
