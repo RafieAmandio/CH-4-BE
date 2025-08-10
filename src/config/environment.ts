@@ -10,12 +10,13 @@ interface EnvironmentConfig {
   JWT_SECRET: string;
   ENVIRONMENT: 'development' | 'production' | 'test';
   DATABASE_URL: string;
+  DIRECT_URL: string;
 }
 
 // Function to verify that all required environment variables are present
 const verifyEnv = (): EnvironmentConfig => {
   // Check for required environment variables
-  const requiredEnvVars = ['PORT', 'JWT_SECRET', 'ENVIRONMENT', 'DATABASE_URL'];
+  const requiredEnvVars = ['PORT', 'JWT_SECRET', 'ENVIRONMENT', 'DATABASE_URL', 'DIRECT_URL'];
 
   const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
 
@@ -43,6 +44,7 @@ const verifyEnv = (): EnvironmentConfig => {
       | 'production'
       | 'test',
     DATABASE_URL: process.env.DATABASE_URL || '',
+    DIRECT_URL: process.env.DIRECT_URL || '',
   };
 };
 
