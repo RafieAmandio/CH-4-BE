@@ -22,9 +22,10 @@ export const parsePagination = (
   sortOrder?: 'asc' | 'desc';
 } => {
   const page = Math.max(1, Number(query.page) || DEFAULT_PAGE);
+  const limitValue = query.limit !== undefined ? Number(query.limit) : DEFAULT_LIMIT;
   const limit = Math.max(
     1,
-    Math.min(100, Number(query.limit) || DEFAULT_LIMIT)
+    Math.min(100, isNaN(limitValue) ? DEFAULT_LIMIT : limitValue)
   );
   const skip = (page - 1) * limit;
 

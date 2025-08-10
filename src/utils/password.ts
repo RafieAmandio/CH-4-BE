@@ -15,10 +15,21 @@ export const hashPassword = async (password: string): Promise<string> => {
  * @param plainPassword The plain password to verify
  * @param hashedPassword The hashed password to compare against
  * @returns True if the passwords match, false otherwise
+ * @throws Error if the hash format is invalid
  */
 export const verifyPassword = async (
   plainPassword: string,
   hashedPassword: string
 ): Promise<boolean> => {
-  return bcrypt.compare(plainPassword, hashedPassword);
+  // Validate hash format - bcrypt hashes start with $2a$, $2b$, $2x$, or $2y$ and have specific length
+  const bcryptHashRegex = /^\$2[abxy]?\$\d+\$.{53}$/;
+  if (!bcryptHashRegex.test(hashedPassword)) {
+    throw new Error('Invalid hash format');
+  }
+  
+  try {
+    return await bcrypt.compare(plainPassword, hashedPassword);
+  } catch (error) {
+    throw new Error('Invalid hash format');
+  }
 };
