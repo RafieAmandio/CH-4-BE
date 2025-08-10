@@ -4,10 +4,13 @@ import { logger } from '../../src/config/logger';
 // Global setup for tests
 beforeAll(async () => {
   try {
-    // Truncate all tables before running tests
-    await prisma.$executeRaw`TRUNCATE TABLE "User" RESTART IDENTITY CASCADE`;
+    // Use Prisma's deleteMany for schema-agnostic database cleanup
+    // This works for both SQLite and PostgreSQL without hardcoded SQL
+    await prisma.user.deleteMany({});
+
+    logger.info('Database cleared successfully for testing');
   } catch (_error) {
-    logger.warn('Could not truncate tables:', _error);
+    logger.warn('Could not clear database:', _error);
   }
 });
 

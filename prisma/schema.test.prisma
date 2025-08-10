@@ -1,0 +1,32 @@
+// Test-specific Prisma schema file using SQLite
+// This schema is used for testing to avoid conflicts with PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Users
+model User {
+  id               String    @id @default(uuid())
+  auth             Provider  @default(EMAIL)
+  email            String    @unique
+  passwordHash     String
+  username         String
+  name             String
+  nickname         String
+  photo            String
+  is_active        Boolean
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+enum Provider {
+  APPLE
+  LINKEDIN
+  EMAIL
+}

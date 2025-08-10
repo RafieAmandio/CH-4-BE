@@ -14,7 +14,8 @@ export default {
   ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
-  setupFilesAfterEnv: ['<rootDir>/tests/setup/globalSetup.ts'],
+  setupFilesAfterEnv: ['<rootDir>/tests/setup/globalsetup.ts'],
   testTimeout: 10000,
-  extensionsToTreatAsEsm: ['.ts']
+  extensionsToTreatAsEsm: ['.ts'],
+  setupFiles: ['<rootDir>/tests/setup/env.ts']
 };
