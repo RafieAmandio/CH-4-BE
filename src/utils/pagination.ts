@@ -1,4 +1,4 @@
-import { PaginationQuery, ListResponse } from "../types";
+import { PaginationQuery, ListResponse } from '../types';
 
 /**
  * Default pagination values
@@ -19,7 +19,7 @@ export const parsePagination = (
   skip: number;
   search?: string;
   sortBy?: string;
-  sortOrder?: "asc" | "desc";
+  sortOrder?: 'asc' | 'desc';
 } => {
   const page = Math.max(1, Number(query.page) || DEFAULT_PAGE);
   const limit = Math.max(

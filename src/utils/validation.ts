@@ -1,7 +1,7 @@
-import { Request, Response, NextFunction } from "express";
-import { validationResult } from "express-validator";
-import { sendError } from "./response";
-import { Error } from "../types";
+import { Request, Response, NextFunction } from 'express';
+import { validationResult } from 'express-validator';
+import { sendError } from './response';
+import { Error } from '../types';
 
 /**
  * Middleware to validate request data
@@ -25,5 +25,5 @@ export const validate = (
     message: error.msg,
   }));
 
-  sendError(res, "Validation Error", validationErrors, 400);
+  sendError(res, 'Validation Error', validationErrors, 400);
 };

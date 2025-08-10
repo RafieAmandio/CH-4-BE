@@ -1,5 +1,5 @@
-import { Response } from "express";
-import { ApiResponse, Error, ListResponse } from "../types";
+import { Response } from 'express';
+import { ApiResponse, Error, ListResponse } from '../types';
 
 /**
  * Send a success response

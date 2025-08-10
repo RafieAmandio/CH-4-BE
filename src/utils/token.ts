@@ -1,6 +1,7 @@
-import jwt from "jsonwebtoken";
-import { env } from "../config/environment";
-import { UserPayload } from "../types";
+import jwt from 'jsonwebtoken';
+import { env } from '../config/environment';
+import { UserPayload } from '../types';
+import { logger } from '../config/logger';
 
 /**
  * Generate a JWT token for a user
@@ -9,7 +10,7 @@ import { UserPayload } from "../types";
  */
 export const generateToken = (payload: UserPayload): string => {
   return jwt.sign(payload, env.JWT_SECRET, {
-    expiresIn: "7d", // Token expires in 7 days
+    expiresIn: '7d', // Token expires in 7 days
   });
 };
 
@@ -23,6 +24,7 @@ export const verifyToken = (token: string): UserPayload | null => {
     const decoded = jwt.verify(token, env.JWT_SECRET) as UserPayload;
     return decoded;
   } catch (error) {
+    logger.error('Token verification error:', error);
     return null;
   }
 };
@@ -33,7 +35,7 @@ export const verifyToken = (token: string): UserPayload | null => {
  * @returns The token if present and valid, null otherwise
  */
 export const extractTokenFromHeader = (authHeader?: string): string | null => {
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return null;
   }
 

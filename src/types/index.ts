@@ -1,5 +1,5 @@
-import { Request } from "express";
-import { User } from "@prisma/client";
+import { Request } from 'express';
+import { User } from '@prisma/client';
 
 export interface ApiResponse<T = any> {
   message: string;
@@ -18,7 +18,7 @@ export interface PaginationQuery {
   limit?: number;
   search?: string;
   sortBy?: string;
-  sortOrder?: "asc" | "desc";
+  sortOrder?: 'asc' | 'desc';
 }
 
 export interface Error {
@@ -33,21 +33,4 @@ export interface AuthRequest extends Request {
 export interface UserPayload {
   id: string;
   email: string;
-}
-
-export interface RegisterInput {
-  name: string;
-  password: string;
-  grade: string;
-  school: string;
-  phone: string;
-  email: string;
-  major: string;
-  interests: string[];
-  referral?: string;
-}
-
-export interface LoginInput {
-  email: string;
-  password: string;
 }

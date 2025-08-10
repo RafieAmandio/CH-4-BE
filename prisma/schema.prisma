@@ -13,14 +13,20 @@ datasource db {
 // Users
 model User {
   id               String               @id @default(uuid()) @db.Uuid
-  username         String               @unique
+  auth             Provider             @default(EMAIL)
   email            String               @unique
   passwordHash     String
+  username         String
   name             String
-  profilePhoto     String?
-  city             String?
-  birthDate        DateTime?            @db.Date
-  mobileNumber     String?
+  nickname         String
+  photo            String
+  is_active        Boolean
   createdAt        DateTime             @default(now())
   updatedAt        DateTime             @updatedAt
+}
+
+enum Provider {
+  APPLE
+  LINKEDIN
+  EMAIL
 }

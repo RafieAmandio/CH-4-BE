@@ -1,10 +1,11 @@
-import { Request, Response } from "express";
-import { LoginInput, RegisterInput, AuthRequest } from "../types";
-import { hashPassword, verifyPassword } from "../utils/password";
-import { generateToken } from "../utils/token";
-import { sendSuccess, sendError } from "../utils/response";
-import { generateUserCode } from "../utils/code-generator";
-import prisma from "../config/database";
+import { Request, Response } from 'express';
+import { AuthRequest } from '../types';
+import { RegisterInput, LoginInput } from '../types/auth.types';
+import { hashPassword, verifyPassword } from '../utils/password';
+import { generateToken } from '../utils/token';
+import { sendSuccess, sendError } from '../utils/response';
+import { logger } from '../config/logger';
+import prisma from '../config/database';
 
 /**
  * Register a new user
@@ -21,15 +22,12 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     if (existingUser) {
       sendError(
         res,
-        "Registration failed",
-        [{ field: "email", message: "Email already in use" }],
+        'Registration failed',
+        [{ field: 'email', message: 'Email already in use' }],
         400
       );
       return;
     }
-
-    // Generate a unique code for the user
-    const code = generateUserCode();
 
     // Hash the password
     const hashedPassword = await hashPassword(userData.password);
@@ -37,16 +35,14 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     // Create the user
     const newUser = await prisma.user.create({
       data: {
-        name: userData.name,
-        password: hashedPassword,
-        grade: userData.grade,
-        school: userData.school,
-        phone: userData.phone,
+        auth: userData.auth,
         email: userData.email,
-        major: userData.major,
-        interests: userData.interests,
-        referral: userData.referral || null,
-        code,
+        passwordHash: hashedPassword,
+        username: userData.username,
+        name: userData.name,
+        nickname: userData.nickname,
+        photo: userData.photo,
+        is_active: userData.is_active,
       },
     });
 
@@ -57,20 +53,20 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     });
 
     // Return user data (excluding password)
-    const { password, ...userWithoutPassword } = newUser;
+    const { ...userWithoutPassword } = newUser;
 
     sendSuccess(
       res,
-      "User registered successfully",
+      'User registered successfully',
       { user: userWithoutPassword, token },
       201
     );
   } catch (error) {
-    console.error("Registration error:", error);
+    logger.error('Registration error:', error);
     sendError(
       res,
-      "Registration failed",
-      [{ field: "server", message: "An error occurred during registration" }],
+      'Registration failed',
+      [{ field: 'server', message: 'An error occurred during registration' }],
       500
     );
   }
@@ -89,11 +85,11 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     });
 
     // Check if user exists and password is correct
-    if (!user || !(await verifyPassword(password, user.password))) {
+    if (!user || !(await verifyPassword(password, user.passwordHash))) {
       sendError(
         res,
-        "Login failed",
-        [{ field: "credentials", message: "Invalid email or password" }],
+        'Login failed',
+        [{ field: 'credentials', message: 'Invalid email or password' }],
         401
       );
       return;
@@ -106,20 +102,20 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     });
 
     // Return user data (excluding password)
-    const { password: _, ...userWithoutPassword } = user;
+    const { passwordHash: _passwordHash, ...userWithoutPassword } = user;
 
     sendSuccess(
       res,
-      "Login successful",
+      'Login successful',
       { user: userWithoutPassword, token },
       200
     );
   } catch (error) {
-    console.error("Login error:", error);
+    logger.error('Login error:', error);
     sendError(
       res,
-      "Login failed",
-      [{ field: "server", message: "An error occurred during login" }],
+      'Login failed',
+      [{ field: 'server', message: 'An error occurred during login' }],
       500
     );
   }
@@ -138,31 +134,31 @@ export const getProfile = async (
     if (!user) {
       sendError(
         res,
-        "Authentication required",
-        [{ field: "auth", message: "User not authenticated" }],
+        'Authentication required',
+        [{ field: 'auth', message: 'User not authenticated' }],
         401
       );
       return;
     }
 
     // Return user data (excluding password)
-    const { password, ...userWithoutPassword } = user;
+    const { ...userWithoutPassword } = user;
 
     sendSuccess(
       res,
-      "Profile retrieved successfully",
+      'Profile retrieved successfully',
       userWithoutPassword,
       200
     );
   } catch (error) {
-    console.error("Get profile error:", error);
+    logger.error('Get profile error:', error);
     sendError(
       res,
-      "Failed to retrieve profile",
+      'Failed to retrieve profile',
       [
         {
-          field: "server",
-          message: "An error occurred while retrieving profile",
+          field: 'server',
+          message: 'An error occurred while retrieving profile',
         },
       ],
       500

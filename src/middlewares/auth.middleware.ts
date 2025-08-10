@@ -1,8 +1,9 @@
-import { Response, NextFunction } from "express";
-import { extractTokenFromHeader, verifyToken } from "../utils/token";
-import { sendError } from "../utils/response";
-import prisma from "../config/database";
-import { AuthRequest } from "../types";
+import { Response, NextFunction } from 'express';
+import { extractTokenFromHeader, verifyToken } from '../utils/token';
+import { sendError } from '../utils/response';
+import prisma from '../config/database';
+import { AuthRequest } from '../types';
+import { logger } from '../config/logger';
 
 /**
  * Authentication middleware to protect routes
@@ -21,8 +22,8 @@ export const authenticate = async (
     if (!token) {
       sendError(
         res,
-        "Authentication required",
-        [{ field: "token", message: "No token provided" }],
+        'Authentication required',
+        [{ field: 'token', message: 'No token provided' }],
         401
       );
       return;
@@ -34,8 +35,8 @@ export const authenticate = async (
     if (!payload) {
       sendError(
         res,
-        "Authentication failed",
-        [{ field: "token", message: "Invalid or expired token" }],
+        'Authentication failed',
+        [{ field: 'token', message: 'Invalid or expired token' }],
         401
       );
       return;
@@ -49,8 +50,8 @@ export const authenticate = async (
     if (!user) {
       sendError(
         res,
-        "Authentication failed",
-        [{ field: "token", message: "User not found" }],
+        'Authentication failed',
+        [{ field: 'token', message: 'User not found' }],
         401
       );
       return;
@@ -61,10 +62,11 @@ export const authenticate = async (
 
     next();
   } catch (error) {
+    logger.error('Authentication error:', error);
     sendError(
       res,
-      "Authentication error",
-      [{ field: "auth", message: "An error occurred during authentication" }],
+      'Authentication error',
+      [{ field: 'auth', message: 'An error occurred during authentication' }],
       500
     );
   }

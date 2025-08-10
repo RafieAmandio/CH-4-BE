@@ -1,11 +1,11 @@
-import { Router } from "express";
-import * as authController from "../controllers/auth.controller";
+import { Router } from 'express';
+import * as authController from '../controllers/auth.controller';
 import {
   registerValidation,
   loginValidation,
-} from "../validations/auth.validation";
-import { validate } from "../utils/validation";
-import { authenticate } from "../middlewares/auth.middleware";
+} from '../validations/auth.validation';
+import { validate } from '../utils/validation';
+import { authenticate } from '../middlewares/auth.middleware';
 
 const router = Router();
 
@@ -14,20 +14,20 @@ const router = Router();
  * @desc Register a new user
  * @access Public
  */
-router.post("/register", registerValidation, validate, authController.register);
+router.post('/register', registerValidation, validate, authController.register);
 
 /**
  * @route POST /api/auth/login
  * @desc Login a user
  * @access Public
  */
-router.post("/login", loginValidation, validate, authController.login);
+router.post('/login', loginValidation, validate, authController.login);
 
 /**
  * @route GET /api/auth/profile
  * @desc Get current user profile
  * @access Private
  */
-router.get("/profile", authenticate, authController.getProfile);
+router.get('/profile', authenticate, authController.getProfile);
 
 export default router;
