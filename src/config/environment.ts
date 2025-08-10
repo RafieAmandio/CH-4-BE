@@ -16,7 +16,13 @@ interface EnvironmentConfig {
 // Function to verify that all required environment variables are present
 const verifyEnv = (): EnvironmentConfig => {
   // Check for required environment variables
-  const requiredEnvVars = ['PORT', 'JWT_SECRET', 'ENVIRONMENT', 'DATABASE_URL', 'DIRECT_URL'];
+  const requiredEnvVars = [
+    'PORT',
+    'JWT_SECRET',
+    'ENVIRONMENT',
+    'DATABASE_URL',
+    'DIRECT_URL',
+  ];
 
   const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
 
