@@ -9,6 +9,7 @@ process.env.PORT = '3001';
 
 // Use test-specific Prisma schema
 process.env.PRISMA_SCHEMA_PATH = './prisma/schema.test.prisma';
+process.env.DIRECT_URL = 'file:./test.db';
 
 // Optional: Use in-memory SQLite for faster tests
 // Uncomment the line below if you prefer in-memory database
