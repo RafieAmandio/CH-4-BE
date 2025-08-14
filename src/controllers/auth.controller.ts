@@ -37,11 +37,11 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       data: {
         auth: userData.auth,
         email: userData.email,
-        passwordHash: hashedPassword,
+        password_hash: hashedPassword,
         username: userData.username,
         name: userData.name,
         nickname: userData.nickname,
-        photo: userData.photo,
+        photo_link: userData.photo,
         is_active: userData.is_active,
       },
     });
@@ -53,7 +53,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     });
 
     // Return user data (excluding password)
-    const { passwordHash: _passwordHash, ...userWithoutPassword } = newUser;
+    const { password_hash: _passwordHash, ...userWithoutPassword } = newUser;
 
     sendSuccess(
       res,
@@ -85,7 +85,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     });
 
     // Check if user exists and password is correct
-    if (!user || !(await verifyPassword(password, user.passwordHash))) {
+    if (!user || !(await verifyPassword(password, user.password_hash))) {
       sendError(
         res,
         'Login failed',
@@ -102,7 +102,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     });
 
     // Return user data (excluding password)
-    const { passwordHash: _passwordHash, ...userWithoutPassword } = user;
+    const { password_hash: _passwordHash, ...userWithoutPassword } = user;
 
     sendSuccess(
       res,
@@ -142,7 +142,7 @@ export const getProfile = async (
     }
 
     // Return user data (excluding password)
-    const { passwordHash: _passwordHash, ...userWithoutPassword } = user;
+    const { password_hash: _passwordHash, ...userWithoutPassword } = user;
 
     sendSuccess(
       res,

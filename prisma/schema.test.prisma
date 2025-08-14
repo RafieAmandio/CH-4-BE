@@ -12,7 +12,7 @@ datasource db {
 
 // Users
 model User {
-  id               String               @id @default(uuid()) @db.Uuid
+  id               String             @id @default(cuid())
   auth             Providers             @default(EMAIL)
   email            String               @unique
   password_hash    String
@@ -29,7 +29,7 @@ model User {
 
 // Events
 model Event {
-  id               String   @id @default(uuid()) @db.Uuid
+  id               String @id @default(cuid())
   name             String   
   detail           String?  
   photo_link       String?  
