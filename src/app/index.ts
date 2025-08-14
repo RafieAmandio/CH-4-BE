@@ -3,11 +3,11 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import compression from 'compression';
-import { morganStream } from '../config/logger';
-import { sendError } from '../utils/response';
-import routes from '../routes';
-import { Error } from '../types';
-import { logger } from '../config/logger';
+import { morganStream } from '../config/logger.js';
+import { sendError } from '../utils/response.js';
+import routes from '../routes/index.js';
+import { Error } from '../types/index.js';
+import { logger } from '../config/logger.js';
 
 // Create Express app
 const app = express();
