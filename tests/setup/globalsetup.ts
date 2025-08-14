@@ -7,8 +7,6 @@ beforeAll(async () => {
     // Use Prisma's deleteMany for schema-agnostic database cleanup
     // This works for both SQLite and PostgreSQL without hardcoded SQL
     await prisma.user.deleteMany({});
-
-    logger.info('Database cleared successfully for testing');
   } catch (_error) {
     logger.warn('Could not clear database:', _error);
   }
