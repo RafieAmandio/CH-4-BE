@@ -1,11 +1,11 @@
 import { Request, Response } from 'express';
-import { AuthRequest } from '../types';
-import { RegisterInput, LoginInput } from '../types/auth.types';
-import { hashPassword, verifyPassword } from '../utils/password';
-import { generateToken } from '../utils/token';
-import { sendSuccess, sendError } from '../utils/response';
-import { logger } from '../config/logger';
-import prisma from '../config/database';
+import { AuthRequest } from '../types/index.js';
+import { RegisterInput, LoginInput } from '../types/auth.types.js';
+import { hashPassword, verifyPassword } from '../utils/password.js';
+import { generateToken } from '../utils/token.js';
+import { sendSuccess, sendError } from '../utils/response.js';
+import { logger } from '../config/logger.js';
+import prisma from '../config/database.js';
 
 /**
  * Register a new user

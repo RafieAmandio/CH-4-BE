@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import { logger } from '../config/logger';
+import { logger } from '../config/logger.js';
 
 /**
  * Hash a password using bcrypt

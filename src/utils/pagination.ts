@@ -1,4 +1,4 @@
-import { PaginationQuery, ListResponse } from '../types';
+import { PaginationQuery, ListResponse } from '../types/index.js';
 
 /**
  * Default pagination values

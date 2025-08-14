@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { validationResult } from 'express-validator';
-import { sendError } from './response';
-import { Error } from '../types';
+import { sendError } from './response.js';
+import { Error } from '../types/index.js';
 
 /**
  * Middleware to validate request data
