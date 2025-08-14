@@ -165,3 +165,14 @@ export const getProfile = async (
     );
   }
 };
+
+
+export const callback = async (req: Request, res: Response): Promise<void> => {
+  try {
+    console.log(req.body, 'reqody')
+    sendSuccess(res, 'Callback successful', req.body, 200);
+  } catch (error) {
+    logger.error('Callback error:', error);
+    sendError(res, 'Callback failed', [{ field: 'server', message: 'An error occurred during callback' }], 500);
+  }
+};
