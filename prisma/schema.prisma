@@ -16,20 +16,54 @@ datasource db {
 // Users
 model User {
   id               String               @id @default(uuid()) @db.Uuid
-  auth             Provider             @default(EMAIL)
+  auth             Providers            @default(EMAIL)
   email            String               @unique
-  passwordHash     String
+  password_hash    String
   username         String
   name             String
   nickname         String
-  photo            String
+  photo_link       String
   is_active        Boolean
-  createdAt        DateTime             @default(now())
-  updatedAt        DateTime             @updatedAt
+  created_at        DateTime             @default(now())
+  updated_at        DateTime             @updatedAt
+
+  @@map("user")
 }
 
-enum Provider {
+model Event {
+  id               String   @id @default(uuid()) @db.Uuid
+  name             String   
+  detail           String?  
+  photo_link       String?  
+  location_name    String?  
+  location_address String?  
+  location_link    String?  
+  latitude         Decimal? 
+  longitude        Decimal? 
+  status           EventStatus
+  start            DateTime 
+  end              DateTime 
+  link             String?  
+  code             String?  
+  is_active        Boolean  @default(true)
+  created_at       DateTime @default(now()) 
+  updated_at       DateTime @default(now())
+
+  @@map("event")
+}
+
+enum EventStatus {
+  ONGOING
+  UPCOMING
+  COMPLETED
+
+  @@map("event_status")
+}
+
+enum Providers {
   APPLE
   LINKEDIN
   EMAIL
+
+  @@map("providers")
 }
