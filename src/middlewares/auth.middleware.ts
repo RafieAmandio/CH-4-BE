@@ -1,9 +1,9 @@
 import { Response, NextFunction } from 'express';
-import { extractTokenFromHeader, verifyToken } from '../utils/token';
-import { sendError } from '../utils/response';
-import prisma from '../config/database';
-import { AuthRequest } from '../types';
-import { logger } from '../config/logger';
+import { extractTokenFromHeader, verifyToken } from '../utils/token.js';
+import { sendError } from '../utils/response.js';
+import prisma from '../config/database.js';
+import { AuthRequest } from '../types/index.js';
+import { logger } from '../config/logger.js';
 
 /**
  * Authentication middleware to protect routes

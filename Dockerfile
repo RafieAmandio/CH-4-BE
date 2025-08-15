@@ -1,12 +1,10 @@
-# Multi-stage Dockerfile for Node.js TypeScript application with Prisma
-
-# Stage 1: Dependencies
-FROM node:18-alpine AS deps
-RUN apk add --no-cache libc6-compat
-WORKDIR /app
+# Build stage
+FROM node:18-alpine AS builder
 
 # Install pnpm
 RUN npm install -g pnpm
+
+WORKDIR /app
 
 # Copy package files
 COPY package.json pnpm-lock.yaml ./
@@ -14,56 +12,54 @@ COPY package.json pnpm-lock.yaml ./
 # Install dependencies
 RUN pnpm install --frozen-lockfile
 
-# Stage 2: Builder
-FROM node:18-alpine AS builder
-WORKDIR /app
-
-# Install pnpm
-RUN npm install -g pnpm
-
-# Copy dependencies from deps stage
-COPY --from=deps /app/node_modules ./node_modules
-
 # Copy source code
 COPY . .
 
 # Generate Prisma client
 RUN pnpm prisma:generate
 
-# Build the application
+# Build the application (copy-assets script now handles missing data files gracefully)
 RUN pnpm build
 
-# Stage 3: Production
-FROM node:18-alpine AS runner
-WORKDIR /app
+# Debug: List locations of Prisma-related files
+RUN echo "Searching for Prisma files..." && \
+    find /app -name "*.prisma" -o -path "*prisma*" | sort
+
+# Debug: Print the entire directory structure to see where the schools.json might be
+RUN echo "Printing directory structure:" && \
+    find /app -type f -name "*.json" | sort && \
+    echo "Complete directory listing:" && \
+    find /app -type f | grep -v "node_modules" | sort
+
+# Production stage
+FROM node:18-alpine
 
 # Install pnpm
 RUN npm install -g pnpm
 
-# Create non-root user
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nodejs
+WORKDIR /app
 
 # Copy package files
 COPY package.json pnpm-lock.yaml ./
+COPY prisma ./prisma/
 
-# Install only production dependencies
-RUN pnpm install --frozen-lockfile --prod
+# Install production dependencies and Prisma CLI
+RUN pnpm install --prod --frozen-lockfile && \
+    pnpm add -D prisma
 
-# Copy built application
-COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
-COPY --from=builder --chown=nodejs:nodejs /app/prisma ./prisma
-COPY --from=builder --chown=nodejs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
+# Copy built assets from builder stage
+COPY --from=builder /app/dist ./dist
 
-# Switch to non-root user
-USER nodejs
+# Use shell to handle errors for copying Prisma files
+RUN mkdir -p ./node_modules/.pnpm/
+RUN mkdir -p ./node_modules/@prisma/
+RUN mkdir -p ./node_modules/.prisma/
 
-# Expose port
+# Generate Prisma client in the production stage (guarantees it exists)
+RUN pnpm prisma:generate
+
+# Expose the port the app runs on
 EXPOSE 3000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
-
-# Start the application
-CMD ["node", "dist/server.js"]
+# Command to run the application
+CMD ["pnpm", "start"]

@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
-import { env } from '../config/environment';
-import { UserPayload } from '../types';
-import { logger } from '../config/logger';
+import { env } from '../config/environment.js';
+import { UserPayload } from '../types/index.js';
+import { logger } from '../config/logger.js';
 
 /**
  * Generate a JWT token for a user

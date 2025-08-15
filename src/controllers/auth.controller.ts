@@ -1,11 +1,15 @@
 import { Request, Response } from 'express';
-import { AuthRequest } from '../types';
-import { RegisterInput, LoginInput } from '../types/auth.types';
-import { hashPassword, verifyPassword } from '../utils/password';
-import { generateToken } from '../utils/token';
-import { sendSuccess, sendError } from '../utils/response';
-import { logger } from '../config/logger';
-import prisma from '../config/database';
+import { AuthRequest } from '../types/index.js';
+import {
+  RegisterInput,
+  LoginInput,
+  CallbackInput,
+} from '../types/auth.types.js';
+import { hashPassword, verifyPassword } from '../utils/password.js';
+import { generateToken } from '../utils/token.js';
+import { sendSuccess, sendError } from '../utils/response.js';
+import { logger } from '../config/logger.js';
+import prisma from '../config/database.js';
 
 /**
  * Register a new user
@@ -37,11 +41,11 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       data: {
         auth: userData.auth,
         email: userData.email,
-        passwordHash: hashedPassword,
+        password_hash: hashedPassword,
         username: userData.username,
         name: userData.name,
         nickname: userData.nickname,
-        photo: userData.photo,
+        photo_link: userData.photo,
         is_active: userData.is_active,
       },
     });
@@ -53,7 +57,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     });
 
     // Return user data (excluding password)
-    const { passwordHash: _passwordHash, ...userWithoutPassword } = newUser;
+    const { password_hash: _passwordHash, ...userWithoutPassword } = newUser;
 
     sendSuccess(
       res,
@@ -85,7 +89,11 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     });
 
     // Check if user exists and password is correct
-    if (!user || !(await verifyPassword(password, user.passwordHash))) {
+    if (
+      !user ||
+      !user.password_hash ||
+      !(await verifyPassword(password, user.password_hash))
+    ) {
       sendError(
         res,
         'Login failed',
@@ -102,7 +110,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     });
 
     // Return user data (excluding password)
-    const { passwordHash: _passwordHash, ...userWithoutPassword } = user;
+    const { password_hash: _passwordHash, ...userWithoutPassword } = user;
 
     sendSuccess(
       res,
@@ -142,7 +150,7 @@ export const getProfile = async (
     }
 
     // Return user data (excluding password)
-    const { passwordHash: _passwordHash, ...userWithoutPassword } = user;
+    const { password_hash: _passwordHash, ...userWithoutPassword } = user;
 
     sendSuccess(
       res,
@@ -161,6 +169,67 @@ export const getProfile = async (
           message: 'An error occurred while retrieving profile',
         },
       ],
+      500
+    );
+  }
+};
+
+export const callback = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id, email, name, provider }: CallbackInput = req.body;
+
+    // Check if user exists by email (OAuth users might have different IDs)
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    let user;
+
+    if (existingUser) {
+      // User exists, update their information and treat like login
+      user = await prisma.user.update({
+        where: { email },
+        data: {
+          name,
+          auth: provider,
+        },
+      });
+    } else {
+      // User doesn't exist, create new user
+      user = await prisma.user.create({
+        data: {
+          id,
+          email,
+          name,
+          auth: provider,
+          is_active: true, // OAuth users are active by default
+        },
+      });
+    }
+
+    // Generate token for both existing and new users
+    const token = generateToken({
+      id: user.id,
+      email: user.email,
+    });
+
+    // Return user data (excluding password)
+    const { password_hash: _passwordHash, ...userWithoutPassword } = user;
+
+    sendSuccess(
+      res,
+      existingUser
+        ? 'Login successful'
+        : 'User created and logged in successfully',
+      { user: userWithoutPassword, token },
+      existingUser ? 200 : 201
+    );
+  } catch (error) {
+    logger.error('Callback error:', error);
+    sendError(
+      res,
+      'Callback failed',
+      [{ field: 'server', message: 'An error occurred during callback' }],
       500
     );
   }

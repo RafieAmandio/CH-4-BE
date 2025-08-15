@@ -1,6 +1,6 @@
-import app from "./app";
-import { env } from "./config/environment";
-import { logger } from "./config/logger";
+import app from "./app/index.js";
+import { env } from "./config/environment.js";
+import { logger } from "./config/logger.js";
 
 // Start the server
 const server = app.listen(env.PORT, () => {

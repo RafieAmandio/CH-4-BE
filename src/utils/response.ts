@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import { ApiResponse, Error, ListResponse } from '../types';
+import { ApiResponse, Error, ListResponse } from '../types/index.js';
 
 /**
  * Send a success response

@@ -1,6 +1,6 @@
 import request from 'supertest';
 import { Express } from 'express';
-import { Provider } from '@prisma/client';
+import { Providers } from '@prisma/client';
 import app from '../../../src/app';
 import prisma from '../../../src/config/database';
 import { hashPassword } from '../../../src/utils/password';
@@ -26,23 +26,23 @@ describe('Auth Routes Integration Tests', () => {
 
   describe('POST /api/auth/register', () => {
     const validRegisterData = {
-      auth: Provider.EMAIL,
+      auth: Providers.EMAIL,
       email: 'test@example.com',
       password: 'password123',
       username: 'testuser',
       name: 'Test User',
       nickname: 'Tester',
-      photo: 'photo.jpg',
+      photo_link: 'photo.jpg',
       is_active: true
     };
 
     const validRegisterDataForDB = {
-      auth: Provider.EMAIL,
+      auth: Providers.EMAIL,
       email: 'test@example.com',
       username: 'testuser',
       name: 'Test User',
       nickname: 'Tester',
-      photo: 'photo.jpg',
+      photo_link: 'photo.jpg',
       is_active: true
     };
 
@@ -82,7 +82,7 @@ describe('Auth Routes Integration Tests', () => {
       await prisma.user.create({
         data: {
           ...validRegisterDataForDB,
-          passwordHash: await hashPassword(validRegisterData.password)
+          password_hash: await hashPassword(validRegisterData.password)
         }
       });
 
@@ -167,33 +167,33 @@ describe('Auth Routes Integration Tests', () => {
 
   describe('POST /api/auth/login', () => {
     const userData = {
-      auth: Provider.EMAIL,
+      auth: Providers.EMAIL,
       email: 'test@example.com',
       password: 'password123',
       username: 'testuser',
       name: 'Test User',
       nickname: 'Tester',
-      photo: 'photo.jpg',
+      photo_link: 'photo.jpg',
       is_active: true
     };
 
     const userDataForDB2 = {
-      auth: Provider.EMAIL,
+      auth: Providers.EMAIL,
       email: 'test@example.com',
       username: 'testuser',
       name: 'Test User',
       nickname: 'Tester',
-      photo: 'photo.jpg',
+      photo_link: 'photo.jpg',
       is_active: true
     };
 
     const userDataForDB = {
-      auth: Provider.EMAIL,
+      auth: Providers.EMAIL,
       email: 'test@example.com',
       username: 'testuser',
       name: 'Test User',
       nickname: 'Tester',
-      photo: 'photo.jpg',
+      photo_link: 'photo.jpg',
       is_active: true
     };
 
@@ -202,7 +202,7 @@ describe('Auth Routes Integration Tests', () => {
       await prisma.user.create({
         data: {
           ...userDataForDB,
-          passwordHash: await hashPassword(userData.password)
+          password_hash: await hashPassword(userData.password)
         }
       });
     });
@@ -313,23 +313,23 @@ describe('Auth Routes Integration Tests', () => {
 
   describe('GET /api/auth/profile', () => {
     const userData = {
-      auth: Provider.EMAIL,
+      auth: Providers.EMAIL,
       email: 'test@example.com',
       password: 'password123',
       username: 'testuser',
       name: 'Test User',
       nickname: 'Tester',
-      photo: 'photo.jpg',
+      photo_link: 'photo.jpg',
       is_active: true
     };
 
     const userDataForDB3 = {
-      auth: Provider.EMAIL,
+      auth: Providers.EMAIL,
       email: 'test@example.com',
       username: 'testuser',
       name: 'Test User',
       nickname: 'Tester',
-      photo: 'photo.jpg',
+      photo_link: 'photo.jpg',
       is_active: true
     };
 
@@ -341,7 +341,7 @@ describe('Auth Routes Integration Tests', () => {
       const user = await prisma.user.create({
         data: {
           ...userDataForDB3,
-          passwordHash: await hashPassword(userData.password)
+          password_hash: await hashPassword(userData.password)
         }
       });
       userId = user.id;
