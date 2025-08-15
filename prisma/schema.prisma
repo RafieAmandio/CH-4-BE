@@ -17,11 +17,11 @@ model User {
   auth          Providers @default(EMAIL)
   email         String    @unique
   password_hash String?
-  username      String    @unique?
+  username      String?    @unique
   name          String
   nickname      String?
-  photo_link    String??
-  is_active     Boolean   @default(true)               @default(true)
+  photo_link    String?
+  is_active     Boolean   @default(true)          
   created_at    DateTime  @default(now())
   updated_at    DateTime  @updatedAt
 
