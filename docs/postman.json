@@ -1,0 +1,381 @@
+{
+  "info": {
+    "name": "CH-4-BE API Collection",
+    "description": "Complete API collection for Challenge 4 Backend - Authentication and User Management",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{auth_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000/api",
+      "type": "string"
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/health",
+          "host": ["{{base_url}}"],
+          "path": ["health"]
+        },
+        "description": "Check if the API is running and healthy"
+      },
+      "response": [
+        {
+          "name": "Success Response",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n  \"status\": \"ok\",\n  \"message\": \"API is running\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"auth\": \"EMAIL\",\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"password123\",\n  \"username\": \"johndoe\",\n  \"name\": \"John Doe\",\n  \"nickname\": \"Johnny\",\n  \"photo\": \"https://example.com/photo.jpg\",\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Register a new user with email and password"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"auth\": \"EMAIL\",\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"password123\",\n  \"username\": \"johndoe\",\n  \"name\": \"John Doe\",\n  \"nickname\": \"Johnny\",\n  \"photo\": \"https://example.com/photo.jpg\",\n  \"is_active\": true\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/register",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "register"]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"User registered successfully\",\n  \"data\": {\n    \"user\": {\n      \"id\": \"user_id_123\",\n      \"auth\": \"EMAIL\",\n      \"email\": \"john.doe@example.com\",\n      \"username\": \"johndoe\",\n      \"name\": \"John Doe\",\n      \"nickname\": \"Johnny\",\n      \"photo_link\": \"https://example.com/photo.jpg\",\n      \"is_active\": true,\n      \"created_at\": \"2024-01-01T00:00:00.000Z\",\n      \"updated_at\": \"2024-01-01T00:00:00.000Z\"\n    },\n    \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n  },\n  \"errors\": []\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('auth_token', response.data.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Login with email and password"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"password123\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/login",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "login"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Login successful\",\n  \"data\": {\n    \"user\": {\n      \"id\": \"user_id_123\",\n      \"auth\": \"EMAIL\",\n      \"email\": \"john.doe@example.com\",\n      \"username\": \"johndoe\",\n      \"name\": \"John Doe\",\n      \"nickname\": \"Johnny\",\n      \"photo_link\": \"https://example.com/photo.jpg\",\n      \"is_active\": true,\n      \"created_at\": \"2024-01-01T00:00:00.000Z\",\n      \"updated_at\": \"2024-01-01T00:00:00.000Z\"\n    },\n    \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n  },\n  \"errors\": []\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('auth_token', response.data.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "OAuth Callback",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"001234.abc123def456.7890\",\n  \"email\": \"john.doe@example.com\",\n  \"name\": \"John Doe\",\n  \"provider\": \"APPLE\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/callback",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "callback"]
+            },
+            "description": "OAuth callback endpoint for Apple, LinkedIn, or Email providers"
+          },
+          "response": [
+            {
+              "name": "New User Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"id\": \"001234.abc123def456.7890\",\n  \"email\": \"john.doe@example.com\",\n  \"name\": \"John Doe\",\n  \"provider\": \"APPLE\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/callback",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "callback"]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"User created and logged in successfully\",\n  \"data\": {\n    \"user\": {\n      \"id\": \"001234.abc123def456.7890\",\n      \"auth\": \"APPLE\",\n      \"email\": \"john.doe@example.com\",\n      \"username\": \"John Doe\",\n      \"name\": \"John Doe\",\n      \"nickname\": \"John Doe\",\n      \"photo_link\": \"\",\n      \"is_active\": true,\n      \"created_at\": \"2024-01-01T00:00:00.000Z\",\n      \"updated_at\": \"2024-01-01T00:00:00.000Z\"\n    },\n    \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n  },\n  \"errors\": []\n}"
+            },
+            {
+              "name": "Existing User Login",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"id\": \"linkedin_user_12345\",\n  \"email\": \"existing.user@example.com\",\n  \"name\": \"Existing User\",\n  \"provider\": \"LINKEDIN\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/callback",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "callback"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Login successful\",\n  \"data\": {\n    \"user\": {\n      \"id\": \"existing_user_id\",\n      \"auth\": \"LINKEDIN\",\n      \"email\": \"existing.user@example.com\",\n      \"username\": \"existinguser\",\n      \"name\": \"Existing User\",\n      \"nickname\": \"ExistingUser\",\n      \"photo_link\": \"https://example.com/existing-photo.jpg\",\n      \"is_active\": true,\n      \"created_at\": \"2024-01-01T00:00:00.000Z\",\n      \"updated_at\": \"2024-01-01T00:00:00.000Z\"\n    },\n    \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n  },\n  \"errors\": []\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('auth_token', response.data.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get User Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/profile",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "profile"]
+            },
+            "description": "Get the current authenticated user's profile (requires authentication)"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{auth_token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/auth/profile",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "profile"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"message\": \"Profile retrieved successfully\",\n  \"data\": {\n    \"id\": \"user_id_123\",\n    \"auth\": \"EMAIL\",\n    \"email\": \"john.doe@example.com\",\n    \"username\": \"johndoe\",\n    \"name\": \"John Doe\",\n    \"nickname\": \"Johnny\",\n    \"photo_link\": \"https://example.com/photo.jpg\",\n    \"is_active\": true,\n    \"created_at\": \"2024-01-01T00:00:00.000Z\",\n    \"updated_at\": \"2024-01-01T00:00:00.000Z\"\n  },\n  \"errors\": []\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Set base URL if not already set",
+          "if (!pm.collectionVariables.get('base_url')) {",
+          "    pm.collectionVariables.set('base_url', 'http://localhost:3000/api');",
+          "}"
+        ]
+      }
+    }
+  ]
+}
