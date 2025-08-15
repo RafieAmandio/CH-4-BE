@@ -27,6 +27,10 @@ model User {
   // Relationships
   events Event[]
 
+  // Indexes
+  @@index([email])
+  @@index([username])
+  @@index([is_active])
   @@map("user")
 }
 
@@ -50,10 +54,21 @@ model Event {
   is_active        Boolean     @default(true)
   created_at       DateTime    @default(now())
   updated_at       DateTime    @updatedAt
+  max_participants     Int?    
+  current_participants Int     @default(0) 
 
   // Relationships
   creator User @relation(fields: [created_by], references: [id], onDelete: Cascade)
 
+  // Indexes
+  @@index([created_by])
+  @@index([status])
+  @@index([start])
+  @@index([end])
+  @@index([is_active])
+  @@index([created_by, is_active])
+  @@index([status, is_active])
+  @@index([start, end])
   @@map("event")
 }
 

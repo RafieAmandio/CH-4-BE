@@ -55,6 +55,8 @@ model Event {
   is_active        Boolean     @default(true)
   created_at       DateTime    @default(now())
   updated_at       DateTime    @updatedAt
+  max_participants     Int?    
+  current_participants Int     @default(0) 
 
   // Relationships
   creator User @relation(fields: [created_by], references: [id], onDelete: Cascade)
