@@ -50,7 +50,7 @@ export const updateEventValidation = [
   param('id')
     .notEmpty()
     .withMessage('Event ID is required')
-    .isUUID()
+    .isString()
     .withMessage('Event ID must be a valid UUID'),
 
   body('name')
@@ -102,7 +102,7 @@ export const getEventValidation = [
   param('id')
     .notEmpty()
     .withMessage('Event ID is required')
-    .isUUID()
+    .isString()
     .withMessage('Event ID must be a valid UUID'),
 ];
 

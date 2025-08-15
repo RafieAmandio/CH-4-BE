@@ -17,8 +17,8 @@ const router = Router();
  * @access Private (authenticated users only)
  */
 router.post(
-  '/create',
-  // authenticate,
+  '/',
+  authenticate,
   createEventValidation,
   validate,
   eventController.createEvent
@@ -30,7 +30,7 @@ router.post(
  * @access Private (authenticated users only)
  */
 router.get(
-  '/filter',
+  '/',
   authenticate,
   getEventsValidation,
   validate,
@@ -43,7 +43,7 @@ router.get(
  * @access Private (authenticated users only)
  */
 router.get(
-  '/byid',
+  '/:id',
   authenticate,
   getEventValidation,
   validate,
@@ -56,7 +56,7 @@ router.get(
  * @access Private (event creator only)
  */
 router.put(
-  '/update',
+  '/:id',
   authenticate,
   updateEventValidation,
   validate,
@@ -70,7 +70,7 @@ router.put(
  * @query hard_delete=true for permanent deletion, otherwise soft delete (disable)
  */
 router.delete(
-  '/delete',
+  '/:id',
   authenticate,
   getEventValidation,
   validate,
