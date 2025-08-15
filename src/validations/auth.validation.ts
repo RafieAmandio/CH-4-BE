@@ -65,3 +65,31 @@ export const loginValidation = [
 
   body('password').notEmpty().withMessage('Password is required'),
 ];
+
+export const callbackValidation = [
+  body('id')
+    .notEmpty()
+    .withMessage('ID is required')
+    .isString()
+    .withMessage('ID must be a string')
+    .trim(),
+  body('email')
+    .notEmpty()
+    .withMessage('Email is required')
+    .isEmail()
+    .withMessage('Invalid email format'),
+  body('name')
+    .notEmpty()
+    .withMessage('Name is required')
+    .isString()
+    .withMessage('Name must be a string')
+    .trim(),
+  body('provider')
+    .notEmpty()
+    .withMessage('Provider is required')
+    .isString()
+    .withMessage('Provider must be a string')
+    .trim()
+    .isIn(['APPLE', 'LINKEDIN', 'EMAIL'])
+    .withMessage('Provider must be APPLE, LINKEDIN, or EMAIL'),
+];

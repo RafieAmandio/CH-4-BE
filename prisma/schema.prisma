@@ -16,12 +16,12 @@ model User {
   id            String    @id @default(uuid()) @db.Uuid
   auth          Providers @default(EMAIL)
   email         String    @unique
-  password_hash String
-  username      String    @unique
+  password_hash String?
+  username      String    @unique?
   name          String
-  nickname      String
-  photo_link    String?
-  is_active     Boolean   @default(true)
+  nickname      String?
+  photo_link    String??
+  is_active     Boolean   @default(true)               @default(true)
   created_at    DateTime  @default(now())
   updated_at    DateTime  @updatedAt
 

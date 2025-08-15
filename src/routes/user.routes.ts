@@ -17,6 +17,11 @@ const router = Router();
  */
 router.post('/register', registerValidation, validate, authController.register);
 
+/**
+ * @route POST /api/auth/callback
+ * @desc Register a new user using apple
+ * @access Public
+ */
 router.post('/callback', callbackValidation, validate, authController.callback);
 
 /**

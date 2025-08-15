@@ -1,6 +1,10 @@
 import { Request, Response } from 'express';
 import { AuthRequest } from '../types/index.js';
-import { RegisterInput, LoginInput } from '../types/auth.types.js';
+import {
+  RegisterInput,
+  LoginInput,
+  CallbackInput,
+} from '../types/auth.types.js';
 import { hashPassword, verifyPassword } from '../utils/password.js';
 import { generateToken } from '../utils/token.js';
 import { sendSuccess, sendError } from '../utils/response.js';
@@ -85,7 +89,11 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     });
 
     // Check if user exists and password is correct
-    if (!user || !(await verifyPassword(password, user.password_hash))) {
+    if (
+      !user ||
+      !user.password_hash ||
+      !(await verifyPassword(password, user.password_hash))
+    ) {
       sendError(
         res,
         'Login failed',
@@ -168,8 +176,54 @@ export const getProfile = async (
 
 export const callback = async (req: Request, res: Response): Promise<void> => {
   try {
-    logger.info(req.body, 'reqody');
-    sendSuccess(res, 'Callback successful', req.body, 200);
+    const { id, email, name, provider }: CallbackInput = req.body;
+
+    // Check if user exists by email (OAuth users might have different IDs)
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    let user;
+
+    if (existingUser) {
+      // User exists, update their information and treat like login
+      user = await prisma.user.update({
+        where: { email },
+        data: {
+          name,
+          auth: provider,
+        },
+      });
+    } else {
+      // User doesn't exist, create new user
+      user = await prisma.user.create({
+        data: {
+          id,
+          email,
+          name,
+          auth: provider,
+          is_active: true, // OAuth users are active by default
+        },
+      });
+    }
+
+    // Generate token for both existing and new users
+    const token = generateToken({
+      id: user.id,
+      email: user.email,
+    });
+
+    // Return user data (excluding password)
+    const { password_hash: _passwordHash, ...userWithoutPassword } = user;
+
+    sendSuccess(
+      res,
+      existingUser
+        ? 'Login successful'
+        : 'User created and logged in successfully',
+      { user: userWithoutPassword, token },
+      existingUser ? 200 : 201
+    );
   } catch (error) {
     logger.error('Callback error:', error);
     sendError(
