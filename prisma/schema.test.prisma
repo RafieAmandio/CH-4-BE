@@ -30,6 +30,7 @@ model User {
 // Events
 model Event {
   id               String @id @default(cuid())
+  created_by       String
   name             String   
   detail           String?  
   photo_link       String?  
@@ -51,6 +52,7 @@ model Event {
 }
 
 enum EventStatus {
+  DRAFT
   ONGOING
   UPCOMING
   COMPLETED
