@@ -13,3 +13,10 @@ export interface LoginInput {
   email: string;
   password: string;
 }
+
+export interface CallbackInput {
+  id: string;
+  email: string;
+  name: string;
+  provider: 'APPLE' | 'LINKEDIN' | 'EMAIL';
+}

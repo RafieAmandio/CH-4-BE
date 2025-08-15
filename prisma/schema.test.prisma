@@ -12,15 +12,15 @@ datasource db {
 
 // Users
 model User {
-  id               String             @id @default(cuid())
-  auth             Providers             @default(EMAIL)
+  id               String             @id @default(uuid()) @db.Uuid
+  auth             Providers            @default(EMAIL)
   email            String               @unique
-  password_hash    String
-  username         String
+  password_hash    String?
+  username         String?
   name             String
-  nickname         String
-  photo_link       String
-  is_active        Boolean
+  nickname         String?
+  photo_link       String?
+  is_active        Boolean               @default(true)
   created_at        DateTime             @default(now())
   updated_at        DateTime             @updatedAt
 
