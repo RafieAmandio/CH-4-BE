@@ -39,13 +39,11 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     // Create the user
     const newUser = await prisma.user.create({
       data: {
-        auth: userData.auth,
+        auth_provider: userData.auth_provider,
         email: userData.email,
         password_hash: hashedPassword,
         username: userData.username,
         name: userData.name,
-        nickname: userData.nickname,
-        photo_link: userData.photo,
         is_active: userData.is_active,
       },
     });
@@ -191,7 +189,7 @@ export const callback = async (req: Request, res: Response): Promise<void> => {
         where: { email },
         data: {
           name,
-          auth: provider,
+          auth_provider: provider,
         },
       });
     } else {
@@ -201,7 +199,7 @@ export const callback = async (req: Request, res: Response): Promise<void> => {
           id,
           email,
           name,
-          auth: provider,
+          auth_provider: provider,
           is_active: true, // OAuth users are active by default
         },
       });
