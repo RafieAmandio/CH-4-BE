@@ -10,69 +10,18 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Users
-model User {
-  id            String    @id @default(cuid())
-  auth          Providers @default(EMAIL)
-  email         String    @unique
-  password_hash String?
-  username      String?    @unique
-  name          String
-  nickname      String?
-  photo_link    String?
-  is_active     Boolean   @default(true)
-  created_at    DateTime  @default(now())
-  updated_at    DateTime  @updatedAt
-
-  // Relationships
-  events Event[]
-
-  // Indexes
-  @@index([email])
-  @@index([username])
-  @@index([is_active])
-  @@map("user")
-}
-
-// Events
-model Event {
-  id               String      @id @default(cuid())
-  created_by       String
-  name             String
-  detail           String?
-  photo_link       String?
-  location_name    String?
-  location_address String?
-  location_link    String?
-  latitude         Decimal?
-  longitude        Decimal?
-  status           EventStatus @default(DRAFT)
-  start            DateTime
-  end              DateTime
-  link             String?
-  code             String?     @unique
-  is_active        Boolean     @default(true)
-  created_at       DateTime    @default(now())
-  updated_at       DateTime    @updatedAt
-  max_participants     Int?    
-  current_participants Int     @default(0) 
-
-  // Relationships
-  creator User @relation(fields: [created_by], references: [id], onDelete: Cascade)
-
-  // Indexes
-  @@index([created_by])
-  @@index([status])
-  @@index([start])
-  @@index([end])
-  @@index([is_active])
-  @@index([created_by, is_active])
-  @@index([status, is_active])
-  @@index([start, end])
-  @@map("event")
-}
-
+// =========================
 // Enums
+// =========================
+
+enum Providers {
+  APPLE
+  LINKEDIN
+  EMAIL
+
+  @@map("providers")
+}
+
 enum EventStatus {
   DRAFT
   ONGOING
@@ -82,10 +31,330 @@ enum EventStatus {
   @@map("event_status")
 }
 
-enum Providers {
-  APPLE
-  LINKEDIN
-  EMAIL
+enum QuestionType {
+  SINGLE_CHOICE
+  MULTI_SELECT
+  RANKED_CHOICE
+  FREE_TEXT
+  NUMBER
+  SCALE
+  DATE
 
-  @@map("providers")
+  @@map("question_type")
+}
+
+// =========================
+// Core Entities
+// =========================
+
+// users
+model User {
+  id             String     @id @default(uuid()) @db.Uuid
+  auth_provider  Providers  @default(EMAIL)
+  email          String?    @unique
+  password_hash  String?
+  username       String?    @unique
+  name           String
+  is_active      Boolean    @default(true)
+  deleted_at     DateTime?
+  created_at     DateTime   @default(now())
+  updated_at     DateTime   @updatedAt
+
+  // relations
+  attendees      Attendee[]
+
+  // indexes
+  @@index([email])
+  @@index([username])
+  @@index([is_active])
+  @@index([deleted_at])
+
+  @@map("users")
+}
+
+// profession_category
+model ProfessionCategory {
+  id         String    @id @default(uuid()) @db.Uuid
+  category   String
+  is_active  Boolean   @default(true)
+  deleted_at DateTime?
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+
+  // relations
+  professions Profession[]
+
+  // indexes
+  @@unique([category])
+  @@index([deleted_at])
+
+  @@map("profession_category")
+}
+
+// professions
+model Profession {
+  id                     String              @id @default(uuid()) @db.Uuid
+  profession_category_id String              @db.Uuid
+  name                   String
+  is_active              Boolean             @default(true)
+  deleted_at             DateTime?
+  created_at             DateTime            @default(now())
+  updated_at             DateTime            @updatedAt
+
+  // relations
+  category   ProfessionCategory @relation(fields: [profession_category_id], references: [id], onDelete: Cascade)
+  attendees  Attendee[]
+
+  // indexes
+  @@unique([profession_category_id, name])
+  @@index([profession_category_id])
+  @@index([deleted_at])
+
+  @@map("professions")
+}
+
+// events
+model Event {
+  id               String       @id @default(uuid()) @db.Uuid
+  name             String
+  detail           String?
+  photo_link       String?
+  location_name    String?
+  location_address String?
+  location_link    String?
+  latitude         Decimal?     @db.Decimal(9, 6)
+  longitude        Decimal?     @db.Decimal(9, 6)
+  status           EventStatus
+  start            DateTime
+  end              DateTime
+  link             String?
+  code             String?      @unique
+  is_active        Boolean      @default(true)
+  deleted_at       DateTime?
+  created_at       DateTime     @default(now())
+  updated_at       DateTime     @updatedAt
+
+  // relations
+  attendees        Attendee[]
+  recommendations  Recommendation[]
+
+  // indexes
+  @@index([start])
+  @@index([status])
+  @@index([deleted_at])
+
+  @@map("events")
+}
+
+// goals_category
+model GoalsCategory {
+  id          String    @id @default(uuid()) @db.Uuid
+  /// DB column name is "goals_category"
+  name        String    @map("goals_category")
+  is_active   Boolean   @default(true)
+  deleted_at  DateTime?
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+
+  // relations
+  questions       Question[]
+  questionOrders  QuestionOrder[]
+  attendees       Attendee[]
+
+  @@index([deleted_at])
+
+  @@map("goals_category")
+}
+
+// questions
+model Question {
+  id                String        @id @default(uuid()) @db.Uuid
+  goals_category_id String        @db.Uuid
+
+  question          String
+  type              QuestionType  @default(SINGLE_CHOICE)
+
+  // selection config
+  min_select        Int           @default(1)
+  max_select        Int?
+  require_ranking   Boolean       @default(false)
+
+  // input constraints
+  text_max_len      Int?
+  number_min        Decimal?      @db.Decimal(18, 6)
+  number_max        Decimal?      @db.Decimal(18, 6)
+  number_step       Decimal?      @db.Decimal(18, 6)
+
+  is_required       Boolean       @default(false)
+  is_active         Boolean       @default(true)
+  deleted_at        DateTime?
+  created_at        DateTime      @default(now())
+  updated_at        DateTime      @updatedAt
+
+  // relations
+  goalsCategory  GoalsCategory @relation(fields: [goals_category_id], references: [id], onDelete: Cascade)
+  answerOptions  AnswerOption[]
+  questionOrders QuestionOrder[]
+  userAnswers    UserAnswer[]
+
+  // indexes
+  @@index([goals_category_id])
+  @@index([deleted_at])
+
+  @@map("questions")
+}
+
+// question_order (a question appears once per category; positions unique per category)
+model QuestionOrder {
+  id                String   @id @default(uuid()) @db.Uuid
+  goals_category_id String   @db.Uuid
+  question_id       String   @db.Uuid
+
+  display_order     Int      @default(1)
+  is_active         Boolean  @default(true)
+  deleted_at        DateTime?
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+
+  // relations
+  goalsCategory GoalsCategory @relation(fields: [goals_category_id], references: [id], onDelete: Cascade)
+  question      Question      @relation(fields: [question_id], references: [id], onDelete: Cascade)
+
+  // indexes
+  @@unique([goals_category_id, question_id])
+  @@unique([goals_category_id, display_order])
+  @@index([question_id])
+  @@index([deleted_at])
+
+  @@map("question_order")
+}
+
+// answer_options
+model AnswerOption {
+  id             String   @id @default(uuid()) @db.Uuid
+  question_id    String   @db.Uuid
+  label          String
+  value          String?
+  display_order  Int      @default(1)
+  default_weight Decimal? @db.Decimal(8, 4)
+  is_active      Boolean  @default(true)
+  deleted_at     DateTime?
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  // relations
+  question    Question     @relation(fields: [question_id], references: [id], onDelete: Cascade)
+  userAnswers UserAnswer[]
+
+  // indexes
+  @@unique([question_id, label])
+  @@index([question_id, display_order])
+  // helpful if you add the composite FK in raw SQL (see notes)
+  @@unique([id, question_id])
+  @@index([deleted_at])
+
+  @@map("answer_options")
+}
+
+// attendees
+model Attendee {
+  id                String   @id @default(uuid()) @db.Uuid
+  event_id          String   @db.Uuid
+  user_id           String?  @db.Uuid
+
+  // snapshot fields
+  user_name         String?
+  user_email        String?
+
+  goals_category_id String   @db.Uuid
+
+  nickname          String?
+  profession_id     String?  @db.Uuid
+  linkedin_username String?
+  photo_link        String?
+
+  is_active         Boolean  @default(true)
+  deleted_at        DateTime?
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+
+  // relations
+  event         Event          @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  user          User?          @relation(fields: [user_id], references: [id], onDelete: SetNull)
+  goal          GoalsCategory  @relation(fields: [goals_category_id], references: [id], onDelete: Restrict)
+  profession    Profession?    @relation(fields: [profession_id], references: [id], onDelete: SetNull)
+  userAnswers   UserAnswer[]
+  recsAsSource  Recommendation[] @relation("RecSource")
+  recsAsTarget  Recommendation[] @relation("RecTarget")
+
+  // indexes
+  @@unique([event_id, user_id])
+  @@index([user_id])
+  @@index([profession_id])
+  @@index([goals_category_id])
+  @@index([deleted_at])
+
+  @@map("attendees")
+}
+
+// recommendations
+model Recommendation {
+  id                  String   @id @default(uuid()) @db.Uuid
+  event_id            String   @db.Uuid
+  source_attendee_id  String   @db.Uuid
+  target_attendee_id  String   @db.Uuid
+  score               Decimal?  @db.Decimal(5, 4)
+  reasoning           String
+  is_active           Boolean  @default(true)
+  deleted_at          DateTime?
+  created_at          DateTime @default(now())
+  updated_at          DateTime @updatedAt
+
+  // relations
+  event   Event    @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  source  Attendee @relation("RecSource", fields: [source_attendee_id], references: [id], onDelete: Cascade)
+  target  Attendee @relation("RecTarget", fields: [target_attendee_id], references: [id], onDelete: Cascade)
+
+  // indexes
+  @@unique([event_id, source_attendee_id, target_attendee_id])
+  @@index([source_attendee_id])
+  @@index([target_attendee_id])
+  @@index([deleted_at])
+
+  @@map("recommendations")
+}
+
+// user_answers
+model UserAnswer {
+  id               String    @id @default(uuid()) @db.Uuid
+  attendee_id      String    @db.Uuid
+  question_id      String    @db.Uuid
+
+  // either pick an option...
+  answer_option_id String?   @db.Uuid
+  // ...or provide a value
+  text_value       String?
+  number_value     Decimal?  @db.Decimal(18, 6)
+  date_value       DateTime?
+
+  rank             Int?
+  weight           Decimal?  @db.Decimal(8, 4)
+
+  is_active        Boolean   @default(true)
+  deleted_at       DateTime?
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+
+  // relations
+  attendee     Attendee     @relation(fields: [attendee_id], references: [id], onDelete: Cascade)
+  question     Question     @relation(fields: [question_id], references: [id], onDelete: Cascade)
+  answerOption AnswerOption? @relation(fields: [answer_option_id], references: [id], onDelete: SetNull)
+
+  // indexes (allow multiple answers but prevent duplicate same option)
+  @@unique([attendee_id, question_id, answer_option_id])
+  @@index([attendee_id, question_id])
+  @@index([question_id])
+  @@index([deleted_at])
+
+  @@map("user_answers")
 }
