@@ -176,7 +176,7 @@ export const getProfile = async (
 
 export const callback = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id, email, name, provider }: CallbackInput = req.body;
+    const { email, name, provider }: CallbackInput = req.body;
 
     // Check if user exists by email (OAuth users might have different IDs)
     const existingUser = await prisma.user.findUnique({
@@ -198,7 +198,6 @@ export const callback = async (req: Request, res: Response): Promise<void> => {
       // User doesn't exist, create new user
       user = await prisma.user.create({
         data: {
-          id,
           email,
           name,
           auth: provider,

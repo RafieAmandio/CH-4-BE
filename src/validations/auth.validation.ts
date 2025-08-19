@@ -67,12 +67,6 @@ export const loginValidation = [
 ];
 
 export const callbackValidation = [
-  body('id')
-    .notEmpty()
-    .withMessage('ID is required')
-    .isString()
-    .withMessage('ID must be a string')
-    .trim(),
   body('email')
     .notEmpty()
     .withMessage('Email is required')

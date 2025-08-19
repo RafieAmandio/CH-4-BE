@@ -6,7 +6,7 @@ import {
   callbackValidation,
 } from '../validations/auth.validation.js';
 import { validate } from '../utils/validation.js';
-import { authenticate } from '../middlewares/auth.middleware.js';
+import { authenticate, authenticateSupabaseToken } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 
@@ -17,7 +17,9 @@ const router = Router();
  */
 router.post('/register', registerValidation, validate, authController.register);
 
-router.post('/callback', callbackValidation, validate, authController.callback);
+
+//authenticate supabase token first then execute callback
+router.post('/callback', callbackValidation, authenticateSupabaseToken, authController.callback);
 
 /**
  * @route POST /api/auth/login
