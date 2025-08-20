@@ -66,25 +66,21 @@ This document outlines the API contract for attendee management, which includes 
 ```json
 {
   "eventId": "uuid",
-  "userName": "string",
-  "userEmail": "string", 
-  "nickname": "string|null",
-  "professionId": "uuid|null",
+  "nickname": "string",
+  "userEmail": "string|null", 
+  "professionId": "uuid",
   "linkedinUsername": "string|null",
-  "photoLink": "string|null"
+  "photoLink": "string"
 }
 ```
 
 **Request Fields:**
 - `eventId` - Event identifier (required)
-- `userName` - Attendee's display name (required) 
-- `userEmail` - Attendee's email address (required)
-- `nickname` - Optional nickname/preferred name
-- `professionId` - Selected profession from professions table
+- `nickname` - Attendee's display name (required) - can be real name or preferred name
+- `userEmail` - Attendee's email address (optional)
+- `professionId` - Selected profession from professions table (required)
 - `linkedinUsername` - LinkedIn profile username
-- `photoLink` - URL to profile photo
-
-**Note:** The `userName` field will be stored in the User table for authenticated users, or as snapshot data in the Attendee table for visitors.
+- `photoLink` - URL to profile photo (required)
 
 **Response (Authenticated User):**
 ```json
@@ -130,7 +126,8 @@ This document outlines the API contract for attendee management, which includes 
 
 **Description:** Returns all active goals categories available for selection.
 
-**Response:**
+**Headers:**
+- No authentication required
 ```json
 {
   "data": [
@@ -150,7 +147,7 @@ This document outlines the API contract for attendee management, which includes 
 
 ### 4. Get Questions by Goals Category
 
-**Endpoint:** `POST /api/attendee/goals-categories/{categoryId}/questions`
+**Endpoint:** `GET /api/attendee/goals-categories/{categoryId}/questions`
 
 **Description:** Returns all questions for the selected goals category, ordered by display_order.
 
@@ -275,39 +272,6 @@ This document outlines the API contract for attendee management, which includes 
 
 ---
 
-## Question Types
-
-| Type | Description | Required Fields | Optional Fields |
-|------|-------------|----------------|-----------------|
-| `SINGLE_CHOICE` | Single selection from options | `answerOptionId` | `weight` |
-| `MULTI_SELECT` | Multiple selections from options | `answerOptionId` | `weight` |
-| `RANKED_CHOICE` | Ranked selections from options | `answerOptionId`, `rank` | `weight` |
-| `FREE_TEXT` | Text input | `textValue` | - |
-| `NUMBER` | Numeric input | `numberValue` | - |
-| `SCALE` | Scale/rating input | `numberValue` | `weight` |
-| `DATE` | Date selection | `dateValue` | - |
-
-**Note:** Only `questionId` is always required. All other fields are optional and should be provided based on the question type requirements above.
-
----
-
-## Validation Rules
-
-### General Rules
-- `attendeeId` must belong to the authenticated user
-- All required questions must have answers
-- Question must belong to the selected goals category
-
-### Type-Specific Rules
-- **SINGLE_CHOICE**: Exactly one `answerOptionId` required
-- **MULTI_SELECT**: Respect `minSelect` and `maxSelect` constraints
-- **RANKED_CHOICE**: Unique rank values required if `requireRanking` is true
-- **FREE_TEXT**: Text length must not exceed `textMaxLen`
-- **NUMBER/SCALE**: Value must be within `numberMin` and `numberMax` range
-- **DATE**: Valid date format required
-
----
-
 ### 6. Get Recommendations
 
 **Endpoint:** `GET /api/attendee/recommendations/{attendeeId}`
@@ -396,6 +360,39 @@ This document outlines the API contract for attendee management, which includes 
 4. Filter answers to only include those where `question.isShareable` is true
 5. Store recommendations in database
 6. Return formatted response with complete attendee profiles
+
+---
+
+## Question Types
+
+| Type | Description | Required Fields | Optional Fields |
+|------|-------------|----------------|-----------------|
+| `SINGLE_CHOICE` | Single selection from options | `answerOptionId` | `weight` |
+| `MULTI_SELECT` | Multiple selections from options | `answerOptionId` | `weight` |
+| `RANKED_CHOICE` | Ranked selections from options | `answerOptionId`, `rank` | `weight` |
+| `FREE_TEXT` | Text input | `textValue` | - |
+| `NUMBER` | Numeric input | `numberValue` | - |
+| `SCALE` | Scale/rating input | `numberValue` | `weight` |
+| `DATE` | Date selection | `dateValue` | - |
+
+**Note:** Only `questionId` is always required. All other fields are optional and should be provided based on the question type requirements above.
+
+---
+
+## Validation Rules
+
+### General Rules
+- `attendeeId` must belong to the authenticated user
+- All required questions must have answers
+- Question must belong to the selected goals category
+
+### Type-Specific Rules
+- **SINGLE_CHOICE**: Exactly one `answerOptionId` required
+- **MULTI_SELECT**: Respect `minSelect` and `maxSelect` constraints
+- **RANKED_CHOICE**: Unique rank values required if `requireRanking` is true
+- **FREE_TEXT**: Text length must not exceed `textMaxLen`
+- **NUMBER/SCALE**: Value must be within `numberMin` and `numberMax` range
+- **DATE**: Valid date format required
 
 ---
 
