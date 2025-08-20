@@ -22,7 +22,3 @@ export interface PublicUserProfileResponse {
   nickname?: string;
   profilePhoto?: string;
 }
-
-export interface UploadPhotoInput {
-  photoUrl: string;
-}
