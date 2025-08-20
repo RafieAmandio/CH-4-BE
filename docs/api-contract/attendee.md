@@ -122,8 +122,6 @@ This document outlines the API contract for attendee management, which includes 
 
 **Endpoint:** `GET /api/attendee/goals-categories`
 
-**Endpoint:** `GET /api/attendee/onboarding/goals-categories`
-
 **Description:** Returns all active goals categories available for selection.
 
 **Headers:**
@@ -294,10 +292,9 @@ This document outlines the API contract for attendee management, which includes 
     "recommendations": [
       {
         "targetAttendeeId": "uuid",
-        "score": "decimal",
         "reasoning": "string",
         "targetAttendee": {
-          "nickname": "string|null",
+          "nickname": "string",
           "profession": {
             "name": "string",
             "categoryName": "string"
@@ -306,7 +303,7 @@ This document outlines the API contract for attendee management, which includes 
             "name": "string"
           },
           "linkedinUsername": "string|null",
-          "photoLink": "string|null",
+          "photoLink": "string",
           "shareableAnswers": [
             {
               "question": "string",
