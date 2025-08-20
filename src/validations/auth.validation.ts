@@ -67,23 +67,6 @@ export const loginValidation = [
 ];
 
 export const callbackValidation = [
-  body('email')
-    .notEmpty()
-    .withMessage('Email is required')
-    .isEmail()
-    .withMessage('Invalid email format'),
-  body('name')
-    .notEmpty()
-    .withMessage('Name is required')
-    .isString()
-    .withMessage('Name must be a string')
-    .trim(),
-  body('provider')
-    .notEmpty()
-    .withMessage('Provider is required')
-    .isString()
-    .withMessage('Provider must be a string')
-    .trim()
-    .isIn(['APPLE', 'LINKEDIN', 'EMAIL'])
-    .withMessage('Provider must be APPLE, LINKEDIN, or EMAIL'),
+  // No body validation needed - all data comes from Supabase token in Authorization header
+  // The middleware will validate the token and extract user data
 ];

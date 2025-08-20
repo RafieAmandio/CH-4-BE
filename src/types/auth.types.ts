@@ -12,9 +12,18 @@ export interface LoginInput {
   password: string;
 }
 
-export interface CallbackInput {
+
+// Supabase user type for middleware
+export interface SupabaseUser {
   id: string;
-  email: string;
-  name: string;
-  provider: 'APPLE' | 'LINKEDIN' | 'EMAIL';
+  email?: string;
+  user_metadata?: {
+    full_name?: string;
+    [key: string]: any;
+  };
+  app_metadata?: {
+    provider?: string;
+    [key: string]: any;
+  };
+  [key: string]: any;
 }

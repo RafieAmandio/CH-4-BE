@@ -4,7 +4,10 @@ import { sendError } from '../utils/response.js';
 import prisma from '../config/database.js';
 import { AuthRequest } from '../types/index.js';
 import { logger } from '../config/logger.js';
-import { createClient } from '@supabase/supabase-js';
+import {
+  verifySupabaseToken,
+  extractSupabaseToken,
+} from '../utils/supabase.js';
 
 /**
  * Authentication middleware to protect routes
@@ -73,44 +76,64 @@ export const authenticate = async (
   }
 };
 
-
-
-
-
-export const authenticateSupabaseToken = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY || '';
-
-  const supabaseAdmin = createClient(supabaseUrl, supabaseKey);
+/**
+ * Supabase authentication middleware
+ * Verifies Supabase token and attaches Supabase user data to request
+ */
+export const authenticateSupabase = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    console.log('authenticateToken');
+    // Extract Supabase token from Authorization header
     const authHeader = req.headers.authorization;
-    const token = extractTokenFromHeader(authHeader);
+    const supabaseToken = extractSupabaseToken(authHeader);
 
-    if (!token) {
+    if (!supabaseToken) {
       sendError(
         res,
         'Authentication required',
-        [{ field: 'token', message: 'No token provided' }],
+        [{ field: 'token', message: 'No Supabase token provided' }],
         401
       );
       return;
     }
 
-    const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
+    // Verify Supabase token and get user data
+    const supabaseUser = await verifySupabaseToken(supabaseToken);
 
-    if (error || !user) {
+    if (!supabaseUser || !supabaseUser.email) {
       sendError(
         res,
         'Authentication failed',
-        [{ field: 'token', message: 'Invalid or expired token' }],
+        [
+          {
+            field: 'token',
+            message: 'Invalid Supabase token or missing email',
+          },
+        ],
         401
       );
       return;
     }
+
+    // Attach Supabase user data to request
+    req.supabaseUser = supabaseUser;
+
     next();
   } catch (error) {
-    console.error('Authentication error:', error);
-    res.status(500).json({ error: 'Authentication failed' });
+    logger.error('Supabase authentication error:', error);
+    sendError(
+      res,
+      'Authentication error',
+      [
+        {
+          field: 'auth',
+          message: 'An error occurred during Supabase authentication',
+        },
+      ],
+      500
+    );
   }
 };

@@ -11,6 +11,8 @@ interface EnvironmentConfig {
   ENVIRONMENT: 'development' | 'production' | 'test';
   DATABASE_URL: string;
   DIRECT_URL: string;
+  SUPABASE_URL: string;
+  SUPABASE_SERVICE_ROLE_KEY: string;
 }
 
 // Function to verify that all required environment variables are present
@@ -22,6 +24,8 @@ const verifyEnv = (): EnvironmentConfig => {
     'ENVIRONMENT',
     'DATABASE_URL',
     'DIRECT_URL',
+    'SUPABASE_URL',
+    'SUPABASE_SERVICE_ROLE_KEY',
   ];
 
   const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
@@ -51,6 +55,8 @@ const verifyEnv = (): EnvironmentConfig => {
       | 'test',
     DATABASE_URL: process.env.DATABASE_URL || '',
     DIRECT_URL: process.env.DIRECT_URL || '',
+    SUPABASE_URL: process.env.SUPABASE_URL || '',
+    SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
   };
 };
 

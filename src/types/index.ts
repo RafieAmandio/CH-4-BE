@@ -1,5 +1,6 @@
 import { Request } from 'express';
 import { User } from '@prisma/client';
+import { SupabaseUser } from './auth.types.js';
 
 export interface ApiResponse<T = any> {
   success: boolean;
@@ -29,6 +30,7 @@ export interface Error {
 
 export interface AuthRequest extends Request {
   user?: User;
+  supabaseUser?: SupabaseUser;
 }
 
 export interface UserPayload {
