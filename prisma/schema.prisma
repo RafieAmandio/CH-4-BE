@@ -55,12 +55,12 @@ model User {
   email          String    @unique
   password_hash  String?
   username       String?    @unique
+  name           String
 
-  profession_id     String?  @db.Uuid
   linkedin_username String?
   photo_link        String?
 
-  name           String
+  profession_id  String?    @db.Uuid
   is_active      Boolean    @default(true)
   deleted_at     DateTime?
   created_at     DateTime   @default(now())
@@ -75,6 +75,7 @@ model User {
   // indexes
   @@index([email])
   @@index([username])
+  @@index([profession_id])
   @@index([is_active])
   @@index([deleted_at])
 
@@ -112,6 +113,7 @@ model Profession {
 
   // relations
   category   ProfessionCategory @relation(fields: [profession_category_id], references: [id], onDelete: Cascade)
+  users      User[]
   attendees  Attendee[]
 
   // indexes
