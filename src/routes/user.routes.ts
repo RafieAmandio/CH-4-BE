@@ -3,7 +3,6 @@ import * as userController from '../controllers/user.controller.js';
 import {
   updateProfileValidation,
   getUserProfileValidation,
-  uploadPhotoValidation,
 } from '../validations/user.validation.js';
 import { validate } from '../utils/validation.js';
 import { authenticate } from '../middlewares/auth.middleware.js';
@@ -28,19 +27,6 @@ router.put(
   updateProfileValidation,
   validate,
   userController.updateMyProfile
-);
-
-/**
- * @route POST /api/users/me/photo
- * @desc Upload profile photo
- * @access Private
- */
-router.post(
-  '/me/photo',
-  authenticate,
-  uploadPhotoValidation,
-  validate,
-  userController.uploadProfilePhoto
 );
 
 /**

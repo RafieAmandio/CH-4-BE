@@ -35,19 +35,19 @@ export const registerValidation = [
     .withMessage('Name must be a string')
     .trim(),
 
-  body('nickname')
-    .notEmpty()
-    .withMessage('Nickname is required')
-    .isString()
-    .withMessage('Nickname must be a string')
-    .trim(),
+  // body('nickname')
+  //   .notEmpty()
+  //   .withMessage('Nickname is required')
+  //   .isString()
+  //   .withMessage('Nickname must be a string')
+  //   .trim(),
 
-  body('photo')
-    .notEmpty()
-    .withMessage('Photo is required')
-    .isString()
-    .withMessage('Photo must be a string')
-    .trim(),
+  // body('photo')
+  //   .notEmpty()
+  //   .withMessage('Photo is required')
+  //   .isString()
+  //   .withMessage('Photo must be a string')
+  //   .trim(),
 
   body('is_active')
     .optional()

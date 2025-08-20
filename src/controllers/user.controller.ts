@@ -36,8 +36,6 @@ export const getMyProfile = async (
         name: userWithoutPassword.name,
         email: userWithoutPassword.email,
         username: userWithoutPassword.username,
-        nickname: userWithoutPassword.nickname,
-        profilePhoto: userWithoutPassword.photo_link,
         createdAt: userWithoutPassword.created_at,
         updatedAt: userWithoutPassword.updated_at,
       },
@@ -86,7 +84,6 @@ export const updateMyProfile = async (
       data: {
         name: updateData.name || user.name,
         username: updateData.username || user.username,
-        nickname: updateData.nickname || user.nickname,
       },
     });
 
@@ -102,8 +99,6 @@ export const updateMyProfile = async (
         name: userWithoutPassword.name,
         email: userWithoutPassword.email,
         username: userWithoutPassword.username,
-        nickname: userWithoutPassword.nickname,
-        profilePhoto: userWithoutPassword.photo_link,
         createdAt: userWithoutPassword.created_at,
         updatedAt: userWithoutPassword.updated_at,
       },
@@ -142,9 +137,6 @@ export const getUserProfile = async (
         id: true,
         name: true,
         username: true,
-        nickname: true,
-        photo_link: true,
-        // Don't include email, password_hash, or other sensitive data
       },
     });
 
@@ -165,8 +157,6 @@ export const getUserProfile = async (
         id: user.id,
         name: user.name,
         username: user.username,
-        nickname: user.nickname,
-        profilePhoto: user.photo_link,
       },
       200
     );
@@ -179,69 +169,6 @@ export const getUserProfile = async (
         {
           field: 'server',
           message: 'An error occurred while retrieving user profile',
-        },
-      ],
-      500
-    );
-  }
-};
-
-/**
- * Upload profile photo
- */
-export const uploadProfilePhoto = async (
-  req: AuthRequest,
-  res: Response
-): Promise<void> => {
-  try {
-    const user = req.user;
-    const { photoUrl } = req.body;
-
-    if (!user) {
-      sendError(
-        res,
-        'Authentication required',
-        [{ field: 'auth', message: 'User not authenticated' }],
-        401
-      );
-      return;
-    }
-
-    if (!photoUrl) {
-      sendError(
-        res,
-        'Photo URL required',
-        [{ field: 'photoUrl', message: 'Photo URL is required' }],
-        400
-      );
-      return;
-    }
-
-    // Update user's photo_link
-    const updatedUser = await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        photo_link: photoUrl,
-      },
-    });
-
-    sendSuccess(
-      res,
-      'Photo uploaded successfully',
-      {
-        profilePhoto: updatedUser.photo_link,
-      },
-      200
-    );
-  } catch (error) {
-    logger.error('Upload profile photo error:', error);
-    sendError(
-      res,
-      'Failed to upload photo',
-      [
-        {
-          field: 'server',
-          message: 'An error occurred while uploading photo',
         },
       ],
       500
