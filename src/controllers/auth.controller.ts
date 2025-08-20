@@ -1,10 +1,6 @@
 import { Request, Response } from 'express';
 import { AuthRequest } from '../types/index.js';
-import {
-  RegisterInput,
-  LoginInput,
-  CallbackInput,
-} from '../types/auth.types.js';
+import { RegisterInput, LoginInput } from '../types/auth.types.js';
 import { hashPassword, verifyPassword } from '../utils/password.js';
 import { generateToken } from '../utils/token.js';
 import { sendSuccess, sendError } from '../utils/response.js';
@@ -172,13 +168,27 @@ export const getProfile = async (
   }
 };
 
-export const callback = async (req: Request, res: Response): Promise<void> => {
+export const callback = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
-    const { id, email, name, provider }: CallbackInput = req.body;
+    // Get Supabase user data from middleware
+    const supabaseUser = req.supabaseUser;
 
-    // Check if user exists by email (OAuth users might have different IDs)
+    if (!supabaseUser || !supabaseUser.email) {
+      sendError(
+        res,
+        'Authentication failed',
+        [{ field: 'auth', message: 'Supabase user data not found' }],
+        401
+      );
+      return;
+    }
+
+    // Check if user exists in our User table by email
     const existingUser = await prisma.user.findUnique({
-      where: { email },
+      where: { email: supabaseUser.email },
     });
 
     let user;
@@ -186,26 +196,34 @@ export const callback = async (req: Request, res: Response): Promise<void> => {
     if (existingUser) {
       // User exists, update their information and treat like login
       user = await prisma.user.update({
-        where: { email },
+        where: { email: supabaseUser.email },
         data: {
-          name,
-          auth_provider: provider,
+          name: supabaseUser.user_metadata?.full_name || supabaseUser.email,
+          // Keep existing auth_provider or update based on Supabase provider
         },
       });
     } else {
       // User doesn't exist, create new user
+      // Determine provider based on Supabase user data
+      let authProvider = 'EMAIL'; // default
+      if (supabaseUser.app_metadata?.provider) {
+        const provider = supabaseUser.app_metadata.provider.toUpperCase();
+        if (['APPLE', 'LINKEDIN'].includes(provider)) {
+          authProvider = provider;
+        }
+      }
+
       user = await prisma.user.create({
         data: {
-          id,
-          email,
-          name,
-          auth_provider: provider,
+          email: supabaseUser.email,
+          name: supabaseUser.user_metadata?.full_name || supabaseUser.email,
+          auth_provider: authProvider as any,
           is_active: true, // OAuth users are active by default
         },
       });
     }
 
-    // Generate token for both existing and new users
+    // Generate our JWT token for the user
     const token = generateToken({
       id: user.id,
       email: user.email,
