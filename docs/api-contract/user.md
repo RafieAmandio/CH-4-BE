@@ -10,140 +10,43 @@ All user endpoints use the base path: `/api/users`
 
 ---
 
-## Endpoints
+### 1. Get Professions
 
-### 1. Get My Profile
+**Endpoint:** `GET /api/users/professions`
 
-**Endpoint:** `GET /api/users/me`
-
-**Description:** Retrieves the current authenticated user's complete profile information.
+**Description:** Returns all active professions grouped by category. This is an authenticated endpoint for user profile management.
 
 **Headers:**
 - `Authorization: Bearer <token>` (required)
 
-**Response (Success):**
+**Response:**
 ```json
 {
-  "message": "Profile retrieved successfully",
-  "data": {
-    "id": "uuid",
-    "name": "string",
-    "email": "string",
-    "username": "string|null",
-    "linkedinUsername": "string|null",
-    "photoLink": "string|null",
-    "profession": {
-      "id": "uuid",
-      "name": "string",
-      "categoryName": "string"
-    } | null
-  }
+  "data": [
+    {
+      "categoryId": "uuid",
+      "categoryName": "string",
+      "professions": [
+        {
+          "id": "uuid",
+          "name": "string"
+        }
+      ]
+    }
+  ]
 }
 ```
 
 **Response Fields:**
-- `id` - User identifier
-- `name` - User's full name
-- `email` - User's email address
-- `username` - User's unique username
-- `linkedinUsername` - LinkedIn profile username
-- `photoLink` - Profile photo URL
-- `profession` - User's profession details (if set)
+- `categoryId` - Profession category identifier
+- `categoryName` - Category display name
+- `professions` - Array of professions in this category
+  - `id` - Profession identifier
+  - `name` - Profession display name
 
 ---
 
-### 2. Update My Profile
-
-**Endpoint:** `PUT /api/users/me`
-
-**Description:** Updates the current authenticated user's profile information.
-
-**Headers:**
-- `Authorization: Bearer <token>` (required)
-- `Content-Type: application/json`
-
-**Request Body:**
-```json
-{
-  "name": "string|optional",
-  "username": "string|optional",
-  "linkedinUsername": "string|optional",
-  "photoLink": "string|optional",
-  "professionId": "uuid|optional"
-}
-```
-
-**Request Fields:**
-All fields are optional. Only include fields you want to update.
-- `name` - User's full name
-- `username` - Unique username
-- `linkedinUsername` - LinkedIn profile username
-- `photoLink` - Profile photo URL
-- `professionId` - Selected profession ID
-
-**Response (Success):**
-```json
-{
-  "message": "Profile updated successfully",
-  "data": {
-    "id": "uuid",
-    "name": "string",
-    "email": "string",
-    "username": "string|null",
-    "linkedinUsername": "string|null",
-    "photoLink": "string|null",
-    "profession": {
-      "id": "uuid",
-      "name": "string",
-      "categoryName": "string"
-    } | null
-  }
-}
-```
-
----
-
-### 3. Get User Profile by ID
-
-**Endpoint:** `GET /api/users/{id}`
-
-**Description:** Retrieves a public view of another user's profile by their ID.
-
-**Headers:**
-- No authentication required (public endpoint)
-
-**Path Parameters:**
-- `id` - User UUID (required)
-
-**Response (Success):**
-```json
-{
-  "message": "User profile retrieved successfully",
-  "data": {
-    "id": "uuid",
-    "name": "string",
-    "username": "string|null",
-    "linkedinUsername": "string|null",
-    "photoLink": "string|null",
-    "profession": {
-      "name": "string",
-      "categoryName": "string"
-    } | null
-  }
-}
-```
-
-**Response Fields:**
-- `id` - User identifier
-- `name` - User's full name
-- `username` - User's username
-- `linkedinUsername` - LinkedIn profile username
-- `photoLink` - Profile photo URL
-- `profession` - User's profession details (no ID exposed)
-
----
-
-### 4. Complete User Registration
+### 2. Complete User Registration
 
 **Endpoint:** `POST /api/users/me/complete`
 
@@ -199,7 +102,140 @@ All fields are optional. Only include fields you want to update.
 
 ---
 
-### 5. Get My Event History
+## Endpoints
+
+### 3. Get My Profile
+
+**Endpoint:** `GET /api/users/me`
+
+**Description:** Retrieves the current authenticated user's complete profile information.
+
+**Headers:**
+- `Authorization: Bearer <token>` (required)
+
+**Response (Success):**
+```json
+{
+  "message": "Profile retrieved successfully",
+  "data": {
+    "id": "uuid",
+    "name": "string",
+    "email": "string",
+    "username": "string|null",
+    "linkedinUsername": "string|null",
+    "photoLink": "string|null",
+    "profession": {
+      "id": "uuid",
+      "name": "string",
+      "categoryName": "string"
+    } | null
+  }
+}
+```
+
+**Response Fields:**
+- `id` - User identifier
+- `name` - User's full name
+- `email` - User's email address
+- `username` - User's unique username
+- `linkedinUsername` - LinkedIn profile username
+- `photoLink` - Profile photo URL
+- `profession` - User's profession details (if set)
+
+---
+
+### 4. Update My Profile
+
+**Endpoint:** `PUT /api/users/me`
+
+**Description:** Updates the current authenticated user's profile information.
+
+**Headers:**
+- `Authorization: Bearer <token>` (required)
+- `Content-Type: application/json`
+
+**Request Body:**
+```json
+{
+  "name": "string|optional",
+  "username": "string|optional",
+  "linkedinUsername": "string|optional",
+  "photoLink": "string|optional",
+  "professionId": "uuid|optional"
+}
+```
+
+**Request Fields:**
+All fields are optional. Only include fields you want to update.
+- `name` - User's full name
+- `username` - Unique username
+- `linkedinUsername` - LinkedIn profile username
+- `photoLink` - Profile photo URL
+- `professionId` - Selected profession ID
+
+**Response (Success):**
+```json
+{
+  "message": "Profile updated successfully",
+  "data": {
+    "id": "uuid",
+    "name": "string",
+    "email": "string",
+    "username": "string|null",
+    "linkedinUsername": "string|null",
+    "photoLink": "string|null",
+    "profession": {
+      "id": "uuid",
+      "name": "string",
+      "categoryName": "string"
+    } | null
+  }
+}
+```
+
+---
+
+### 5. Get User Profile by ID
+
+**Endpoint:** `GET /api/users/{id}`
+
+**Description:** Retrieves a public view of another user's profile by their ID.
+
+**Headers:**
+- No authentication required (public endpoint)
+
+**Path Parameters:**
+- `id` - User UUID (required)
+
+**Response (Success):**
+```json
+{
+  "message": "User profile retrieved successfully",
+  "data": {
+    "id": "uuid",
+    "name": "string",
+    "username": "string|null",
+    "linkedinUsername": "string|null",
+    "photoLink": "string|null",
+    "profession": {
+      "name": "string",
+      "categoryName": "string"
+    } | null
+  }
+}
+```
+
+**Response Fields:**
+- `id` - User identifier
+- `name` - User's full name
+- `username` - User's username
+- `linkedinUsername` - LinkedIn profile username
+- `photoLink` - Profile photo URL
+- `profession` - User's profession details (no ID exposed)
+
+---
+
+### 6. Get My Event History
 
 **Endpoint:** `GET /api/users/me/events`
 
