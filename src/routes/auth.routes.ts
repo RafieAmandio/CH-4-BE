@@ -11,7 +11,6 @@ import {
   authenticateSupabase,
 } from '../middlewares/auth.middleware.js';
 import { logger } from '../config/logger.js';
-import { AuthRequest } from '../types/index.js';
 
 const router = Router();
 
@@ -88,7 +87,7 @@ router.post(
       userAgent: req.headers['user-agent'],
       ip: req.ip || req.connection.remoteAddress,
       hasAuthHeader: !!req.headers.authorization,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
     next();
   },

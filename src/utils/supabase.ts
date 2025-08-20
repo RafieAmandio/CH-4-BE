@@ -26,39 +26,39 @@ export const getSupabaseClient = (): SupabaseClient => {
 export const verifySupabaseToken = async (token: string) => {
   const startTime = Date.now();
   logger.info('=== SUPABASE TOKEN VERIFICATION STARTED ===');
-  
+
   try {
     logger.info('Verifying Supabase token:', {
       tokenLength: token.length,
       tokenPrefix: token.substring(0, 20) + '...',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
-    
+
     const supabase = getSupabaseClient();
 
     const {
       data: { user },
       error,
     } = await supabase.auth.getUser(token);
-    
+
     const processingTime = Date.now() - startTime;
 
     if (error) {
       logger.warn('Supabase token verification failed with error:', {
         error: error.message,
         errorCode: error.status,
-        processingTimeMs: processingTime
+        processingTimeMs: processingTime,
       });
       return null;
     }
-    
+
     if (!user) {
       logger.warn('Supabase token verification failed: No user returned', {
-        processingTimeMs: processingTime
+        processingTimeMs: processingTime,
       });
       return null;
     }
-    
+
     logger.info('Supabase token verification successful:', {
       userId: user.id,
       email: user.email,
@@ -68,9 +68,9 @@ export const verifySupabaseToken = async (token: string) => {
       phoneConfirmed: user.phone_confirmed_at ? true : false,
       lastSignIn: user.last_sign_in_at,
       createdAt: user.created_at,
-      processingTimeMs: processingTime
+      processingTimeMs: processingTime,
     });
-    
+
     logger.info('=== SUPABASE TOKEN VERIFICATION COMPLETED ===');
     return user;
   } catch (error) {
@@ -79,7 +79,7 @@ export const verifySupabaseToken = async (token: string) => {
       error: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,
       tokenLength: token.length,
-      processingTimeMs: processingTime
+      processingTimeMs: processingTime,
     });
     logger.info('=== SUPABASE TOKEN VERIFICATION FAILED ===');
     return null;
@@ -96,9 +96,9 @@ export const extractSupabaseToken = (
     hasHeader: !!authHeader,
     headerLength: authHeader?.length || 0,
     startsWithBearer: authHeader?.startsWith('Bearer ') || false,
-    headerPrefix: authHeader ? authHeader.substring(0, 20) + '...' : 'N/A'
+    headerPrefix: authHeader ? authHeader.substring(0, 20) + '...' : 'N/A',
   });
-  
+
   if (!authHeader) {
     logger.warn('Token extraction failed: No authorization header');
     return null;
@@ -107,16 +107,16 @@ export const extractSupabaseToken = (
   const parts = authHeader.split(' ');
   if (parts.length !== 2 || parts[0] !== 'Bearer') {
     logger.warn('Token extraction failed: Invalid format (not Bearer)', {
-      receivedHeader: authHeader.substring(0, 20) + '...'
+      receivedHeader: authHeader.substring(0, 20) + '...',
     });
     return null;
   }
-  
+
   const token = parts[1];
-  
+
   logger.info('Token extracted successfully:', {
     tokenLength: token.length,
-    tokenPrefix: token.substring(0, 20) + '...'
+    tokenPrefix: token.substring(0, 20) + '...',
   });
 
   return token;

@@ -12,7 +12,6 @@ export interface LoginInput {
   password: string;
 }
 
-
 // Supabase user type for middleware
 export interface SupabaseUser {
   id: string;

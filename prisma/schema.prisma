@@ -177,6 +177,7 @@ model Question {
   goals_category_id String        @db.Uuid
 
   question          String
+  placeholder       String?
   type              QuestionType  @default(SINGLE_CHOICE)
 
   // selection config
