@@ -40,10 +40,15 @@ export const createEventValidation = [
     .withMessage('Location must not exceed 200 characters')
     .trim(),
 
-  body('maxParticipants')
+  body('latitude')
     .optional()
-    .isInt({ min: 1 })
-    .withMessage('Max participants must be a positive integer'),
+    .isFloat({ min: -90, max: 90 })
+    .withMessage('Latitude must be a number between -90 and 90'),
+
+  body('longitude')
+    .optional()
+    .isFloat({ min: -180, max: 180 })
+    .withMessage('Longitude must be a number between -180 and 180'),
 ];
 
 export const updateEventValidation = [
@@ -92,10 +97,15 @@ export const updateEventValidation = [
     .withMessage('Location must not exceed 200 characters')
     .trim(),
 
-  body('maxParticipants')
+  body('latitude')
     .optional()
-    .isInt({ min: 1 })
-    .withMessage('Max participants must be a positive integer'),
+    .isFloat({ min: -90, max: 90 })
+    .withMessage('Latitude must be a number between -90 and 90'),
+
+  body('longitude')
+    .optional()
+    .isFloat({ min: -180, max: 180 })
+    .withMessage('Longitude must be a number between -180 and 180'),
 ];
 
 export const getEventValidation = [

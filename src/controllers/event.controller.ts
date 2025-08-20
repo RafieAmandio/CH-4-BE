@@ -45,8 +45,9 @@ export const createEvent = async (
         ), // Default 2 hours later
         detail: eventData.description,
         location_name: eventData.location,
+        latitude: eventData.latitude,
+        longitude: eventData.longitude,
         status: EventStatus.UPCOMING,
-        max_participants: eventData.maxParticipants,
         current_participants: 0,
         created_by: userId,
         is_active: true,
@@ -290,8 +291,10 @@ export const updateEvent = async (
       updateData.detail = eventData.description;
     if (eventData.location !== undefined)
       updateData.location_name = eventData.location;
-    if (eventData.maxParticipants !== undefined)
-      updateData.max_participants = eventData.maxParticipants;
+    if (eventData.latitude !== undefined)
+      updateData.latitude = eventData.latitude;
+    if (eventData.longitude !== undefined)
+      updateData.longitude = eventData.longitude;
 
     // Update the event
     const updatedEvent = await prisma.event.update({
