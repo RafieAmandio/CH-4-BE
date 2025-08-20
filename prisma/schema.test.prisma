@@ -182,6 +182,7 @@ model Question {
   min_select        Int           @default(1)
   max_select        Int?
   require_ranking   Boolean       @default(false)
+  is_using_other    Boolean       @default(false)
 
   // input constraints
   text_max_len      Int?
