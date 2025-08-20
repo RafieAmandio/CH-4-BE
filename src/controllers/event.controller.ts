@@ -86,32 +86,32 @@ export const getEvents = async (
     // Build where clause for search
     const where: Prisma.EventWhereInput = search
       ? {
-        AND: [
-          { is_active: true },
-          {
-            OR: [
-              {
-                name: {
-                  contains: search,
-                  mode: 'insensitive' as Prisma.QueryMode,
+          AND: [
+            { is_active: true },
+            {
+              OR: [
+                {
+                  name: {
+                    contains: search,
+                    mode: 'insensitive' as Prisma.QueryMode,
+                  },
                 },
-              },
-              {
-                detail: {
-                  contains: search,
-                  mode: 'insensitive' as Prisma.QueryMode,
+                {
+                  detail: {
+                    contains: search,
+                    mode: 'insensitive' as Prisma.QueryMode,
+                  },
                 },
-              },
-              {
-                location_name: {
-                  contains: search,
-                  mode: 'insensitive' as Prisma.QueryMode,
+                {
+                  location_name: {
+                    contains: search,
+                    mode: 'insensitive' as Prisma.QueryMode,
+                  },
                 },
-              },
-            ],
-          },
-        ],
-      }
+              ],
+            },
+          ],
+        }
       : { is_active: true };
 
     // Build order by clause
