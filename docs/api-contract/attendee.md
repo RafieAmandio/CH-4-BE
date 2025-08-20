@@ -1,8 +1,8 @@
-# Attendee Onboarding API Contract
+# Attendee API Contract
 
 ## Overview
 
-This document outlines the API contract for the attendee onboarding process, which consists of three main endpoints to guide users through goal selection and questionnaire completion.
+This document outlines the API contract for attendee management, which includes registration, onboarding, and recommendation functionality.
 
 ## Flow
 
@@ -11,6 +11,7 @@ This document outlines the API contract for the attendee onboarding process, whi
 3. **Get Goals Categories** - Fetch available goal categories
 4. **Select Goal Category** - Choose a category and receive associated questions
 5. **Submit Answers** - Provide responses to the questionnaire
+6. **Get Recommendations** - Fetch AI-generated networking recommendations
 
 ---
 
@@ -18,7 +19,7 @@ This document outlines the API contract for the attendee onboarding process, whi
 
 ### 1. Get Professions
 
-**Endpoint:** `GET /api/attendee/onboarding/professions`
+**Endpoint:** `GET /api/attendee/professions`
 
 **Description:** Returns all active professions grouped by category. This is a public endpoint that doesn't require authentication.
 
@@ -54,7 +55,7 @@ This document outlines the API contract for the attendee onboarding process, whi
 
 ### 2. Create Attendee
 
-**Endpoint:** `POST /api/attendee/onboarding/register`
+**Endpoint:** `POST /api/attendee/register`
 
 **Description:** Registers a new attendee for an event. Supports both authenticated users and visitors. For visitors, generates a temporary access token.
 
@@ -65,23 +66,21 @@ This document outlines the API contract for the attendee onboarding process, whi
 ```json
 {
   "eventId": "uuid",
-  "userName": "string",
-  "userEmail": "string", 
-  "nickname": "string|null",
-  "professionId": "uuid|null",
+  "nickname": "string",
+  "userEmail": "string|null", 
+  "professionId": "uuid",
   "linkedinUsername": "string|null",
-  "photoLink": "string|null"
+  "photoLink": "string"
 }
 ```
 
 **Request Fields:**
 - `eventId` - Event identifier (required)
-- `userName` - Attendee's display name (required)
-- `userEmail` - Attendee's email address (required)
-- `nickname` - Optional nickname/preferred name
-- `professionId` - Selected profession from professions table
+- `nickname` - Attendee's display name (required) - can be real name or preferred name
+- `userEmail` - Attendee's email address (optional)
+- `professionId` - Selected profession from professions table (required)
 - `linkedinUsername` - LinkedIn profile username
-- `photoLink` - URL to profile photo
+- `photoLink` - URL to profile photo (required)
 
 **Response (Authenticated User):**
 ```json
@@ -121,13 +120,14 @@ This document outlines the API contract for the attendee onboarding process, whi
 
 ### 3. Get Goals Categories
 
-**Endpoint:** `GET /api/attendee/onboarding/goals-categories`
+**Endpoint:** `GET /api/attendee/goals-categories`
 
 **Endpoint:** `GET /api/attendee/onboarding/goals-categories`
 
 **Description:** Returns all active goals categories available for selection.
 
-**Response:**
+**Headers:**
+- No authentication required
 ```json
 {
   "data": [
@@ -147,7 +147,7 @@ This document outlines the API contract for the attendee onboarding process, whi
 
 ### 4. Get Questions by Goals Category
 
-**Endpoint:** `POST /api/attendee/onboarding/goals-categories/{categoryId}/questions`
+**Endpoint:** `GET /api/attendee/goals-categories/{categoryId}/questions`
 
 **Description:** Returns all questions for the selected goals category, ordered by display_order.
 
@@ -163,12 +163,15 @@ This document outlines the API contract for the attendee onboarding process, whi
         "id": "uuid",
         "question": "string",
         "type": "QuestionType",
+        "placeholder": "string|null",
         "displayOrder": "number",
         "isRequired": "boolean",
+        "isShareable": "boolean",
         "constraints": {
           "minSelect": "number",
           "maxSelect": "number|null",
           "requireRanking": "boolean",
+          "isUsingOther": "boolean",
           "textMaxLen": "number|null",
           "numberMin": "decimal|null",
           "numberMax": "decimal|null",
@@ -194,8 +197,10 @@ This document outlines the API contract for the attendee onboarding process, whi
 - `id` - Question identifier
 - `question` - Question text
 - `type` - Question type enum (see [Question Types](#question-types))
+- `placeholder` - Placeholder text for input fields
 - `displayOrder` - Order for display
 - `isRequired` - Whether question must be answered
+- `isShareable` - Whether answer should be displayed in recommendations
 - `constraints` - Type-specific constraints
 - `answerOptions` - Available options (for selection-based questions)
 
@@ -203,6 +208,7 @@ This document outlines the API contract for the attendee onboarding process, whi
 - `minSelect` - Minimum selections required
 - `maxSelect` - Maximum selections allowed
 - `requireRanking` - Whether ranking is required
+- `isUsingOther` - Whether "Other" option is available
 - `textMaxLen` - Maximum text length
 - `numberMin` - Minimum numeric value
 - `numberMax` - Maximum numeric value  
@@ -218,7 +224,7 @@ This document outlines the API contract for the attendee onboarding process, whi
 
 ### 5. Submit User Answers
 
-**Endpoint:** `POST /api/attendee/onboarding/answers`
+**Endpoint:** `POST /api/attendee/answers`
 
 **Description:** Submits answers for questionnaire completion.
 
@@ -263,6 +269,97 @@ This document outlines the API contract for the attendee onboarding process, whi
   }
 }
 ```
+
+---
+
+### 6. Get Recommendations
+
+**Endpoint:** `GET /api/attendee/recommendations/{attendeeId}`
+
+**Description:** Retrieves AI-generated networking recommendations for a specific attendee. This endpoint triggers the AI recommendation service to generate fresh recommendations based on all attendees in the same event.
+
+**Headers:**
+- `Authorization: Bearer <token>` (required for authenticated users)
+- For visitors: Use the temporary token received during registration
+
+**Path Parameters:**
+- `attendeeId` - UUID of the attendee requesting recommendations
+
+**Response:**
+```json
+{
+  "data": {
+    "attendeeId": "uuid",
+    "eventId": "uuid", 
+    "recommendations": [
+      {
+        "targetAttendeeId": "uuid",
+        "score": "decimal",
+        "reasoning": "string",
+        "targetAttendee": {
+          "nickname": "string|null",
+          "profession": {
+            "name": "string",
+            "categoryName": "string"
+          },
+          "goalsCategory": {
+            "name": "string"
+          },
+          "linkedinUsername": "string|null",
+          "photoLink": "string|null",
+          "shareableAnswers": [
+            {
+              "question": "string",
+              "questionType": "QuestionType",
+              "answerLabel": "string|null",
+              "textValue": "string|null",
+              "numberValue": "decimal|null",
+              "dateValue": "datetime|null",
+              "rank": "number|null"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
+```
+
+**Response Fields:**
+- `attendeeId` - Requesting attendee's ID
+- `eventId` - Event identifier
+- `recommendations` - Array of recommendation objects
+
+**Recommendation Object:**
+- `targetAttendeeId` - Recommended attendee's ID
+- `score` - Compatibility score (0-1, up to 4 decimal places)
+- `reasoning` - AI-generated explanation for the match
+- `targetAttendee` - Complete attendee profile
+
+**Target Attendee Object:**
+- `nickname` - Preferred name
+- `profession` - Profession name and category
+- `goalsCategory` - Selected goals category
+- `linkedinUsername` - LinkedIn profile handle
+- `photoLink` - Profile photo URL
+- `shareableAnswers` - Only answers where `isShareable` is true
+
+**Shareable Answer Object:**
+- `question` - Question text
+- `questionType` - Type of question
+- `answerLabel` - Selected option text (for choice-based questions)
+- `textValue` - Free text response
+- `numberValue` - Numeric response
+- `dateValue` - Date response
+- `rank` - Ranking value (for ranked questions)
+
+**Business Logic:**
+1. Validate attendee exists and belongs to requesting user/token
+2. Call AI service endpoint `/ai/attendees/recommendations` with attendee data
+3. Process AI response and enrich with attendee profile data
+4. Filter answers to only include those where `question.isShareable` is true
+5. Store recommendations in database
+6. Return formatted response with complete attendee profiles
 
 ---
 
@@ -321,10 +418,17 @@ This document outlines the API contract for the attendee onboarding process, whi
 }
 ```
 
+### 403 Forbidden
+```json
+{
+  "error": "Attendee does not belong to authenticated user"
+}
+```
+
 ### 404 Not Found
 ```json
 {
-  "error": "Goals category not found"
+  "error": "Attendee not found"
 }
 ```
 
