@@ -271,10 +271,65 @@ This document outlines the API contract for attendee management, which includes 
   "message": "Answers submitted successfully",
   "data": {
     "attendeeId": "uuid",
-    "answersProcessed": "number"
+    "answersProcessed": "number",
+    "recommendations": [
+      {
+        "targetAttendeeId": "uuid",
+        "reasoning": "string",
+        "targetAttendee": {
+          "nickname": "string",
+          "profession": {
+            "name": "string",
+            "categoryName": "string"
+          },
+          "goalsCategory": {
+            "name": "string"
+          },
+          "linkedinUsername": "string|null",
+          "photoLink": "string",
+          "shareableAnswers": [
+            {
+              "question": "string",
+              "questionType": "QuestionType",
+              "answerLabel": "string|null",
+              "textValue": "string|null",
+              "numberValue": "decimal|null",
+              "dateValue": "datetime|null",
+              "rank": "number|null"
+            }
+          ]
+        }
+      }
+    ]
   }
 }
 ```
+
+**Response Fields:**
+- `attendeeId` - ID of the attendee who submitted answers
+- `answersProcessed` - Number of answers successfully processed
+- `recommendations` - Array of top 3 AI-generated recommendations
+
+**Recommendation Object:**
+- `targetAttendeeId` - Recommended attendee's ID
+- `reasoning` - AI-generated explanation for the match
+- `targetAttendee` - Complete attendee profile
+
+**Target Attendee Object:**
+- `nickname` - Preferred name
+- `profession` - Profession name and category
+- `goalsCategory` - Selected goals category
+- `linkedinUsername` - LinkedIn profile handle
+- `photoLink` - Profile photo URL
+- `shareableAnswers` - Only answers where `isShareable` is true
+
+**Business Logic:**
+1. Validate and store all submitted answers
+2. Call AI service endpoint `/ai/attendees/process` to submit attendee data for training
+3. Simultaneously (using singleton/multi-threading) call `/ai/attendees/recommendations` to generate recommendations
+4. Process AI response and enrich with attendee profile data
+5. Filter answers to only include those where `question.isShareable` is true
+6. Return top 3 recommendations along with submission confirmation
 
 ---
 
@@ -299,6 +354,7 @@ This document outlines the API contract for attendee management, which includes 
     "recommendations": [
       {
         "targetAttendeeId": "uuid",
+        "score": "decimal",
         "reasoning": "string",
         "targetAttendee": {
           "nickname": "string",
@@ -336,6 +392,7 @@ This document outlines the API contract for attendee management, which includes 
 
 **Recommendation Object:**
 - `targetAttendeeId` - Recommended attendee's ID
+- `score` - Compatibility score (0-1, up to 4 decimal places)
 - `reasoning` - AI-generated explanation for the match
 - `targetAttendee` - Complete attendee profile
 
