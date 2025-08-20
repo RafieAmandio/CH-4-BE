@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import * as authController from '../controllers/auth.controller.js';
 import {
   registerValidation,
@@ -10,6 +10,8 @@ import {
   authenticate,
   authenticateSupabase,
 } from '../middlewares/auth.middleware.js';
+import { logger } from '../config/logger.js';
+import { AuthRequest } from '../types/index.js';
 
 const router = Router();
 
@@ -21,12 +23,75 @@ const router = Router();
 router.post('/register', registerValidation, validate, authController.register);
 
 /**
- * @route POST /api/auth/callback
- * @desc Handle Supabase OAuth callback
- * @access Public (requires Supabase token in Authorization header)
+ * @swagger
+ * /auth/callback:
+ *   post:
+ *     summary: Handle OAuth callback
+ *     description: Process OAuth callback and authenticate user with Supabase token
+ *     tags: [Authentication]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Login successful"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     user:
+ *                       $ref: '#/components/schemas/User'
+ *                     token:
+ *                       type: string
+ *                       example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *       201:
+ *         description: User created and logged in successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "User created and logged in successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     user:
+ *                       $ref: '#/components/schemas/User'
+ *                     token:
+ *                       type: string
+ *                       example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
  */
 router.post(
   '/callback',
+  (req: Request, res: Response, next: NextFunction) => {
+    logger.info('=== AUTH CALLBACK ENDPOINT ACCESSED ===', {
+      method: req.method,
+      url: req.url,
+      userAgent: req.headers['user-agent'],
+      ip: req.ip || req.connection.remoteAddress,
+      hasAuthHeader: !!req.headers.authorization,
+      timestamp: new Date().toISOString()
+    });
+    next();
+  },
   callbackValidation,
   validate,
   authenticateSupabase,

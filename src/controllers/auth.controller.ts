@@ -172,11 +172,36 @@ export const callback = async (
   req: AuthRequest,
   res: Response
 ): Promise<void> => {
+  const startTime = Date.now();
+  logger.info('=== CALLBACK AUTHENTICATION STARTED ===');
+  
   try {
+    // Log request details
+    logger.info('Callback request details:', {
+      method: req.method,
+      url: req.url,
+      userAgent: req.headers['user-agent'],
+      ip: req.ip || req.connection.remoteAddress,
+      timestamp: new Date().toISOString()
+    });
+
     // Get Supabase user data from middleware
     const supabaseUser = req.supabaseUser;
+    logger.info('Supabase user data received from middleware:', {
+      hasUser: !!supabaseUser,
+      userId: supabaseUser?.id,
+      email: supabaseUser?.email,
+      provider: supabaseUser?.app_metadata?.provider,
+      emailVerified: supabaseUser?.email_confirmed_at ? true : false,
+      userMetadata: supabaseUser?.user_metadata ? Object.keys(supabaseUser.user_metadata) : [],
+      appMetadata: supabaseUser?.app_metadata ? Object.keys(supabaseUser.app_metadata) : []
+    });
 
     if (!supabaseUser || !supabaseUser.email) {
+      logger.warn('Authentication failed: Missing Supabase user data or email', {
+        hasUser: !!supabaseUser,
+        hasEmail: !!supabaseUser?.email
+      });
       sendError(
         res,
         'Authentication failed',
@@ -186,23 +211,49 @@ export const callback = async (
       return;
     }
 
+    logger.info('Checking if user exists in local database:', {
+      email: supabaseUser.email
+    });
+
     // Check if user exists in our User table by email
     const existingUser = await prisma.user.findUnique({
       where: { email: supabaseUser.email },
     });
 
+    logger.info('Database user lookup result:', {
+      userExists: !!existingUser,
+      userId: existingUser?.id,
+      currentProvider: existingUser?.auth_provider,
+      isActive: existingUser?.is_active,
+      createdAt: existingUser?.created_at,
+      lastUpdated: existingUser?.updated_at
+    });
+
     let user;
 
     if (existingUser) {
+      logger.info('Updating existing user information');
+      
+      const updateData = {
+        name: supabaseUser.user_metadata?.full_name || supabaseUser.email,
+        // Keep existing auth_provider or update based on Supabase provider
+      };
+      
+      logger.info('User update data:', updateData);
+      
       // User exists, update their information and treat like login
       user = await prisma.user.update({
         where: { email: supabaseUser.email },
-        data: {
-          name: supabaseUser.user_metadata?.full_name || supabaseUser.email,
-          // Keep existing auth_provider or update based on Supabase provider
-        },
+        data: updateData,
+      });
+      
+      logger.info('User updated successfully:', {
+        userId: user.id,
+        updatedFields: Object.keys(updateData)
       });
     } else {
+      logger.info('Creating new user account');
+      
       // User doesn't exist, create new user
       // Determine provider based on Supabase user data
       let authProvider = 'EMAIL'; // default
@@ -212,16 +263,35 @@ export const callback = async (
           authProvider = provider;
         }
       }
+      
+      const createData = {
+        email: supabaseUser.email,
+        name: supabaseUser.user_metadata?.full_name || supabaseUser.email,
+        auth_provider: authProvider as any,
+        is_active: true, // OAuth users are active by default
+      };
+      
+      logger.info('User creation data:', {
+        ...createData,
+        determinedProvider: authProvider,
+        originalProvider: supabaseUser.app_metadata?.provider
+      });
 
       user = await prisma.user.create({
-        data: {
-          email: supabaseUser.email,
-          name: supabaseUser.user_metadata?.full_name || supabaseUser.email,
-          auth_provider: authProvider as any,
-          is_active: true, // OAuth users are active by default
-        },
+        data: createData,
+      });
+      
+      logger.info('New user created successfully:', {
+        userId: user.id,
+        email: user.email,
+        provider: user.auth_provider
       });
     }
+
+    logger.info('Generating JWT token for user:', {
+      userId: user.id,
+      email: user.email
+    });
 
     // Generate our JWT token for the user
     const token = generateToken({
@@ -229,24 +299,54 @@ export const callback = async (
       email: user.email,
     });
 
+    logger.info('JWT token generated successfully', {
+      tokenLength: token.length,
+      userId: user.id
+    });
+
     // Return user data (excluding password)
     const { password_hash: _passwordHash, ...userWithoutPassword } = user;
+
+    const responseData = {
+      user: userWithoutPassword,
+      token
+    };
+
+    const processingTime = Date.now() - startTime;
+    logger.info('Callback authentication completed successfully:', {
+      isExistingUser: !!existingUser,
+      userId: user.id,
+      processingTimeMs: processingTime,
+      responseStatus: existingUser ? 200 : 201
+    });
 
     sendSuccess(
       res,
       existingUser
         ? 'Login successful'
         : 'User created and logged in successfully',
-      { user: userWithoutPassword, token },
+      responseData,
       existingUser ? 200 : 201
     );
+    
+    logger.info('=== CALLBACK AUTHENTICATION COMPLETED ===');
   } catch (error) {
-    logger.error('Callback error:', error);
+    const processingTime = Date.now() - startTime;
+    logger.error('Callback authentication failed:', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      processingTimeMs: processingTime,
+      supabaseUserId: req.supabaseUser?.id,
+      supabaseEmail: req.supabaseUser?.email
+    });
+    
     sendError(
       res,
       'Callback failed',
       [{ field: 'server', message: 'An error occurred during callback' }],
       500
     );
+    
+    logger.info('=== CALLBACK AUTHENTICATION FAILED ===');
   }
 };

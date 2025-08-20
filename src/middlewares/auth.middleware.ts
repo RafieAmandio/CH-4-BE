@@ -85,25 +85,70 @@ export const authenticateSupabase = async (
   res: Response,
   next: NextFunction
 ): Promise<void> => {
+  const startTime = Date.now();
+  logger.info('=== SUPABASE AUTHENTICATION MIDDLEWARE STARTED ===');
+  
   try {
-    // Extract Supabase token from Authorization header
-    const authHeader = req.headers.authorization;
-    const supabaseToken = extractSupabaseToken(authHeader);
+    // Log request details
+    logger.info('Supabase auth middleware request details:', {
+      method: req.method,
+      url: req.url,
+      userAgent: req.headers['user-agent'],
+      ip: req.ip || req.connection.remoteAddress,
+      hasAuthHeader: !!req.headers.authorization,
+      authHeaderFormat: req.headers.authorization ? 
+        (req.headers.authorization.startsWith('Bearer ') ? 'Bearer format' : 'Non-Bearer format') : 
+        'No header',
+      timestamp: new Date().toISOString()
+    });
 
-    if (!supabaseToken) {
+    // Extract token from Authorization header
+    const token = extractSupabaseToken(req.headers.authorization);
+    
+    logger.info('Token extraction result:', {
+      hasToken: !!extractSupabaseToken(req.headers.authorization),
+      tokenLength: token ? token.length : 0,
+      tokenPrefix: token ? token.substring(0, 10) + '...' : 'N/A'
+    });
+
+    if (!token) {
+      logger.warn('Authentication failed: No Supabase token provided', {
+        authHeader: req.headers.authorization ? 'Present but invalid format' : 'Missing'
+      });
       sendError(
         res,
         'Authentication required',
-        [{ field: 'token', message: 'No Supabase token provided' }],
+        [{ field: 'authorization', message: 'Supabase token is required' }],
         401
       );
       return;
     }
 
-    // Verify Supabase token and get user data
-    const supabaseUser = await verifySupabaseToken(supabaseToken);
+    logger.info('Verifying Supabase token...');
+
+    // Verify the Supabase token
+    const supabaseUser = await verifySupabaseToken(token);
+    
+    logger.info('Token verification result:', {
+      isValid: !!supabaseUser,
+      userId: supabaseUser?.id,
+      email: supabaseUser?.email,
+      provider: supabaseUser?.app_metadata?.provider,
+      role: supabaseUser?.role,
+      emailConfirmed: supabaseUser?.email_confirmed_at ? true : false,
+      phoneConfirmed: supabaseUser?.phone_confirmed_at ? true : false,
+      lastSignIn: supabaseUser?.last_sign_in_at,
+      userMetadataKeys: supabaseUser?.user_metadata ? Object.keys(supabaseUser.user_metadata) : [],
+      appMetadataKeys: supabaseUser?.app_metadata ? Object.keys(supabaseUser.app_metadata) : []
+    });
 
     if (!supabaseUser || !supabaseUser.email) {
+      logger.warn('Authentication failed: Invalid Supabase token or missing email', {
+         hasUser: !!supabaseUser,
+         hasEmail: supabaseUser?.email ? true : false,
+         tokenLength: token.length,
+         tokenPrefix: token.substring(0, 10) + '...'
+       });
       sendError(
         res,
         'Authentication failed',
@@ -118,12 +163,33 @@ export const authenticateSupabase = async (
       return;
     }
 
+    logger.info('Supabase user authenticated successfully, attaching to request:', {
+      userId: supabaseUser.id,
+      email: supabaseUser.email
+    });
+
     // Attach Supabase user data to request
     req.supabaseUser = supabaseUser;
-
+    
+    const processingTime = Date.now() - startTime;
+    logger.info('Supabase authentication middleware completed successfully:', {
+      userId: supabaseUser.id,
+      processingTimeMs: processingTime
+    });
+    
+    logger.info('=== SUPABASE AUTHENTICATION MIDDLEWARE COMPLETED ===');
     next();
   } catch (error) {
-    logger.error('Supabase authentication error:', error);
+    const processingTime = Date.now() - startTime;
+    logger.error('Supabase authentication middleware failed:', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      processingTimeMs: processingTime,
+      hasToken: !!extractSupabaseToken(req.headers.authorization),
+      requestUrl: req.url,
+      requestMethod: req.method
+    });
+    
     sendError(
       res,
       'Authentication error',
@@ -135,5 +201,7 @@ export const authenticateSupabase = async (
       ],
       500
     );
+    
+    logger.info('=== SUPABASE AUTHENTICATION MIDDLEWARE FAILED ===');
   }
 };
