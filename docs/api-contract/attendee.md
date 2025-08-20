@@ -9,7 +9,7 @@ This document outlines the API contract for attendee management, which includes 
 1. **Get Professions** - Fetch available professions by category
 2. **Create Attendee** - Register for event (authenticated or visitor)
 3. **Get Goals Categories** - Fetch available goal categories
-4. **Select Goal Category** - Choose a category and receive associated questions
+4. **Update Attendee with Goals Category** - Choose a category and receive associated questions
 5. **Submit Answers** - Provide responses to the questionnaire
 6. **Get Recommendations** - Fetch AI-generated networking recommendations
 
@@ -145,22 +145,38 @@ This document outlines the API contract for attendee management, which includes 
 
 ---
 
-### 4. Get Questions by Goals Category
+### 4. Update Attendee with Goals Category
 
-**Endpoint:** `GET /api/attendee/goals-categories/{categoryId}/questions`
+**Endpoint:** `PUT /api/attendee/{attendeeId}/goals-category`
 
-**Description:** Returns all questions for the selected goals category, ordered by display_order.
+**Description:** Updates the attendee's goals category selection and returns all questions for that category, ordered by display_order.
 
 **Headers:**
 - `Authorization: Bearer <token>` (required)
 
 **Path Parameters:**
-- `categoryId` - UUID of the selected goals category
+- `attendeeId` - UUID of the attendee
+
+**Request Body:**
+```json
+{
+  "goalsCategoryId": "uuid"
+}
+```
+
+**Request Fields:**
+- `goalsCategoryId` - Selected goals category ID (required)
 
 **Response:**
 ```json
 {
+  "message": "Goals category updated successfully",
   "data": {
+    "attendeeId": "uuid",
+    "goalsCategory": {
+      "id": "uuid",
+      "name": "string"
+    },
     "questions": [
       {
         "id": "uuid",
@@ -195,6 +211,9 @@ This document outlines the API contract for attendee management, which includes 
 ```
 
 **Response Fields:**
+- `attendeeId` - Attendee identifier
+- `goalsCategory` - Selected goals category information
+- `questions` - Array of questions ordered by display_order
 
 **Question Object:**
 - `id` - Question identifier
@@ -222,6 +241,13 @@ This document outlines the API contract for attendee management, which includes 
 - `label` - Display text
 - `value` - Optional underlying value
 - `displayOrder` - Display order
+
+**Business Logic:**
+- Validates attendee exists and belongs to requesting user/token
+- Validates goals category exists and is active
+- Updates attendee's goals_category_id
+- Returns questions ordered by display_order with all answer options
+- Includes question constraints based on question type
 
 ---
 
@@ -442,9 +468,9 @@ This document outlines the API contract for attendee management, which includes 
 ## Validation Rules
 
 ### General Rules
-- `attendeeId` must belong to the authenticated user
+- `attendeeId` must belong to the authenticated user or valid temporary token
 - All required questions must have answers
-- Question must belong to the selected goals category
+- Attendee must have a goals category selected before submitting answers
 
 ### Type-Specific Rules
 - **SINGLE_CHOICE**: Exactly one `answerOptionId` required
