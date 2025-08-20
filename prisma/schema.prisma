@@ -194,6 +194,7 @@ model Question {
   max_select        Int?
   require_ranking   Boolean       @default(false)
   is_using_other    Boolean       @default(false)
+  is_shareable      Boolean       @default(false)
 
   // input constraints
   text_max_len      Int?

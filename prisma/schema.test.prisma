@@ -55,6 +55,11 @@ model User {
   password_hash  String?
   username       String?    @unique
   name           String
+
+  linkedin_username String?
+  photo_link        String?
+
+  profession_id  String?    @db.Uuid
   is_active      Boolean    @default(true)
   deleted_at     DateTime?
   created_at     DateTime   @default(now())
@@ -63,10 +68,13 @@ model User {
   // relations
   attendees      Attendee[]
   events Event[]
+  profession    Profession?    @relation(fields: [profession_id], references: [id], onDelete: SetNull)
+
 
   // indexes
   @@index([email])
   @@index([username])
+  @@index([profession_id])
   @@index([is_active])
   @@index([deleted_at])
 
@@ -104,6 +112,7 @@ model Profession {
 
   // relations
   category   ProfessionCategory @relation(fields: [profession_category_id], references: [id], onDelete: Cascade)
+  users      User[]
   attendees  Attendee[]
 
   // indexes
@@ -130,7 +139,7 @@ model Event {
   start            DateTime
   end              DateTime
   link             String?
-  code             String?      @unique
+  code             String       @unique @default(dbgenerated("LPAD(FLOOR(RANDOM() * 1000000)::TEXT, 6, '0')"))
   current_participants Int     @default(0) 
   is_active        Boolean      @default(true)
   deleted_at       DateTime?
@@ -184,6 +193,7 @@ model Question {
   max_select        Int?
   require_ranking   Boolean       @default(false)
   is_using_other    Boolean       @default(false)
+  is_shareable      Boolean       @default(false)
 
   // input constraints
   text_max_len      Int?
@@ -201,7 +211,7 @@ model Question {
   goalsCategory  GoalsCategory @relation(fields: [goals_category_id], references: [id], onDelete: Cascade)
   answerOptions  AnswerOption[]
   questionOrders QuestionOrder[]
-  userAnswers    UserAnswer[]
+  attendeeAnswers    AttendeeAnswer[]
 
   // indexes
   @@index([goals_category_id])
@@ -250,7 +260,7 @@ model AnswerOption {
 
   // relations
   question    Question     @relation(fields: [question_id], references: [id], onDelete: Cascade)
-  userAnswers UserAnswer[]
+  attendeeAnswers AttendeeAnswer[]
 
   // indexes
   @@unique([question_id, label])
@@ -268,8 +278,6 @@ model Attendee {
   event_id          String   @db.Uuid
   user_id           String?  @db.Uuid
 
-  // snapshot fields
-  user_name         String?
   user_email        String?
 
   goals_category_id String   @db.Uuid
@@ -289,7 +297,7 @@ model Attendee {
   user          User?          @relation(fields: [user_id], references: [id], onDelete: SetNull)
   goal          GoalsCategory  @relation(fields: [goals_category_id], references: [id], onDelete: Restrict)
   profession    Profession?    @relation(fields: [profession_id], references: [id], onDelete: SetNull)
-  userAnswers   UserAnswer[]
+  attendeeAnswers   AttendeeAnswer[]
   recsAsSource  Recommendation[] @relation("RecSource")
   recsAsTarget  Recommendation[] @relation("RecTarget")
 
@@ -330,8 +338,8 @@ model Recommendation {
   @@map("recommendations")
 }
 
-// user_answers
-model UserAnswer {
+// attendee_answers
+model AttendeeAnswer {
   id               String    @id @default(uuid()) @db.Uuid
   attendee_id      String    @db.Uuid
   question_id      String    @db.Uuid
@@ -362,5 +370,5 @@ model UserAnswer {
   @@index([question_id])
   @@index([deleted_at])
 
-  @@map("user_answers")
+  @@map("attendee_answers")
 }
