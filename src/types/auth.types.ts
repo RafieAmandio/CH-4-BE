@@ -1,11 +1,9 @@
 export interface RegisterInput {
-  auth: 'APPLE' | 'LINKEDIN' | 'EMAIL';
+  auth_provider: 'APPLE' | 'LINKEDIN' | 'EMAIL';
   email: string;
   password: string;
   username: string;
   name: string;
-  nickname: string;
-  photo: string;
   is_active: boolean;
 }
 
