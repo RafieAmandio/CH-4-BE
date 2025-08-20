@@ -8,13 +8,29 @@
   "auth": {
     "type": "bearer",
     "bearer": [
-      { "key": "token", "value": "{{auth_token}}", "type": "string" }
+      {
+        "key": "token",
+        "value": "{{auth_token}}",
+        "type": "string"
+      }
     ]
   },
   "variable": [
-    { "key": "base_url", "value": "http://localhost:3000/api", "type": "string" },
-    { "key": "auth_token", "value": "", "type": "string" },
-    { "key": "event_id", "value": "", "type": "string" }
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000/api",
+      "type": "string"
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "event_id",
+      "value": "",
+      "type": "string"
+    }
   ],
   "event": [
     {
@@ -38,8 +54,12 @@
         "header": [],
         "url": {
           "raw": "{{base_url}}/health",
-          "host": ["{{base_url}}"],
-          "path": ["health"]
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "health"
+          ]
         },
         "description": "Check if the API is running and healthy"
       },
@@ -51,14 +71,23 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/health",
-              "host": ["{{base_url}}"],
-              "path": ["health"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health"
+              ]
             }
           },
           "status": "OK",
           "code": 200,
           "_postman_previewlanguage": "json",
-          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
           "cookie": [],
           "body": "{\n  \"status\": \"ok\",\n  \"message\": \"API is running\"\n}"
         }
@@ -69,18 +98,30 @@
       "item": [
         {
           "name": "Register User",
-          "auth": { "type": "noauth" },
+          "auth": {
+            "type": "noauth"
+          },
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"auth\": \"EMAIL\",\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"password123\",\n  \"username\": \"johndoe\",\n  \"name\": \"John Doe\",\n  \"nickname\": \"Johnny\",\n  \"photo\": \"https://example.com/photo.jpg\",\n  \"is_active\": true\n}"
             },
             "url": {
               "raw": "{{base_url}}/auth/register",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "register"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
             },
             "description": "Register a new user with email and password"
           },
@@ -89,21 +130,36 @@
               "name": "Success Response",
               "originalRequest": {
                 "method": "POST",
-                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
                 "body": {
                   "mode": "raw",
                   "raw": "{\n  \"auth\": \"EMAIL\",\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"password123\",\n  \"username\": \"johndoe\",\n  \"name\": \"John Doe\",\n  \"nickname\": \"Johnny\",\n  \"photo\": \"https://example.com/photo.jpg\",\n  \"is_active\": true\n}"
                 },
                 "url": {
                   "raw": "{{base_url}}/auth/register",
-                  "host": ["{{base_url}}"],
-                  "path": ["auth", "register"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "register"
+                  ]
                 }
               },
               "status": "Created",
               "code": 201,
               "_postman_previewlanguage": "json",
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
               "cookie": [],
               "body": "{\n  \"success\": true,\n  \"message\": \"User registered successfully\",\n  \"data\": {\n    \"user\": {\n      \"id\": \"user_id_123\",\n      \"auth\": \"EMAIL\",\n      \"email\": \"john.doe@example.com\",\n      \"username\": \"johndoe\",\n      \"name\": \"John Doe\",\n      \"nickname\": \"Johnny\",\n      \"photo_link\": \"https://example.com/photo.jpg\",\n      \"is_active\": true,\n      \"created_at\": \"2024-01-01T00:00:00.000Z\",\n      \"updated_at\": \"2024-01-01T00:00:00.000Z\"\n    },\n    \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n  },\n  \"errors\": []\n}"
             }
@@ -125,18 +181,30 @@
         },
         {
           "name": "Login User",
-          "auth": { "type": "noauth" },
+          "auth": {
+            "type": "noauth"
+          },
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"password123\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/auth/login",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "login"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
             },
             "description": "Login with email and password"
           },
@@ -145,21 +213,36 @@
               "name": "Success Response",
               "originalRequest": {
                 "method": "POST",
-                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
                 "body": {
                   "mode": "raw",
                   "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"password123\"\n}"
                 },
                 "url": {
                   "raw": "{{base_url}}/auth/login",
-                  "host": ["{{base_url}}"],
-                  "path": ["auth", "login"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
                 }
               },
               "status": "OK",
               "code": 200,
               "_postman_previewlanguage": "json",
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
               "cookie": [],
               "body": "{\n  \"success\": true,\n  \"message\": \"Login successful\",\n  \"data\": {\n    \"user\": {\n      \"id\": \"user_id_123\",\n      \"auth\": \"EMAIL\",\n      \"email\": \"john.doe@example.com\",\n      \"username\": \"johndoe\",\n      \"name\": \"John Doe\",\n      \"nickname\": \"Johnny\",\n      \"photo_link\": \"https://example.com/photo.jpg\",\n      \"is_active\": true,\n      \"created_at\": \"2024-01-01T00:00:00.000Z\",\n      \"updated_at\": \"2024-01-01T00:00:00.000Z\"\n    },\n    \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n  },\n  \"errors\": []\n}"
             }
@@ -181,18 +264,30 @@
         },
         {
           "name": "OAuth Callback",
-          "auth": { "type": "noauth" },
+          "auth": {
+            "type": "noauth"
+          },
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"id\": \"001234.abc123def456.7890\",\n  \"email\": \"john.doe@example.com\",\n  \"name\": \"John Doe\",\n  \"provider\": \"APPLE\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/auth/callback",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "callback"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "callback"
+              ]
             },
             "description": "OAuth callback endpoint for Apple, LinkedIn, or Email providers"
           },
@@ -201,21 +296,36 @@
               "name": "New User Created",
               "originalRequest": {
                 "method": "POST",
-                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
                 "body": {
                   "mode": "raw",
                   "raw": "{\n  \"id\": \"001234.abc123def456.7890\",\n  \"email\": \"john.doe@example.com\",\n  \"name\": \"John Doe\",\n  \"provider\": \"APPLE\"\n}"
                 },
                 "url": {
                   "raw": "{{base_url}}/auth/callback",
-                  "host": ["{{base_url}}"],
-                  "path": ["auth", "callback"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "callback"
+                  ]
                 }
               },
               "status": "Created",
               "code": 201,
               "_postman_previewlanguage": "json",
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
               "cookie": [],
               "body": "{\n  \"success\": true,\n  \"message\": \"User created and logged in successfully\",\n  \"data\": {\n    \"user\": {\n      \"id\": \"001234.abc123def456.7890\",\n      \"auth\": \"APPLE\",\n      \"email\": \"john.doe@example.com\",\n      \"username\": \"John Doe\",\n      \"name\": \"John Doe\",\n      \"nickname\": \"John Doe\",\n      \"photo_link\": \"\",\n      \"is_active\": true,\n      \"created_at\": \"2024-01-01T00:00:00.000Z\",\n      \"updated_at\": \"2024-01-01T00:00:00.000Z\"\n    },\n    \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n  },\n  \"errors\": []\n}"
             },
@@ -223,21 +333,36 @@
               "name": "Existing User Login",
               "originalRequest": {
                 "method": "POST",
-                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
                 "body": {
                   "mode": "raw",
                   "raw": "{\n  \"id\": \"linkedin_user_12345\",\n  \"email\": \"existing.user@example.com\",\n  \"name\": \"Existing User\",\n  \"provider\": \"LINKEDIN\"\n}"
                 },
                 "url": {
                   "raw": "{{base_url}}/auth/callback",
-                  "host": ["{{base_url}}"],
-                  "path": ["auth", "callback"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "callback"
+                  ]
                 }
               },
               "status": "OK",
               "code": 200,
               "_postman_previewlanguage": "json",
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
               "cookie": [],
               "body": "{\n  \"success\": true,\n  \"message\": \"Login successful\",\n  \"data\": {\n    \"user\": {\n      \"id\": \"existing_user_id\",\n      \"auth\": \"LINKEDIN\",\n      \"email\": \"existing.user@example.com\",\n      \"username\": \"existinguser\",\n      \"name\": \"Existing User\",\n      \"nickname\": \"ExistingUser\",\n      \"photo_link\": \"https://example.com/existing-photo.jpg\",\n      \"is_active\": true,\n      \"created_at\": \"2024-01-01T00:00:00.000Z\",\n      \"updated_at\": \"2024-01-01T00:00:00.000Z\"\n    },\n    \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n  },\n  \"errors\": []\n}"
             }
@@ -264,8 +389,13 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/auth/profile",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "profile"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "profile"
+              ]
             },
             "description": "Get the current authenticated user's profile (requires authentication)"
           },
@@ -277,14 +407,24 @@
                 "header": [],
                 "url": {
                   "raw": "{{base_url}}/auth/profile",
-                  "host": ["{{base_url}}"],
-                  "path": ["auth", "profile"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "profile"
+                  ]
                 }
               },
               "status": "OK",
               "code": 200,
               "_postman_previewlanguage": "json",
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
               "cookie": [],
               "body": "{\n  \"success\": true,\n  \"message\": \"Profile retrieved successfully\",\n  \"data\": {\n    \"id\": \"user_id_123\",\n    \"auth\": \"EMAIL\",\n    \"email\": \"john.doe@example.com\",\n    \"username\": \"johndoe\",\n    \"name\": \"John Doe\",\n    \"nickname\": \"Johnny\",\n    \"photo_link\": \"https://example.com/photo.jpg\",\n    \"is_active\": true,\n    \"created_at\": \"2024-01-01T00:00:00.000Z\",\n    \"updated_at\": \"2024-01-01T00:00:00.000Z\"\n  },\n  \"errors\": []\n}"
             }
@@ -299,15 +439,24 @@
           "name": "Create Event",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Tech Conference 2025\",\n  \"datetime\": \"2025-03-15T09:00:00Z\",\n  \"description\": \"Annual technology conference for networking and learning\",\n  \"location\": \"Jakarta Convention Center\",\n  \"maxParticipants\": 500\n}"
+              "raw": "{\n  \"name\": \"Tech Conference 2025\",\n  \"datetime\": \"2025-03-15T09:00:00Z\",\n  \"description\": \"Annual technology conference for networking and learning\",\n  \"location\": \"Jakarta Convention Center\",\n  \"latitude\": -6.2088,\n  \"longitude\": 106.8456\n}"
             },
             "url": {
               "raw": "{{base_url}}/events",
-              "host": ["{{base_url}}"],
-              "path": ["events"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "events"
+              ]
             },
             "description": "Create a new event (requires authentication)"
           },
@@ -316,23 +465,37 @@
               "name": "Success Response",
               "originalRequest": {
                 "method": "POST",
-                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"name\": \"Tech Conference 2025\",\n  \"datetime\": \"2025-03-15T09:00:00Z\",\n  \"description\": \"Annual technology conference for networking and learning\",\n  \"location\": \"Jakarta Convention Center\",\n  \"maxParticipants\": 500\n}"
+                  "raw": "{\n  \"name\": \"Tech Conference 2025\",\n  \"datetime\": \"2025-03-15T09:00:00Z\",\n  \"description\": \"Annual technology conference for networking and learning\",\n  \"location\": \"Jakarta Convention Center\",\n  \"latitude\": -6.2088,\n  \"longitude\": 106.8456\n}"
                 },
                 "url": {
                   "raw": "{{base_url}}/events",
-                  "host": ["{{base_url}}"],
-                  "path": ["events"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "events"
+                  ]
                 }
               },
               "status": "Created",
               "code": 201,
               "_postman_previewlanguage": "json",
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
               "cookie": [],
-              "body": "{\n  \"success\": true,\n  \"message\": \"Event created successfully\",\n  \"data\": {\n    \"event\": {\n      \"id\": \"01HJD8Q9PQWERTY123456789\",\n      \"name\": \"Tech Conference 2025\",\n      \"start\": \"2025-03-15T09:00:00.000Z\",\n      \"end\": \"2025-03-15T11:00:00.000Z\",\n      \"detail\": \"Annual technology conference for networking and learning\",\n      \"location_name\": \"Jakarta Convention Center\",\n      \"status\": \"UPCOMING\",\n      \"max_participants\": 500,\n      \"current_participants\": 0,\n      \"created_by\": \"user_id_123\",\n      \"is_active\": true,\n      \"created_at\": \"2025-01-15T00:00:00.000Z\",\n      \"updated_at\": \"2025-01-15T00:00:00.000Z\"\n    }\n  },\n  \"errors\": []\n}"
+              "body": "{\n  \"success\": true,\n  \"message\": \"Event created successfully\",\n  \"data\": {\n    \"event\": {\n      \"id\": \"01HJD8Q9PQWERTY123456789\",\n      \"name\": \"Tech Conference 2025\",\n      \"start\": \"2025-03-15T09:00:00.000Z\",\n      \"end\": \"2025-03-15T11:00:00.000Z\",\n      \"detail\": \"Annual technology conference for networking and learning\",\n      \"location_name\": \"Jakarta Convention Center\",\n      \"latitude\": -6.2088,\n      \"longitude\": 106.8456,\n      \"status\": \"UPCOMING\",\n      \"max_participants\": 500,\n      \"current_participants\": 0,\n      \"created_by\": \"user_id_123\",\n      \"is_active\": true,\n      \"created_at\": \"2025-01-15T00:00:00.000Z\",\n      \"updated_at\": \"2025-01-15T00:00:00.000Z\"\n    }\n  },\n  \"errors\": []\n}"
             }
           ],
           "event": [
@@ -351,20 +514,99 @@
           ]
         },
         {
+          "name": "Create Event - Jakarta Office",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Team Building Workshop\",\n  \"datetime\": \"2025-04-20T10:00:00Z\",\n  \"description\": \"Monthly team building workshop for improving collaboration\",\n  \"location\": \"Jakarta Office - Conference Room A\",\n  \"latitude\": -6.1944,\n  \"longitude\": 106.8229\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/events",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "events"
+              ]
+            },
+            "description": "Create a team building event at Jakarta office location"
+          }
+        },
+        {
+          "name": "Create Event - Outdoor Location",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Beach Volleyball Tournament\",\n  \"datetime\": \"2025-05-10T08:00:00Z\",\n  \"description\": \"Annual beach volleyball tournament for all skill levels\",\n  \"location\": \"Ancol Beach, North Jakarta\",\n  \"latitude\": -6.1235,\n  \"longitude\": 106.8424\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/events",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "events"
+              ]
+            },
+            "description": "Create an outdoor event with beach location coordinates"
+          }
+        },
+        {
           "name": "Get All Events",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
               "raw": "{{base_url}}/events?page=1&limit=10",
-              "host": ["{{base_url}}"],
-              "path": ["events"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "events"
+              ],
               "query": [
-                { "key": "page", "value": "1", "description": "Page number (optional, default: 1)" },
-                { "key": "limit", "value": "10", "description": "Items per page (optional, default: 10)" },
-                { "key": "search", "value": "", "description": "Search term (optional)", "disabled": true },
-                { "key": "sortBy", "value": "", "description": "Sort field: name, start, status, created_at, updated_at (optional)", "disabled": true },
-                { "key": "sortOrder", "value": "", "description": "Sort order: asc, desc (optional)", "disabled": true }
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (optional, default: 1)"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Items per page (optional, default: 10)"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Search term (optional)",
+                  "disabled": true
+                },
+                {
+                  "key": "sortBy",
+                  "value": "",
+                  "description": "Sort field: name, start, status, created_at, updated_at (optional)",
+                  "disabled": true
+                },
+                {
+                  "key": "sortOrder",
+                  "value": "",
+                  "description": "Sort order: asc, desc (optional)",
+                  "disabled": true
+                }
               ]
             },
             "description": "Get all events with pagination and search (requires authentication)"
@@ -377,20 +619,35 @@
                 "header": [],
                 "url": {
                   "raw": "{{base_url}}/events?page=1&limit=10",
-                  "host": ["{{base_url}}"],
-                  "path": ["events"],
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "events"
+                  ],
                   "query": [
-                    { "key": "page", "value": "1" },
-                    { "key": "limit", "value": "10" }
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    }
                   ]
                 }
               },
               "status": "OK",
               "code": 200,
               "_postman_previewlanguage": "json",
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
               "cookie": [],
-              "body": "{\n  \"success\": true,\n  \"message\": \"Events retrieved successfully\",\n  \"data\": {\n    \"totalData\": 25,\n    \"totalPage\": 3,\n    \"entries\": [\n      {\n        \"id\": \"01HJD8Q9PQWERTY123456789\",\n        \"name\": \"Tech Conference 2025\",\n        \"start\": \"2025-03-15T09:00:00.000Z\",\n        \"end\": \"2025-03-15T11:00:00.000Z\",\n        \"detail\": \"Annual technology conference for networking\",\n        \"location_name\": \"Jakarta Convention Center\",\n        \"status\": \"UPCOMING\",\n        \"max_participants\": 500,\n        \"current_participants\": 125,\n        \"created_by\": \"user_id_123\",\n        \"is_active\": true,\n        \"created_at\": \"2025-01-01T00:00:00.000Z\",\n        \"updated_at\": \"2025-01-01T00:00:00.000Z\",\n        \"creator\": {\n          \"id\": \"user_id_123\",\n          \"name\": \"John Doe\",\n          \"username\": \"johndoe\",\n          \"email\": \"john.doe@example.com\"\n        }\n      }\n    ]\n  },\n  \"errors\": []\n}"
+              "body": "{\n  \"success\": true,\n  \"message\": \"Events retrieved successfully\",\n  \"data\": {\n    \"totalData\": 25,\n    \"totalPage\": 3,\n    \"entries\": [\n      {\n        \"id\": \"01HJD8Q9PQWERTY123456789\",\n        \"name\": \"Tech Conference 2025\",\n        \"start\": \"2025-03-15T09:00:00.000Z\",\n        \"end\": \"2025-03-15T11:00:00.000Z\",\n        \"detail\": \"Annual technology conference for networking\",\n        \"location_name\": \"Jakarta Convention Center\",\n        \"latitude\": -6.2088,\n        \"longitude\": 106.8456,\n        \"status\": \"UPCOMING\",\n        \"max_participants\": 500,\n        \"current_participants\": 125,\n        \"created_by\": \"user_id_123\",\n        \"is_active\": true,\n        \"created_at\": \"2025-01-01T00:00:00.000Z\",\n        \"updated_at\": \"2025-01-01T00:00:00.000Z\",\n        \"creator\": {\n          \"id\": \"user_id_123\",\n          \"name\": \"John Doe\",\n          \"username\": \"johndoe\",\n          \"email\": \"john.doe@example.com\"\n        }\n      }\n    ]\n  },\n  \"errors\": []\n}"
             }
           ]
         },
@@ -401,14 +658,33 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/events?page=1&limit=10&search=conference&sortBy=start&sortOrder=desc",
-              "host": ["{{base_url}}"],
-              "path": ["events"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "events"
+              ],
               "query": [
-                { "key": "page", "value": "1" },
-                { "key": "limit", "value": "10" },
-                { "key": "search", "value": "conference" },
-                { "key": "sortBy", "value": "start" },
-                { "key": "sortOrder", "value": "desc" }
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "search",
+                  "value": "conference"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "start"
+                },
+                {
+                  "key": "sortOrder",
+                  "value": "desc"
+                }
               ]
             },
             "description": "Get events with search and sorting (requires authentication)"
@@ -421,8 +697,13 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/events/{{event_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["events", "{{event_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "events",
+                "{{event_id}}"
+              ]
             },
             "description": "Get a single event by ID (requires authentication)"
           },
@@ -434,16 +715,26 @@
                 "header": [],
                 "url": {
                   "raw": "{{base_url}}/events/01HJD8Q9PQWERTY123456789",
-                  "host": ["{{base_url}}"],
-                  "path": ["events", "01HJD8Q9PQWERTY123456789"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "events",
+                    "01HJD8Q9PQWERTY123456789"
+                  ]
                 }
               },
               "status": "OK",
               "code": 200,
               "_postman_previewlanguage": "json",
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
               "cookie": [],
-              "body": "{\n  \"success\": true,\n  \"message\": \"Event details retrieved successfully\",\n  \"data\": {\n    \"id\": \"01HJD8Q9PQWERTY123456789\",\n    \"name\": \"Tech Conference 2025\",\n    \"start\": \"2025-03-15T09:00:00.000Z\",\n    \"end\": \"2025-03-15T11:00:00.000Z\",\n    \"detail\": \"Annual technology conference for networking professionals\",\n    \"location_name\": \"Jakarta Convention Center\",\n    \"status\": \"UPCOMING\",\n    \"max_participants\": 500,\n    \"current_participants\": 125,\n    \"created_by\": \"user_id_123\",\n    \"is_active\": true,\n    \"created_at\": \"2025-01-01T00:00:00.000Z\",\n    \"updated_at\": \"2025-01-01T00:00:00.000Z\",\n    \"creator\": {\n      \"id\": \"user_id_123\",\n      \"name\": \"John Doe\",\n      \"username\": \"johndoe\",\n      \"email\": \"john.doe@example.com\"\n    }\n  },\n  \"errors\": []\n}"
+              "body": "{\n  \"success\": true,\n  \"message\": \"Event details retrieved successfully\",\n  \"data\": {\n    \"id\": \"01HJD8Q9PQWERTY123456789\",\n    \"name\": \"Tech Conference 2025\",\n    \"start\": \"2025-03-15T09:00:00.000Z\",\n    \"end\": \"2025-03-15T11:00:00.000Z\",\n    \"detail\": \"Annual technology conference for networking professionals\",\n    \"location_name\": \"Jakarta Convention Center\",\n    \"latitude\": -6.2088,\n    \"longitude\": 106.8456,\n    \"status\": \"UPCOMING\",\n    \"max_participants\": 500,\n    \"current_participants\": 125,\n    \"created_by\": \"user_id_123\",\n    \"is_active\": true,\n    \"created_at\": \"2025-01-01T00:00:00.000Z\",\n    \"updated_at\": \"2025-01-01T00:00:00.000Z\",\n    \"creator\": {\n      \"id\": \"user_id_123\",\n      \"name\": \"John Doe\",\n      \"username\": \"johndoe\",\n      \"email\": \"john.doe@example.com\"\n    }\n  },\n  \"errors\": []\n}"
             }
           ]
         },
@@ -451,15 +742,25 @@
           "name": "Update Event",
           "request": {
             "method": "PUT",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Updated Tech Conference 2025\",\n  \"datetime\": \"2025-03-16T10:00:00Z\",\n  \"description\": \"Updated description for the annual technology conference\",\n  \"location\": \"Updated Jakarta Convention Center - Hall B\",\n  \"maxParticipants\": 600\n}"
+              "raw": "{\n  \"name\": \"Updated Tech Conference 2025\",\n  \"datetime\": \"2025-03-16T10:00:00Z\",\n  \"description\": \"Updated description for the annual technology conference\",\n  \"location\": \"Updated Jakarta Convention Center - Hall B\",\n  \"latitude\": -6.2090,\n  \"longitude\": 106.8460\n}"
             },
             "url": {
               "raw": "{{base_url}}/events/{{event_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["events", "{{event_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "events",
+                "{{event_id}}"
+              ]
             },
             "description": "Update an existing event (requires authentication and ownership)"
           },
@@ -468,23 +769,38 @@
               "name": "Success Response",
               "originalRequest": {
                 "method": "PUT",
-                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"name\": \"Updated Tech Conference 2025\",\n  \"datetime\": \"2025-03-16T10:00:00Z\",\n  \"description\": \"Updated description for the annual technology conference\",\n  \"location\": \"Updated Jakarta Convention Center - Hall B\",\n  \"maxParticipants\": 600\n}"
+                  "raw": "{\n  \"name\": \"Updated Tech Conference 2025\",\n  \"datetime\": \"2025-03-16T10:00:00Z\",\n  \"description\": \"Updated description for the annual technology conference\",\n  \"location\": \"Updated Jakarta Convention Center - Hall B\",\n  \"latitude\": -6.2090,\n  \"longitude\": 106.8460\n}"
                 },
                 "url": {
                   "raw": "{{base_url}}/events/01HJD8Q9PQWERTY123456789",
-                  "host": ["{{base_url}}"],
-                  "path": ["events", "01HJD8Q9PQWERTY123456789"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "events",
+                    "01HJD8Q9PQWERTY123456789"
+                  ]
                 }
               },
               "status": "OK",
               "code": 200,
               "_postman_previewlanguage": "json",
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
               "cookie": [],
-              "body": "{\n  \"success\": true,\n  \"message\": \"Event updated successfully\",\n  \"data\": {\n    \"id\": \"01HJD8Q9PQWERTY123456789\",\n    \"name\": \"Updated Tech Conference 2025\",\n    \"start\": \"2025-03-16T10:00:00.000Z\",\n    \"end\": \"2025-03-16T12:00:00.000Z\",\n    \"detail\": \"Updated description for the annual technology conference\",\n    \"location_name\": \"Updated Jakarta Convention Center - Hall B\",\n    \"status\": \"UPCOMING\",\n    \"max_participants\": 600,\n    \"current_participants\": 125,\n    \"created_by\": \"user_id_123\",\n    \"is_active\": true,\n    \"created_at\": \"2025-01-01T00:00:00.000Z\",\n    \"updated_at\": \"2025-01-15T10:30:00.000Z\",\n    \"creator\": {\n      \"id\": \"user_id_123\",\n      \"name\": \"John Doe\",\n      \"username\": \"johndoe\",\n      \"email\": \"john.doe@example.com\"\n    }\n  },\n  \"errors\": []\n}"
+              "body": "{\n  \"success\": true,\n  \"message\": \"Event updated successfully\",\n  \"data\": {\n    \"id\": \"01HJD8Q9PQWERTY123456789\",\n    \"name\": \"Updated Tech Conference 2025\",\n    \"start\": \"2025-03-16T10:00:00.000Z\",\n    \"end\": \"2025-03-16T12:00:00.000Z\",\n    \"detail\": \"Updated description for the annual technology conference\",\n    \"location_name\": \"Updated Jakarta Convention Center - Hall B\",\n    \"latitude\": -6.2090,\n    \"longitude\": 106.8460,\n    \"status\": \"UPCOMING\",\n    \"max_participants\": 600,\n    \"current_participants\": 125,\n    \"created_by\": \"user_id_123\",\n    \"is_active\": true,\n    \"created_at\": \"2025-01-01T00:00:00.000Z\",\n    \"updated_at\": \"2025-01-15T10:30:00.000Z\",\n    \"creator\": {\n      \"id\": \"user_id_123\",\n      \"name\": \"John Doe\",\n      \"username\": \"johndoe\",\n      \"email\": \"john.doe@example.com\"\n    }\n  },\n  \"errors\": []\n}"
             }
           ]
         },
@@ -495,8 +811,13 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/events/{{event_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["events", "{{event_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "events",
+                "{{event_id}}"
+              ]
             },
             "description": "Soft delete/disable an event (creator only)"
           },
@@ -508,14 +829,24 @@
                 "header": [],
                 "url": {
                   "raw": "{{base_url}}/events/01HJD8Q9PQWERTY123456789",
-                  "host": ["{{base_url}}"],
-                  "path": ["events", "01HJD8Q9PQWERTY123456789"]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "events",
+                    "01HJD8Q9PQWERTY123456789"
+                  ]
                 }
               },
               "status": "OK",
               "code": 200,
               "_postman_previewlanguage": "json",
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
               "cookie": [],
               "body": "{\n  \"success\": true,\n  \"message\": \"Event deleted successfully\",\n  \"data\": null,\n  \"errors\": []\n}"
             }
@@ -528,10 +859,18 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/events/{{event_id}}?hard_delete=true",
-              "host": ["{{base_url}}"],
-              "path": ["events", "{{event_id}}"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "events",
+                "{{event_id}}"
+              ],
               "query": [
-                { "key": "hard_delete", "value": "true" }
+                {
+                  "key": "hard_delete",
+                  "value": "true"
+                }
               ]
             },
             "description": "Permanently delete an event (creator only). Adds ?hard_delete=true"
@@ -544,15 +883,30 @@
                 "header": [],
                 "url": {
                   "raw": "{{base_url}}/events/01HJD8Q9PQWERTY123456789?hard_delete=true",
-                  "host": ["{{base_url}}"],
-                  "path": ["events", "01HJD8Q9PQWERTY123456789"],
-                  "query": [{ "key": "hard_delete", "value": "true" }]
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "events",
+                    "01HJD8Q9PQWERTY123456789"
+                  ],
+                  "query": [
+                    {
+                      "key": "hard_delete",
+                      "value": "true"
+                    }
+                  ]
                 }
               },
               "status": "OK",
               "code": 200,
               "_postman_previewlanguage": "json",
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
               "cookie": [],
               "body": "{\n  \"success\": true,\n  \"message\": \"Event permanently deleted\",\n  \"data\": null,\n  \"errors\": []\n}"
             }
