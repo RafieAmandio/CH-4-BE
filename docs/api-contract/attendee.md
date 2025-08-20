@@ -125,7 +125,9 @@ This document outlines the API contract for attendee management, which includes 
 **Description:** Returns all active goals categories available for selection.
 
 **Headers:**
-- No authentication required
+- `Authorization: Bearer <token>` (required)
+
+**Response:**
 ```json
 {
   "data": [
@@ -148,6 +150,9 @@ This document outlines the API contract for attendee management, which includes 
 **Endpoint:** `GET /api/attendee/goals-categories/{categoryId}/questions`
 
 **Description:** Returns all questions for the selected goals category, ordered by display_order.
+
+**Headers:**
+- `Authorization: Bearer <token>` (required)
 
 **Path Parameters:**
 - `categoryId` - UUID of the selected goals category
@@ -226,6 +231,9 @@ This document outlines the API contract for attendee management, which includes 
 
 **Description:** Submits answers for questionnaire completion.
 
+**Headers:**
+- `Authorization: Bearer <token>` (required)
+
 **Request Body:**
 ```json
 {
@@ -277,8 +285,7 @@ This document outlines the API contract for attendee management, which includes 
 **Description:** Retrieves AI-generated networking recommendations for a specific attendee. This endpoint triggers the AI recommendation service to generate fresh recommendations based on all attendees in the same event.
 
 **Headers:**
-- `Authorization: Bearer <token>` (required for authenticated users)
-- For visitors: Use the temporary token received during registration
+- `Authorization: Bearer <token>` (required)
 
 **Path Parameters:**
 - `attendeeId` - UUID of the attendee requesting recommendations
