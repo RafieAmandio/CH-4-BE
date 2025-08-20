@@ -329,7 +329,6 @@ This document outlines the API contract for attendee management, which includes 
 
 **Recommendation Object:**
 - `targetAttendeeId` - Recommended attendee's ID
-- `score` - Compatibility score (0-1, up to 4 decimal places)
 - `reasoning` - AI-generated explanation for the match
 - `targetAttendee` - Complete attendee profile
 
