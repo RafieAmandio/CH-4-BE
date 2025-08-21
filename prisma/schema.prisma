@@ -281,7 +281,7 @@ model Attendee {
 
   user_email        String?
 
-  goals_category_id String   @db.Uuid
+  goals_category_id String?   @db.Uuid
 
   nickname          String?
   profession_id     String?  @db.Uuid
@@ -296,7 +296,7 @@ model Attendee {
   // relations
   event         Event          @relation(fields: [event_id], references: [id], onDelete: Cascade)
   user          User?          @relation(fields: [user_id], references: [id], onDelete: SetNull)
-  goal          GoalsCategory  @relation(fields: [goals_category_id], references: [id], onDelete: Restrict)
+  goal          GoalsCategory?  @relation(fields: [goals_category_id], references: [id], onDelete: Restrict)
   profession    Profession?    @relation(fields: [profession_id], references: [id], onDelete: SetNull)
   attendeeAnswers   AttendeeAnswer[]
   recsAsSource  Recommendation[] @relation("RecSource")

@@ -1,5 +1,5 @@
 import { Request } from 'express';
-import { User } from '@prisma/client';
+import { Attendee, User } from '@prisma/client';
 import { SupabaseUser } from './auth.types.js';
 
 export interface ApiResponse<T = any> {
@@ -30,10 +30,12 @@ export interface Error {
 
 export interface AuthRequest extends Request {
   user?: User;
+  attendee?: Attendee;
   supabaseUser?: SupabaseUser;
 }
 
 export interface UserPayload {
-  id: string;
-  email: string;
+  id?: string;
+  attendeeId?: string;
+  email?: string;
 }
