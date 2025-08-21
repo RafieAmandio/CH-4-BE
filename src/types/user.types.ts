@@ -1,3 +1,5 @@
+import { PaginationResponse } from './index.js';
+
 export interface UpdateProfileInput {
   name?: string;
   email?: string;
@@ -42,6 +44,8 @@ export interface UserProfileResponse {
   profession: UserProfessionResponse | null;
 }
 
+
+
 export interface PublicUserProfileResponse {
   id: string;
   name: string;
@@ -71,29 +75,10 @@ export interface EventHistoryItem {
     current_participants: number;
     code: string;
   };
-  attendeeInfo: {
-    nickname: string | null;
-    goalsCategory: {
-      name: string;
-    };
-    profession: {
-      name: string;
-      categoryName: string;
-    } | null;
-    linkedinUsername: string | null;
-    photoLink: string | null;
-  };
   registrationDate: string;
 }
 
 export interface EventHistoryResponse {
   items: EventHistoryItem[];
-  pagination: {
-    currentPage: number;
-    totalPages: number;
-    totalItems: number;
-    itemsPerPage: number;
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;
-  };
+  pagination: PaginationResponse;
 }
