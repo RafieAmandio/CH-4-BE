@@ -283,18 +283,6 @@ GET /api/users/me/events?page=1&limit=10&status=upcoming&sortBy=start&sortOrder=
           "current_participants": "number",
           "code": "string"
         },
-        "attendeeInfo": {
-          "nickname": "string|null",
-          "goalsCategory": {
-            "name": "string"
-          },
-          "profession": {
-            "name": "string",
-            "categoryName": "string"
-          } | null,
-          "linkedinUsername": "string|null",
-          "photoLink": "string|null"
-        },
         "registrationDate": "datetime"
       }
     ],
@@ -313,14 +301,13 @@ GET /api/users/me/events?page=1&limit=10&status=upcoming&sortBy=start&sortOrder=
 **Response Fields:**
 - `attendeeId` - User's attendee ID for this event
 - `event` - Complete event information
-- `attendeeInfo` - User's registration details for this event
 - `registrationDate` - When user registered for the event
 
 **Business Logic:**
 - Queries through the Attendee table where `user_id` matches current user
-- Returns events with user's specific attendee information
-- Includes goals category and profession used during registration
+- Returns events without exposing attendee details for privacy
 - Shows registration timestamp (`created_at` from attendee record)
+- Focuses on event information rather than attendee data
 
 ---
 

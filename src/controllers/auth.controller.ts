@@ -237,6 +237,7 @@ export const callback = async (
     });
 
     let user;
+    let isFirstTime = false;
 
     if (existingUser) {
       logger.info('Updating existing user information');
@@ -260,6 +261,7 @@ export const callback = async (
       });
     } else {
       logger.info('Creating new user account');
+      isFirstTime = true;
 
       // User doesn't exist, create new user
       // Determine provider based on Supabase user data
@@ -315,7 +317,10 @@ export const callback = async (
     const { password_hash: _passwordHash, ...userWithoutPassword } = user;
 
     const responseData = {
-      user: userWithoutPassword,
+      user: {
+        ...userWithoutPassword,
+        isFirst: isFirstTime,
+      },
       token,
     };
 

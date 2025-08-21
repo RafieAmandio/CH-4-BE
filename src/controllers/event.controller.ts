@@ -1,11 +1,7 @@
 import { Response } from 'express';
 import { AuthRequest, PaginationQuery } from '../types/index.js';
 import { CreateEventInput, UpdateEventInput } from '../types/event.types.js';
-import {
-  sendSuccess,
-  sendError,
-  sendPaginatedSuccess,
-} from '../utils/response.js';
+import { sendSuccess, sendError } from '../utils/response.js';
 import {
   parsePagination,
   createPaginatedResponse,
@@ -148,11 +144,7 @@ export const getEvents = async (
       limit
     );
 
-    sendPaginatedSuccess(
-      res,
-      'Events retrieved successfully',
-      paginatedResponse
-    );
+    sendSuccess(res, 'Events retrieved successfully', paginatedResponse, 200);
   } catch (error) {
     logger.error('Get events error:', error);
     sendError(

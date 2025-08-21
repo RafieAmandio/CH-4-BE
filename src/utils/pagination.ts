@@ -1,4 +1,4 @@
-import { PaginationQuery, ListResponse } from '../types/index.js';
+import { PaginationQuery } from '../types/index.js';
 
 /**
  * Default pagination values
@@ -53,10 +53,14 @@ export const createPaginatedResponse = <T>(
   totalData: number,
   page: number,
   limit: number
-): ListResponse<T> => {
+) => {
+  const totalPages = Math.ceil(totalData / limit);
   return {
-    totalData,
-    totalPage: Math.ceil(totalData / limit),
-    entries: data,
+    currentPage: page,
+    totalPages,
+    totalItems: totalData,
+    itemsPerPage: limit,
+    hasNextPage: page < totalPages,
+    hasPreviousPage: page > 1,
   };
 };

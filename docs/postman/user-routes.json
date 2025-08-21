@@ -1,0 +1,219 @@
+{
+  "info": {
+    "name": "User Routes",
+    "description": "Postman collection for User API endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Get Professions",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/users/professions",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "users",
+            "professions"
+          ]
+        },
+        "description": "Returns all active professions grouped by category"
+      }
+    },
+    {
+      "name": "Complete User Registration",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"linkedinUsername\": \"johndoe\",\n  \"photoLink\": \"https://example.com/photo.jpg\",\n  \"professionId\": \"uuid-here\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/users/me/complete",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "users",
+            "me",
+            "complete"
+          ]
+        },
+        "description": "Completes user registration by adding profile details"
+      }
+    },
+    {
+      "name": "Get My Profile",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/users/me",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "users",
+            "me"
+          ]
+        },
+        "description": "Retrieves the current authenticated user's profile"
+      }
+    },
+    {
+      "name": "Update My Profile",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Updated Name\",\n  \"username\": \"newusername\",\n  \"linkedinUsername\": \"newlinkedin\",\n  \"photoLink\": \"https://example.com/newphoto.jpg\",\n  \"professionId\": \"new-uuid-here\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/users/me",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "users",
+            "me"
+          ]
+        },
+        "description": "Updates the current authenticated user's profile"
+      }
+    },
+    {
+      "name": "Get User Profile by ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/users/:id",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "users",
+            ":id"
+          ],
+          "variable": [
+            {
+              "key": "id",
+              "value": "user-uuid-here",
+              "description": "User UUID"
+            }
+          ]
+        },
+        "description": "Retrieves a public view of another user's profile by ID"
+      }
+    },
+    {
+      "name": "Get My Event History",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/users/me/events?page=1&limit=10&status=all&sortBy=start&sortOrder=desc",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "users",
+            "me",
+            "events"
+          ],
+          "query": [
+            {
+              "key": "page",
+              "value": "1",
+              "description": "Page number (default: 1)"
+            },
+            {
+              "key": "limit",
+              "value": "10",
+              "description": "Items per page (default: 10, max: 100)"
+            },
+            {
+              "key": "status",
+              "value": "all",
+              "description": "Filter by event status: upcoming, ongoing, completed, all"
+            },
+            {
+              "key": "sortBy",
+              "value": "start",
+              "description": "Field to sort by: start, end, created_at"
+            },
+            {
+              "key": "sortOrder",
+              "value": "desc",
+              "description": "Sort order: asc or desc"
+            }
+          ]
+        },
+        "description": "Retrieves events where the current user is registered as an attendee"
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "your-jwt-token-here",
+      "type": "string"
+    }
+  ]
+}

@@ -15,7 +15,11 @@ const router = Router();
  * @desc Get all professions grouped by category
  * @access Private
  */
-router.get('/professions', authenticate, userController.getProfessions);
+router.get(
+  '/professions',
+  authenticate(['USER']),
+  userController.getProfessions
+);
 
 /**
  * @route POST /api/users/me/complete
@@ -24,7 +28,7 @@ router.get('/professions', authenticate, userController.getProfessions);
  */
 router.post(
   '/me/complete',
-  authenticate,
+  authenticate(['USER']),
   completeRegistrationValidation,
   validate,
   userController.completeUserRegistration
@@ -42,7 +46,11 @@ router.get('/me', authenticate(['USER']), userController.getMyProfile);
  * @desc Get current user's event history
  * @access Private
  */
-router.get('/me/events', authenticate, userController.getMyEventHistory);
+router.get(
+  '/me/events',
+  authenticate(['USER']),
+  userController.getMyEventHistory
+);
 
 /**
  * @route PUT /api/users/me

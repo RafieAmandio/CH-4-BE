@@ -3,6 +3,10 @@ import { AuthRequest } from '../types/index.js';
 import { sendSuccess, sendError } from '../utils/response.js';
 import { logger } from '../config/logger.js';
 import prisma from '../config/database.js';
+import {
+  parsePagination,
+  createPaginatedResponse,
+} from '../utils/pagination.js';
 
 /**
  * Get all professions grouped by category
@@ -477,13 +481,7 @@ export const getMyEventHistory = async (
 ): Promise<void> => {
   try {
     const user = req.user;
-    const {
-      page = 1,
-      limit = 10,
-      status = 'all',
-      sortBy = 'start',
-      sortOrder = 'desc',
-    } = req.query;
+    const { status = 'all', sortBy = 'start', sortOrder = 'desc' } = req.query;
 
     if (!user) {
       sendError(
@@ -495,12 +493,8 @@ export const getMyEventHistory = async (
       return;
     }
 
-    const pageNum = Math.max(1, parseInt(page as string) || 1);
-    const limitNum = Math.min(
-      100,
-      Math.max(1, parseInt(limit as string) || 10)
-    );
-    const offset = (pageNum - 1) * limitNum;
+    // Use standardized pagination
+    const { page, limit, skip } = parsePagination(req.query);
 
     // Build status filter
     let statusFilter = {};
@@ -546,18 +540,12 @@ export const getMyEventHistory = async (
       },
       include: {
         event: true,
-        goal: true,
-        profession: {
-          include: {
-            category: true,
-          },
-        },
       },
       orderBy: {
         event: eventOrderBy,
       },
-      skip: offset,
-      take: limitNum,
+      skip,
+      take: limit,
     });
 
     // Get total count for pagination
@@ -592,38 +580,13 @@ export const getMyEventHistory = async (
         current_participants: attendee.event.current_participants,
         code: attendee.event.code,
       },
-      attendeeInfo: {
-        nickname: attendee.nickname,
-        goalsCategory: {
-          name: attendee.goal.name,
-        },
-        profession: attendee.profession
-          ? {
-              name: attendee.profession.name,
-              categoryName: attendee.profession.category.category,
-            }
-          : null,
-        linkedinUsername: attendee.linkedin_username,
-        photoLink: attendee.photo_link,
-      },
       registrationDate: attendee.created_at.toISOString(),
     }));
 
-    // Calculate pagination
-    const totalPages = Math.ceil(totalItems / limitNum);
-    const hasNextPage = pageNum < totalPages;
-    const hasPreviousPage = pageNum > 1;
-
+    // Use standardized pagination response
     const responseData = {
       items,
-      pagination: {
-        currentPage: pageNum,
-        totalPages,
-        totalItems,
-        itemsPerPage: limitNum,
-        hasNextPage,
-        hasPreviousPage,
-      },
+      pagination: createPaginatedResponse(items, totalItems, page, limit),
     };
 
     sendSuccess(res, 'Event history retrieved successfully', responseData, 200);

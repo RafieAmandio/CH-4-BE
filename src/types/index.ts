@@ -9,12 +9,6 @@ export interface ApiResponse<T = any> {
   errors: Error[];
 }
 
-export interface ListResponse<T = any> {
-  totalData: number;
-  totalPage: number;
-  entries: T[];
-}
-
 export interface PaginationQuery {
   page?: number;
   limit?: number;
