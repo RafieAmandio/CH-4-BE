@@ -44,8 +44,6 @@ export interface UserProfileResponse {
   profession: UserProfessionResponse | null;
 }
 
-
-
 export interface PublicUserProfileResponse {
   id: string;
   name: string;
