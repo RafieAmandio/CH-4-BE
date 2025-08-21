@@ -9,93 +9,158 @@ import {
   extractSupabaseToken,
 } from '../utils/supabase.js';
 
+// Define authentication types
+export type AuthType = 'USER' | 'ATTENDEE' | 'EMPTY';
+
 /**
- * Authentication middleware to protect routes
- * Verifies the JWT token and attaches the user to the request
+ * Flexible authentication middleware
+ * @param allowedTypes - Array of allowed authentication types
  */
-export const authenticate = async (
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    // Extract token from Authorization header
-    const authHeader = req.headers.authorization;
-    const token = extractTokenFromHeader(authHeader);
+export const authenticate = (allowedTypes: AuthType[]) => {
+  return async (
+    req: AuthRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      // Extract token from Authorization header
+      const authHeader = req.headers.authorization;
+      const token = extractTokenFromHeader(authHeader);
 
-    if (!token) {
-      sendError(
-        res,
-        'Authentication required',
-        [{ field: 'token', message: 'No token provided' }],
-        401
-      );
-      return;
-    }
+      // Handle EMPTY case (no token)
+      if (!token) {
+        if (allowedTypes.includes('EMPTY')) {
+          next();
+          return;
+        } else {
+          sendError(
+            res,
+            'Authentication required',
+            [{ field: 'token', message: 'No token provided' }],
+            401
+          );
+          return;
+        }
+      }
 
-    // Verify token
-    const payload = verifyToken(token);
+      // Verify token
+      const payload = verifyToken(token);
 
-    if (!payload) {
-      sendError(
-        res,
-        'Authentication failed',
-        [{ field: 'token', message: 'Invalid or expired token' }],
-        401
-      );
-      return;
-    }
+      if (!payload) {
+        if (allowedTypes.includes('EMPTY')) {
+          next();
+          return;
+        } else {
+          sendError(
+            res,
+            'Authentication failed',
+            [{ field: 'token', message: 'Invalid or expired token' }],
+            401
+          );
+          return;
+        }
+      }
 
-    if (payload.email) {
-      // User token (has email)
-      const user = await prisma.user.findUnique({
-        where: { id: payload.id },
-      });
+      // Handle USER token (has email)
+      if (payload.email) {
+        if (!allowedTypes.includes('USER')) {
+          sendError(
+            res,
+            'Authentication failed',
+            [
+              {
+                field: 'token',
+                message: 'User token not allowed for this endpoint',
+              },
+            ],
+            403
+          );
+          return;
+        }
 
-      if (!user) {
-        sendError(
-          res,
-          'Authentication failed',
-          [{ field: 'token', message: 'User not found' }],
-          401
-        );
+        const user = await prisma.user.findUnique({
+          where: { id: payload.id },
+        });
+
+        if (!user) {
+          sendError(
+            res,
+            'Authentication failed',
+            [{ field: 'token', message: 'User not found' }],
+            401
+          );
+          return;
+        }
+
+        req.user = user;
+
+        // If token has attendeeId and ATTENDEE is allowed, attach attendee
+        if (payload.attendeeId && allowedTypes.includes('ATTENDEE')) {
+          const attendee = await prisma.attendee.findFirst({
+            where: {
+              id: payload.attendeeId as string,
+              user_id: user.id,
+            },
+          });
+
+          if (attendee) {
+            req.attendee = attendee;
+          }
+        }
+
+        next();
         return;
       }
 
-      // Attach user to request
-      req.user = user;
-    }
-    // If token has attendeeId, attach attendee info
-    if (payload.attendeeId) {
-      const attendee = await prisma.attendee.findFirst({
-        // 👈 Change to findFirst
-        where: {
-          id: payload.attendeeId as string, // 👈 Cast to string
-        },
-      });
+      // Handle ATTENDEE token (no email, visitor)
+      else {
+        if (!allowedTypes.includes('ATTENDEE')) {
+          sendError(
+            res,
+            'Authentication failed',
+            [
+              {
+                field: 'token',
+                message: 'Attendee token not allowed for this endpoint',
+              },
+            ],
+            403
+          );
+          return;
+        }
 
-      if (attendee) {
+        const attendee = await prisma.attendee.findFirst({
+          where: {
+            id: payload.id as string,
+            user_id: null, // Visitors have no user_id
+            is_active: true,
+          },
+        });
+
+        if (!attendee) {
+          sendError(
+            res,
+            'Authentication failed',
+            [{ field: 'token', message: 'Attendee not found or inactive' }],
+            401
+          );
+          return;
+        }
+
         req.attendee = attendee;
-      } else {
-        sendError(
-          res,
-          'Authentication failed',
-          [{ field: 'token', message: 'Attendee not found or inactive' }],
-          401
-        );
+        next();
         return;
       }
+    } catch (error) {
+      logger.error('Authentication error:', error);
+      sendError(
+        res,
+        'Authentication error',
+        [{ field: 'auth', message: 'An error occurred during authentication' }],
+        500
+      );
     }
-    next();
-  } catch (error) {
-    logger.error('Authentication error:', error);
-    sendError(
-      res,
-      'Authentication error',
-      [{ field: 'auth', message: 'An error occurred during authentication' }],
-      500
-    );
-  }
+  };
 };
 
 /**

@@ -14,7 +14,7 @@ const router = Router();
  * @desc Get current user profile
  * @access Private
  */
-router.get('/me', authenticate, userController.getMyProfile);
+router.get('/me', authenticate(['USER']), userController.getMyProfile);
 
 /**
  * @route PUT /api/users/me
@@ -23,7 +23,7 @@ router.get('/me', authenticate, userController.getMyProfile);
  */
 router.put(
   '/me',
-  authenticate,
+  authenticate(['USER']),
   updateProfileValidation,
   validate,
   userController.updateMyProfile

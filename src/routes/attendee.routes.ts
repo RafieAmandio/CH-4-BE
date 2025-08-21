@@ -5,6 +5,7 @@ import {
   createAttendeeValidation,
 } from '../validations/attendee.validation.js';
 import { validate } from '../utils/validation.js';
+import { authenticate } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 
@@ -27,9 +28,33 @@ router.get(
  */
 router.post(
   '/register',
+  authenticate(['USER', 'EMPTY']), // Allow both user tokens and no token
   createAttendeeValidation,
   validate,
   attendeeController.createAttendee
+);
+
+/**
+ * @route PUT /api/attendee/:attendeeId/goals-category
+ * @desc Update attendee's goals category
+ * @access Attendee only (user with attendee context or visitor attendee)
+ */
+router.put(
+  '/:attendeeId/goals-category',
+  authenticate(['USER', 'ATTENDEE']) // Allow user tokens and attendee tokens
+  // validation,
+  // controller
+);
+
+/**
+ * @route GET /api/attendee/recommendations/:attendeeId
+ * @desc Get recommendations for attendee
+ * @access Attendee only
+ */
+router.get(
+  '/recommendations/:attendeeId',
+  authenticate(['ATTENDEE']) // Only attendee tokens allowed
+  // controller
 );
 
 export default router;
