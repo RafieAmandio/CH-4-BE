@@ -63,7 +63,6 @@ export const completeRegistrationValidation = [
     .withMessage('Name must be between 1 and 100 characters'),
 
   body('email')
-    .optional()
     .isEmail()
     .withMessage('Email must be a valid email address')
     .normalizeEmail(),

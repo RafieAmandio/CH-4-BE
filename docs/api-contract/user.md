@@ -69,7 +69,7 @@ All user endpoints use the base path: `/api/users`
 
 **Request Fields:**
 - `name` - User's display name (required)
-- `email` - User's email address (optional)
+- `email` - User's email address (required)
 - `linkedinUsername` - LinkedIn profile username (optional)
 - `photoLink` - URL to profile photo (required)
 - `professionId` - Selected profession from professions table (required)
