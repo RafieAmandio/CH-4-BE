@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import { ApiResponse, Error, ListResponse } from '../types/index.js';
+import { ApiResponse, Error } from '../types/index.js';
 
 /**
  * Send a success response
@@ -15,29 +15,6 @@ export const sendSuccess = <T>(
   statusCode = 200
 ): void => {
   const response: ApiResponse<T> = {
-    success: true,
-    message,
-    data: data,
-    errors: [],
-  };
-
-  res.status(statusCode).json(response);
-};
-
-/**
- * Send a paginated response
- * @param res Express response object
- * @param message Success message
- * @param data The paginated data to include in the response
- * @param statusCode HTTP status code (default: 200)
- */
-export const sendPaginatedSuccess = <T>(
-  res: Response,
-  message: string,
-  data: ListResponse<T>,
-  statusCode = 200
-): void => {
-  const response: ApiResponse<ListResponse<T>> = {
     success: true,
     message,
     data: data,

@@ -158,7 +158,7 @@ All authentication endpoints use the base path: `/api/auth`
       "is_active": "boolean",
       "created_at": "datetime",
       "updated_at": "datetime",
-      "isSignUp": false
+      "isFirst": false
     },
     "token": "jwt_token"
   }
