@@ -64,11 +64,11 @@ export const authenticate = async (
 
       // Attach user to request
       req.user = user;
-
     }
     // If token has attendeeId, attach attendee info
     if (payload.attendeeId) {
-      const attendee = await prisma.attendee.findFirst({ // 👈 Change to findFirst
+      const attendee = await prisma.attendee.findFirst({
+        // 👈 Change to findFirst
         where: {
           id: payload.attendeeId as string, // 👈 Cast to string
         },
@@ -76,8 +76,7 @@ export const authenticate = async (
 
       if (attendee) {
         req.attendee = attendee;
-      }
-      else {
+      } else {
         sendError(
           res,
           'Authentication failed',

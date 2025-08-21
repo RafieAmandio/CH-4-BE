@@ -36,6 +36,6 @@ export interface AuthRequest extends Request {
 
 export interface UserPayload {
   id?: string;
-  attendeeId?: String;
+  attendeeId?: string;
   email?: string;
 }

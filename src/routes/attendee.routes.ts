@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import * as attendeeController from '../controllers/attendee.controller.js';
 import {
-    getProfessionsValidation,
-    createAttendeeValidation,
+  getProfessionsValidation,
+  createAttendeeValidation,
 } from '../validations/attendee.validation.js';
 import { validate } from '../utils/validation.js';
 
@@ -14,10 +14,10 @@ const router = Router();
  * @access Public
  */
 router.get(
-    '/professions',
-    getProfessionsValidation,
-    validate,
-    attendeeController.getProfessions
+  '/professions',
+  getProfessionsValidation,
+  validate,
+  attendeeController.getProfessions
 );
 
 /**
@@ -26,10 +26,10 @@ router.get(
  * @access Public (but checks for authentication)
  */
 router.post(
-    '/register',
-    createAttendeeValidation,
-    validate,
-    attendeeController.createAttendee
+  '/register',
+  createAttendeeValidation,
+  validate,
+  attendeeController.createAttendee
 );
 
 export default router;
