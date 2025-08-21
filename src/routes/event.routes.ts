@@ -18,7 +18,7 @@ const router = Router();
  */
 router.post(
   '/',
-  authenticate,
+  authenticate(['USER']),
   createEventValidation,
   validate,
   eventController.createEvent
@@ -31,7 +31,7 @@ router.post(
  */
 router.get(
   '/',
-  authenticate,
+  authenticate(['USER']),
   getEventsValidation,
   validate,
   eventController.getEvents
@@ -44,7 +44,7 @@ router.get(
  */
 router.get(
   '/:id',
-  authenticate,
+  authenticate(['USER']),
   getEventValidation,
   validate,
   eventController.getEventById
@@ -57,7 +57,7 @@ router.get(
  */
 router.put(
   '/:id',
-  authenticate,
+  authenticate(['USER']),
   updateEventValidation,
   validate,
   eventController.updateEvent
@@ -71,7 +71,7 @@ router.put(
  */
 router.delete(
   '/:id',
-  authenticate,
+  authenticate(['USER']),
   getEventValidation,
   validate,
   eventController.deleteEvent

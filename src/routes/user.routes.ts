@@ -35,7 +35,7 @@ router.post(
  * @desc Get current user profile
  * @access Private
  */
-router.get('/me', authenticate, userController.getMyProfile);
+router.get('/me', authenticate(['USER']), userController.getMyProfile);
 
 /**
  * @route GET /api/users/me/events
@@ -51,7 +51,7 @@ router.get('/me/events', authenticate, userController.getMyEventHistory);
  */
 router.put(
   '/me',
-  authenticate,
+  authenticate(['USER']),
   updateProfileValidation,
   validate,
   userController.updateMyProfile

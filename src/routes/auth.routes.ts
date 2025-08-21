@@ -109,6 +109,6 @@ router.post('/login', loginValidation, validate, authController.login);
  * @desc Get current user profile
  * @access Private
  */
-router.get('/profile', authenticate, authController.getProfile);
+router.get('/profile', authenticate(['USER']), authController.getProfile);
 
 export default router;
