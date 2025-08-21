@@ -46,24 +46,47 @@ export const authenticate = async (
       return;
     }
 
-    // Get user from database
-    const user = await prisma.user.findUnique({
-      where: { id: payload.id },
-    });
+    if (payload.email) {
+      // User token (has email)
+      const user = await prisma.user.findUnique({
+        where: { id: payload.id },
+      });
 
-    if (!user) {
-      sendError(
-        res,
-        'Authentication failed',
-        [{ field: 'token', message: 'User not found' }],
-        401
-      );
-      return;
+      if (!user) {
+        sendError(
+          res,
+          'Authentication failed',
+          [{ field: 'token', message: 'User not found' }],
+          401
+        );
+        return;
+      }
+
+      // Attach user to request
+      req.user = user;
+
     }
+    // If token has attendeeId, attach attendee info
+    if (payload.attendeeId) {
+      const attendee = await prisma.attendee.findFirst({ // 👈 Change to findFirst
+        where: {
+          id: payload.attendeeId as string, // 👈 Cast to string
+        },
+      });
 
-    // Attach user to request
-    req.user = user;
-
+      if (attendee) {
+        req.attendee = attendee;
+      }
+      else {
+        sendError(
+          res,
+          'Authentication failed',
+          [{ field: 'token', message: 'Attendee not found or inactive' }],
+          401
+        );
+        return;
+      }
+    }
     next();
   } catch (error) {
     logger.error('Authentication error:', error);

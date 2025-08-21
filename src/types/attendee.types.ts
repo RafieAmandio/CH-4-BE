@@ -25,12 +25,5 @@ export interface CreateAttendeeInput {
 
 export interface CreateAttendeeResponse {
     attendeeId: string;
-    accessToken?: string; // Only for visitors
-}
-
-// For temporary token generation
-export interface TemporaryTokenPayload {
-    attendeeId: string;
-    eventId: string;
-    type: 'visitor';
+    accessToken: string;
 }
