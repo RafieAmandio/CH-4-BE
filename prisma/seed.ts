@@ -5,6 +5,162 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('Starting seed...');
 
+  // Create Profession Categories
+  const techCategory = await prisma.professionCategory.create({
+    data: {
+      category: 'Technology & Engineering',
+    },
+  });
+
+  const businessCategory = await prisma.professionCategory.create({
+    data: {
+      category: 'Business & Management',
+    },
+  });
+
+  const designCategory = await prisma.professionCategory.create({
+    data: {
+      category: 'Design & Creative',
+    },
+  });
+
+  const marketingCategory = await prisma.professionCategory.create({
+    data: {
+      category: 'Marketing & Sales',
+    },
+  });
+
+  const financeCategory = await prisma.professionCategory.create({
+    data: {
+      category: 'Finance & Accounting',
+    },
+  });
+
+  const healthcareCategory = await prisma.professionCategory.create({
+    data: {
+      category: 'Healthcare & Medical',
+    },
+  });
+
+  const educationCategory = await prisma.professionCategory.create({
+    data: {
+      category: 'Education & Training',
+    },
+  });
+
+  const legalCategory = await prisma.professionCategory.create({
+    data: {
+      category: 'Legal & Compliance',
+    },
+  });
+
+  // Create Professions
+  await prisma.profession.createMany({
+    data: [
+      // Technology & Engineering
+      { profession_category_id: techCategory.id, name: 'Software Engineer' },
+      { profession_category_id: techCategory.id, name: 'Frontend Developer' },
+      { profession_category_id: techCategory.id, name: 'Backend Developer' },
+      { profession_category_id: techCategory.id, name: 'Full Stack Developer' },
+      { profession_category_id: techCategory.id, name: 'DevOps Engineer' },
+      { profession_category_id: techCategory.id, name: 'Data Scientist' },
+      { profession_category_id: techCategory.id, name: 'Data Engineer' },
+      { profession_category_id: techCategory.id, name: 'Machine Learning Engineer' },
+      { profession_category_id: techCategory.id, name: 'Product Manager' },
+      { profession_category_id: techCategory.id, name: 'Technical Product Manager' },
+      { profession_category_id: techCategory.id, name: 'QA Engineer' },
+      { profession_category_id: techCategory.id, name: 'Security Engineer' },
+      { profession_category_id: techCategory.id, name: 'Cloud Architect' },
+      { profession_category_id: techCategory.id, name: 'Mobile Developer' },
+      { profession_category_id: techCategory.id, name: 'System Administrator' },
+
+      // Business & Management
+      { profession_category_id: businessCategory.id, name: 'CEO' },
+      { profession_category_id: businessCategory.id, name: 'CTO' },
+      { profession_category_id: businessCategory.id, name: 'COO' },
+      { profession_category_id: businessCategory.id, name: 'Business Analyst' },
+      { profession_category_id: businessCategory.id, name: 'Project Manager' },
+      { profession_category_id: businessCategory.id, name: 'Operations Manager' },
+      { profession_category_id: businessCategory.id, name: 'Strategy Consultant' },
+      { profession_category_id: businessCategory.id, name: 'Business Development Manager' },
+      { profession_category_id: businessCategory.id, name: 'General Manager' },
+      { profession_category_id: businessCategory.id, name: 'Entrepreneur' },
+      { profession_category_id: businessCategory.id, name: 'Startup Founder' },
+      { profession_category_id: businessCategory.id, name: 'Venture Capitalist' },
+      { profession_category_id: businessCategory.id, name: 'Investment Banker' },
+
+      // Design & Creative
+      { profession_category_id: designCategory.id, name: 'UI/UX Designer' },
+      { profession_category_id: designCategory.id, name: 'Graphic Designer' },
+      { profession_category_id: designCategory.id, name: 'Product Designer' },
+      { profession_category_id: designCategory.id, name: 'Visual Designer' },
+      { profession_category_id: designCategory.id, name: 'Brand Designer' },
+      { profession_category_id: designCategory.id, name: 'Web Designer' },
+      { profession_category_id: designCategory.id, name: 'Motion Graphics Designer' },
+      { profession_category_id: designCategory.id, name: 'Creative Director' },
+      { profession_category_id: designCategory.id, name: 'Art Director' },
+      { profession_category_id: designCategory.id, name: 'Illustrator' },
+      { profession_category_id: designCategory.id, name: 'Photographer' },
+      { profession_category_id: designCategory.id, name: 'Video Editor' },
+
+      // Marketing & Sales
+      { profession_category_id: marketingCategory.id, name: 'Marketing Manager' },
+      { profession_category_id: marketingCategory.id, name: 'Digital Marketing Specialist' },
+      { profession_category_id: marketingCategory.id, name: 'Content Marketing Manager' },
+      { profession_category_id: marketingCategory.id, name: 'Social Media Manager' },
+      { profession_category_id: marketingCategory.id, name: 'SEO Specialist' },
+      { profession_category_id: marketingCategory.id, name: 'Growth Hacker' },
+      { profession_category_id: marketingCategory.id, name: 'Sales Manager' },
+      { profession_category_id: marketingCategory.id, name: 'Sales Representative' },
+      { profession_category_id: marketingCategory.id, name: 'Account Manager' },
+      { profession_category_id: marketingCategory.id, name: 'Customer Success Manager' },
+      { profession_category_id: marketingCategory.id, name: 'Brand Manager' },
+      { profession_category_id: marketingCategory.id, name: 'PR Manager' },
+
+      // Finance & Accounting
+      { profession_category_id: financeCategory.id, name: 'Financial Analyst' },
+      { profession_category_id: financeCategory.id, name: 'Accountant' },
+      { profession_category_id: financeCategory.id, name: 'CFO' },
+      { profession_category_id: financeCategory.id, name: 'Controller' },
+      { profession_category_id: financeCategory.id, name: 'Tax Specialist' },
+      { profession_category_id: financeCategory.id, name: 'Auditor' },
+      { profession_category_id: financeCategory.id, name: 'Financial Planner' },
+      { profession_category_id: financeCategory.id, name: 'Investment Advisor' },
+      { profession_category_id: financeCategory.id, name: 'Risk Manager' },
+      { profession_category_id: financeCategory.id, name: 'Treasury Analyst' },
+
+      // Healthcare & Medical
+      { profession_category_id: healthcareCategory.id, name: 'Doctor' },
+      { profession_category_id: healthcareCategory.id, name: 'Nurse' },
+      { profession_category_id: healthcareCategory.id, name: 'Pharmacist' },
+      { profession_category_id: healthcareCategory.id, name: 'Medical Researcher' },
+      { profession_category_id: healthcareCategory.id, name: 'Healthcare Administrator' },
+      { profession_category_id: healthcareCategory.id, name: 'Physical Therapist' },
+      { profession_category_id: healthcareCategory.id, name: 'Medical Device Engineer' },
+      { profession_category_id: healthcareCategory.id, name: 'Biomedical Engineer' },
+      { profession_category_id: healthcareCategory.id, name: 'Health Data Analyst' },
+
+      // Education & Training
+      { profession_category_id: educationCategory.id, name: 'Teacher' },
+      { profession_category_id: educationCategory.id, name: 'Professor' },
+      { profession_category_id: educationCategory.id, name: 'Training Specialist' },
+      { profession_category_id: educationCategory.id, name: 'Instructional Designer' },
+      { profession_category_id: educationCategory.id, name: 'Education Administrator' },
+      { profession_category_id: educationCategory.id, name: 'Corporate Trainer' },
+      { profession_category_id: educationCategory.id, name: 'Curriculum Developer' },
+      { profession_category_id: educationCategory.id, name: 'Educational Consultant' },
+
+      // Legal & Compliance
+      { profession_category_id: legalCategory.id, name: 'Lawyer' },
+      { profession_category_id: legalCategory.id, name: 'Legal Counsel' },
+      { profession_category_id: legalCategory.id, name: 'Compliance Officer' },
+      { profession_category_id: legalCategory.id, name: 'Paralegal' },
+      { profession_category_id: legalCategory.id, name: 'Contract Manager' },
+      { profession_category_id: legalCategory.id, name: 'Intellectual Property Specialist' },
+      { profession_category_id: legalCategory.id, name: 'Regulatory Affairs Specialist' },
+    ],
+  });
+
   // Create Goals Categories
   const jobSeekingCategory = await prisma.goalsCategory.create({
     data: {
