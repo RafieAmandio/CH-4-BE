@@ -88,6 +88,7 @@ This document outlines the API contract for attendee management, which includes 
   "message": "Attendee registered successfully",
   "data": {
     "attendeeId": "uuid"
+    "accessToken": "jwt_token"
   }
 }
 ```
