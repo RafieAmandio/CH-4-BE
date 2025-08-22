@@ -35,14 +35,16 @@ export const createEvent = async (
     const newEvent = await prisma.event.create({
       data: {
         name: eventData.name,
-        start: new Date(eventData.datetime),
-        end: new Date(
-          new Date(eventData.datetime).getTime() + 2 * 60 * 60 * 1000
-        ), // Default 2 hours later
+        start: new Date(eventData.start),
+        end: new Date(eventData.end),
         detail: eventData.description,
-        location_name: eventData.location,
+        photo_link: eventData.photoLink,
+        location_name: eventData.locationName,
+        location_address: eventData.locationAddress,
+        location_link: eventData.locationLink,
         latitude: eventData.latitude,
         longitude: eventData.longitude,
+        link: eventData.link,
         status: EventStatus.UPCOMING,
         current_participants: 0,
         created_by: userId,
@@ -75,15 +77,34 @@ export const getEvents = async (
   res: Response
 ): Promise<void> => {
   try {
-    const query = req.query as PaginationQuery;
+    const query = req.query as PaginationQuery & { filter?: string };
     const { page, limit, skip, search, sortBy, sortOrder } =
       parsePagination(query);
+    const { filter } = query;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      sendError(
+        res,
+        'Authentication required',
+        [{ field: 'auth', message: 'User not authenticated' }],
+        401
+      );
+      return;
+    }
+
+    // Build base where clause
+    const baseWhere: Prisma.EventWhereInput = {
+      is_active: true,
+      // Apply filter: 'created' shows only user's events, 'all' shows all events
+      ...(filter === 'all' ? {} : { created_by: userId }),
+    };
 
     // Build where clause for search
     const where: Prisma.EventWhereInput = search
       ? {
           AND: [
-            { is_active: true },
+            baseWhere,
             {
               OR: [
                 {
@@ -108,7 +129,7 @@ export const getEvents = async (
             },
           ],
         }
-      : { is_active: true };
+      : baseWhere;
 
     // Build order by clause
     const orderBy: Prisma.EventOrderByWithRelationInput = sortBy
@@ -136,15 +157,32 @@ export const getEvents = async (
       prisma.event.count({ where }),
     ]);
 
-    // Create paginated response
-    const paginatedResponse = createPaginatedResponse(
-      events,
-      totalEvents,
-      page,
-      limit
-    );
+    // Transform events to match API response format
+    const items = events.map(event => ({
+      id: event.id,
+      name: event.name,
+      start: event.start.toISOString(),
+      end: event.end.toISOString(),
+      detail: event.detail,
+      photoLink: event.photo_link,
+      locationName: event.location_name,
+      locationAddress: event.location_address,
+      locationLink: event.location_link,
+      link: event.link,
+      status: event.status,
+      currentParticipants: event.current_participants,
+      creator: event.creator,
+      createdAt: event.created_at.toISOString(),
+      updatedAt: event.updated_at.toISOString(),
+    }));
 
-    sendSuccess(res, 'Events retrieved successfully', paginatedResponse, 200);
+    // Use standardized pagination response
+    const responseData = {
+      items,
+      pagination: createPaginatedResponse(items, totalEvents, page, limit),
+    };
+
+    sendSuccess(res, 'Events retrieved successfully', responseData, 200);
   } catch (error) {
     logger.error('Get events error:', error);
     sendError(
@@ -273,20 +311,27 @@ export const updateEvent = async (
     // Prepare update data
     const updateData: any = {};
     if (eventData.name !== undefined) updateData.name = eventData.name;
-    if (eventData.datetime !== undefined) {
-      updateData.start = new Date(eventData.datetime);
-      updateData.end = new Date(
-        new Date(eventData.datetime).getTime() + 2 * 60 * 60 * 1000
-      );
+    if (eventData.start !== undefined) {
+      updateData.start = new Date(eventData.start);
+    }
+    if (eventData.end !== undefined) {
+      updateData.end = new Date(eventData.end);
     }
     if (eventData.description !== undefined)
       updateData.detail = eventData.description;
-    if (eventData.location !== undefined)
-      updateData.location_name = eventData.location;
+    if (eventData.photoLink !== undefined)
+      updateData.photo_link = eventData.photoLink;
+    if (eventData.locationName !== undefined)
+      updateData.location_name = eventData.locationName;
+    if (eventData.locationAddress !== undefined)
+      updateData.location_address = eventData.locationAddress;
+    if (eventData.locationLink !== undefined)
+      updateData.location_link = eventData.locationLink;
     if (eventData.latitude !== undefined)
       updateData.latitude = eventData.latitude;
     if (eventData.longitude !== undefined)
       updateData.longitude = eventData.longitude;
+    if (eventData.link !== undefined) updateData.link = eventData.link;
 
     // Update the event
     const updatedEvent = await prisma.event.update({

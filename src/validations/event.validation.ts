@@ -10,16 +10,30 @@ export const createEventValidation = [
     .withMessage('Event name must be between 3 and 100 characters')
     .trim(),
 
-  body('datetime')
+  body('start')
     .notEmpty()
-    .withMessage('Event datetime is required')
+    .withMessage('Event start time is required')
     .isISO8601()
-    .withMessage('Datetime must be a valid ISO 8601 date')
-    .custom(datetime => {
-      const eventDate = new Date(datetime);
+    .withMessage('Start time must be a valid ISO 8601 date')
+    .custom(start => {
+      const startDate = new Date(start);
       const now = new Date();
-      if (eventDate <= now) {
-        throw new Error('Event datetime must be in the future');
+      if (startDate <= now) {
+        throw new Error('Event start time must be in the future');
+      }
+      return true;
+    }),
+
+  body('end')
+    .notEmpty()
+    .withMessage('Event end time is required')
+    .isISO8601()
+    .withMessage('End time must be a valid ISO 8601 date')
+    .custom((end, { req }) => {
+      const endDate = new Date(end);
+      const startDate = new Date(req.body.start);
+      if (endDate <= startDate) {
+        throw new Error('Event end time must be after start time');
       }
       return true;
     }),
@@ -32,13 +46,31 @@ export const createEventValidation = [
     .withMessage('Description must not exceed 1000 characters')
     .trim(),
 
-  body('location')
+  body('photoLink')
+    .optional()
+    .isURL()
+    .withMessage('Photo link must be a valid URL'),
+
+  body('locationName')
     .optional()
     .isString()
-    .withMessage('Location must be a string')
+    .withMessage('Location name must be a string')
     .isLength({ max: 200 })
-    .withMessage('Location must not exceed 200 characters')
+    .withMessage('Location name must not exceed 200 characters')
     .trim(),
+
+  body('locationAddress')
+    .optional()
+    .isString()
+    .withMessage('Location address must be a string')
+    .isLength({ max: 500 })
+    .withMessage('Location address must not exceed 500 characters')
+    .trim(),
+
+  body('locationLink')
+    .optional()
+    .isURL()
+    .withMessage('Location link must be a valid URL'),
 
   body('latitude')
     .optional()
@@ -49,6 +81,8 @@ export const createEventValidation = [
     .optional()
     .isFloat({ min: -180, max: 180 })
     .withMessage('Longitude must be a number between -180 and 180'),
+
+  body('link').optional().isURL().withMessage('Event link must be a valid URL'),
 ];
 
 export const updateEventValidation = [
@@ -66,16 +100,31 @@ export const updateEventValidation = [
     .withMessage('Event name must be between 3 and 100 characters')
     .trim(),
 
-  body('datetime')
+  body('start')
     .optional()
     .isISO8601()
-    .withMessage('Datetime must be a valid ISO 8601 date')
-    .custom(datetime => {
-      if (datetime) {
-        const eventDate = new Date(datetime);
+    .withMessage('Start time must be a valid ISO 8601 date')
+    .custom(start => {
+      if (start) {
+        const startDate = new Date(start);
         const now = new Date();
-        if (eventDate <= now) {
-          throw new Error('Event datetime must be in the future');
+        if (startDate <= now) {
+          throw new Error('Event start time must be in the future');
+        }
+      }
+      return true;
+    }),
+
+  body('end')
+    .optional()
+    .isISO8601()
+    .withMessage('End time must be a valid ISO 8601 date')
+    .custom((end, { req }) => {
+      if (end && req.body.start) {
+        const endDate = new Date(end);
+        const startDate = new Date(req.body.start);
+        if (endDate <= startDate) {
+          throw new Error('Event end time must be after start time');
         }
       }
       return true;
@@ -89,13 +138,31 @@ export const updateEventValidation = [
     .withMessage('Description must not exceed 1000 characters')
     .trim(),
 
-  body('location')
+  body('photoLink')
+    .optional()
+    .isURL()
+    .withMessage('Photo link must be a valid URL'),
+
+  body('locationName')
     .optional()
     .isString()
-    .withMessage('Location must be a string')
+    .withMessage('Location name must be a string')
     .isLength({ max: 200 })
-    .withMessage('Location must not exceed 200 characters')
+    .withMessage('Location name must not exceed 200 characters')
     .trim(),
+
+  body('locationAddress')
+    .optional()
+    .isString()
+    .withMessage('Location address must be a string')
+    .isLength({ max: 500 })
+    .withMessage('Location address must not exceed 500 characters')
+    .trim(),
+
+  body('locationLink')
+    .optional()
+    .isURL()
+    .withMessage('Location link must be a valid URL'),
 
   body('latitude')
     .optional()
@@ -144,4 +211,9 @@ export const getEventsValidation = [
     .optional()
     .isIn(['asc', 'desc'])
     .withMessage('SortOrder must be either asc or desc'),
+
+  query('filter')
+    .optional()
+    .isIn(['created', 'all'])
+    .withMessage('Filter must be either created or all'),
 ];
