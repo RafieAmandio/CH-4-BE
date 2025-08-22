@@ -27,3 +27,111 @@ export interface CreateAttendeeResponse {
   attendeeId: string;
   accessToken: string;
 }
+
+export interface GoalsCategoryResponse {
+  id: string;
+  name: string;
+}
+
+export interface GetGoalsCategoriesResponse {
+  data: GoalsCategoryResponse[];
+}
+
+export interface UpdateGoalsCategoryInput {
+  goalsCategoryId: string;
+}
+
+export interface QuestionResponse {
+  id: string;
+  question: string;
+  type:
+    | 'SINGLE_CHOICE'
+    | 'MULTI_SELECT'
+    | 'RANKED_CHOICE'
+    | 'FREE_TEXT'
+    | 'NUMBER'
+    | 'SCALE'
+    | 'DATE';
+  placeholder?: string;
+  displayOrder: number;
+  isRequired: boolean;
+  isShareable: boolean;
+  constraints: {
+    minSelect: number;
+    maxSelect?: number;
+    requireRanking: boolean;
+    isUsingOther: boolean;
+    textMaxLen?: number;
+    numberMin?: number;
+    numberMax?: number;
+    numberStep?: number;
+  };
+  answerOptions: AnswerOptionResponse[];
+}
+
+export interface AnswerOptionResponse {
+  id: string;
+  label: string;
+  value?: string;
+  displayOrder: number;
+}
+
+export interface UpdateGoalsCategoryResponse {
+  attendeeId: string;
+  goalsCategory: GoalsCategoryResponse;
+  questions: QuestionResponse[];
+}
+
+export interface SubmitAnswersInput {
+  attendeeId: string;
+  answers: Array<{
+    questionId: string;
+    answerOptionId?: string;
+    textValue?: string;
+    numberValue?: number;
+    dateValue?: string;
+    rank?: number;
+    weight?: number;
+  }>;
+}
+
+export interface RecommendationTargetAttendee {
+  nickname: string;
+  profession: {
+    name: string;
+    categoryName: string;
+  };
+  goalsCategory: {
+    name: string;
+  };
+  linkedinUsername?: string;
+  photoLink: string;
+  shareableAnswers: Array<{
+    question: string;
+    questionType: string;
+    answerLabel?: string;
+    textValue?: string;
+    numberValue?: number;
+    dateValue?: string;
+    rank?: number;
+  }>;
+}
+
+export interface RecommendationResponse {
+  targetAttendeeId: string;
+  score?: number;
+  reasoning: string;
+  targetAttendee: RecommendationTargetAttendee;
+}
+
+export interface SubmitAnswersResponse {
+  attendeeId: string;
+  answersProcessed: number;
+  recommendations: RecommendationResponse[];
+}
+
+export interface GetRecommendationsResponse {
+  attendeeId: string;
+  eventId: string;
+  recommendations: RecommendationResponse[];
+}
