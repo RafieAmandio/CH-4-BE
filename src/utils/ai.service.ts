@@ -49,14 +49,17 @@ export const submitAttendeeDataToAI = async (
   attendeeData: AttendeeDataForAI
 ): Promise<void> => {
   try {
-    const response = await fetch(`${env.AI_SERVICE_URL}/ai/attendees/process`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${env.AI_SERVICE_TOKEN}`,
-      },
-      body: JSON.stringify(attendeeData),
-    });
+    const response = await fetch(
+      `${env.AI_SERVICE_URL}/api/ai/v1/attendees/process`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${env.AI_SERVICE_TOKEN}`,
+        },
+        body: JSON.stringify(attendeeData),
+      }
+    );
 
     if (!response.ok) {
       throw new Error(
@@ -74,7 +77,7 @@ export const getAIRecommendations = async (
 ): Promise<AIRecommendationResponse | null> => {
   try {
     const response = await fetch(
-      `${env.AI_SERVICE_URL}/ai/attendees/recommendations`,
+      `${env.AI_SERVICE_URL}/api/ai/v1/attendees/recommendations`,
       {
         method: 'POST',
         headers: {
