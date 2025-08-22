@@ -81,3 +81,57 @@ export interface UpdateGoalsCategoryResponse {
   goalsCategory: GoalsCategoryResponse;
   questions: QuestionResponse[];
 }
+
+export interface SubmitAnswersInput {
+  attendeeId: string;
+  answers: Array<{
+    questionId: string;
+    answerOptionId?: string;
+    textValue?: string;
+    numberValue?: number;
+    dateValue?: string;
+    rank?: number;
+    weight?: number;
+  }>;
+}
+
+export interface RecommendationTargetAttendee {
+  nickname: string;
+  profession: {
+    name: string;
+    categoryName: string;
+  };
+  goalsCategory: {
+    name: string;
+  };
+  linkedinUsername?: string;
+  photoLink: string;
+  shareableAnswers: Array<{
+    question: string;
+    questionType: string;
+    answerLabel?: string;
+    textValue?: string;
+    numberValue?: number;
+    dateValue?: string;
+    rank?: number;
+  }>;
+}
+
+export interface RecommendationResponse {
+  targetAttendeeId: string;
+  score?: number;
+  reasoning: string;
+  targetAttendee: RecommendationTargetAttendee;
+}
+
+export interface SubmitAnswersResponse {
+  attendeeId: string;
+  answersProcessed: number;
+  recommendations: RecommendationResponse[];
+}
+
+export interface GetRecommendationsResponse {
+  attendeeId: string;
+  eventId: string;
+  recommendations: RecommendationResponse[];
+}

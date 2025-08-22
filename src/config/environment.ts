@@ -13,6 +13,8 @@ interface EnvironmentConfig {
   DIRECT_URL: string;
   SUPABASE_URL: string;
   SUPABASE_SERVICE_ROLE_KEY: string;
+  AI_SERVICE_URL: string;
+  AI_SERVICE_TOKEN: string;
 }
 
 // Function to verify that all required environment variables are present
@@ -26,6 +28,8 @@ const verifyEnv = (): EnvironmentConfig => {
     'DIRECT_URL',
     'SUPABASE_URL',
     'SUPABASE_SERVICE_ROLE_KEY',
+    'AI_SERVICE_URL',
+    'AI_SERVICE_TOKEN',
   ];
 
   const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
@@ -57,6 +61,8 @@ const verifyEnv = (): EnvironmentConfig => {
     DIRECT_URL: process.env.DIRECT_URL || '',
     SUPABASE_URL: process.env.SUPABASE_URL || '',
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+    AI_SERVICE_URL: process.env.AI_SERVICE_URL || '',
+    AI_SERVICE_TOKEN: process.env.AI_SERVICE_TOKEN || '',
   };
 };
 

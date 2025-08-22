@@ -9,9 +9,18 @@ import {
   UpdateGoalsCategoryInput,
   QuestionResponse,
   UpdateGoalsCategoryResponse,
+  SubmitAnswersInput,
+  SubmitAnswersResponse,
+  GetRecommendationsResponse,
+  RecommendationResponse,
 } from '../types/attendee.types.js';
 import { CreateAttendeeInput } from '../types/attendee.types.js';
 import { generateToken } from '../utils/token.js';
+import {
+  processAttendeeWithAI,
+  getAIRecommendations,
+  AttendeeDataForAI,
+} from '../utils/ai.service.js';
 
 /**
  * Get all professions grouped by category
@@ -422,3 +431,534 @@ export const updateGoalsCategory = async (
     );
   }
 };
+
+/**
+ * POST /api/attendee/answers
+ * Replace-by-question (delete + createMany) to support multi-select & nulls.
+ * Returns top-3 recommendations (without score) per your spec.
+ */
+export const submitAnswers = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const { attendeeId, answers }: SubmitAnswersInput = req.body;
+    const user = req.user;
+    const attendeeToken = req.attendee;
+
+    // ---- Ownership & auth checks ----
+    if (user) {
+      const owned = await prisma.attendee.findFirst({
+        where: { id: attendeeId, user_id: user.id, is_active: true },
+        select: { id: true },
+      });
+      if (!owned) {
+        sendError(
+          res,
+          'Attendee not found',
+          [
+            {
+              field: 'attendeeId',
+              message: 'Attendee not found or does not belong to user',
+            },
+          ],
+          404
+        );
+        return;
+      }
+    } else if (attendeeToken) {
+      if (attendeeToken.id !== attendeeId) {
+        sendError(
+          res,
+          'Forbidden',
+          [{ field: 'attendeeId', message: 'Token does not match attendee' }],
+          403
+        );
+        return;
+      }
+    } else {
+      sendError(
+        res,
+        'Authentication required',
+        [{ field: 'auth', message: 'No valid authentication found' }],
+        401
+      );
+      return;
+    }
+
+    // ---- Load attendee context ----
+    const currentAttendee = await prisma.attendee.findUnique({
+      where: { id: attendeeId },
+      include: {
+        event: true,
+        user: {
+          select: { id: true, email: true, username: true, name: true },
+        },
+        profession: { include: { category: true } },
+        goal: true,
+      },
+    });
+
+    if (!currentAttendee) {
+      sendError(
+        res,
+        'Attendee not found',
+        [{ field: 'attendeeId', message: 'Attendee not found' }],
+        404
+      );
+      return;
+    }
+    if (!currentAttendee.goals_category_id) {
+      sendError(
+        res,
+        'Goals category required',
+        [
+          {
+            field: 'attendeeId',
+            message:
+              'Attendee must select a goals category before submitting answers',
+          },
+        ],
+        400
+      );
+      return;
+    }
+
+    // ---- Validate questions belong to attendee's goals category ----
+    const questionIds = Array.from(new Set(answers.map(a => a.questionId)));
+    const validQuestions = await prisma.question.findMany({
+      where: {
+        id: { in: questionIds },
+        goals_category_id: currentAttendee.goals_category_id,
+        is_active: true,
+      },
+      select: { id: true },
+    });
+    const validSet = new Set(validQuestions.map(q => q.id));
+    const invalid = questionIds.filter(id => !validSet.has(id));
+    if (invalid.length > 0) {
+      sendError(
+        res,
+        'Invalid question(s)',
+        invalid.map(qid => ({
+          field: 'questionId',
+          message: `Question ${qid} not in attendee's goals category`,
+        })),
+        400
+      );
+      return;
+    }
+
+    // ---- Replace-by-question transaction ----
+    const byQuestion = new Map<string, typeof answers>();
+    for (const a of answers) {
+      const arr = byQuestion.get(a.questionId) ?? [];
+      arr.push(a);
+      byQuestion.set(a.questionId, arr);
+    }
+
+    const txs: any[] = [];
+    let totalCreated = 0;
+
+    for (const [qid, group] of byQuestion) {
+      txs.push(
+        prisma.attendeeAnswer.deleteMany({
+          where: { attendee_id: attendeeId, question_id: qid },
+        })
+      );
+      txs.push(
+        prisma.attendeeAnswer.createMany({
+          data: group.map(g => ({
+            attendee_id: attendeeId,
+            question_id: g.questionId,
+            answer_option_id: g.answerOptionId ?? null,
+            text_value: g.textValue ?? null,
+            number_value:
+              g.numberValue == null ? null : (g.numberValue as unknown as any),
+            date_value: g.dateValue ? new Date(g.dateValue) : null,
+            rank: g.rank ?? null,
+            weight: g.weight == null ? null : (g.weight as unknown as any), // Prisma.Decimal compatible
+            is_active: true,
+          })),
+        })
+      );
+    }
+
+    const results = await prisma.$transaction(txs);
+    for (const r of results) {
+      if (typeof r?.count === 'number') totalCreated += r.count;
+    }
+
+    // ---- Reload answers to build AI payload (with labels & types) ----
+    const attendeeAnswers = await prisma.attendeeAnswer.findMany({
+      where: { attendee_id: attendeeId, is_active: true },
+      include: { question: true, answerOption: true },
+    });
+
+    const aiData = {
+      eventId: currentAttendee.event_id,
+      attendee: {
+        attendeeId,
+        userId: currentAttendee.user?.id ?? undefined,
+        userName:
+          currentAttendee.nickname ||
+          currentAttendee.user?.username ||
+          currentAttendee.user?.name ||
+          currentAttendee.user?.email ||
+          '',
+        userEmail: currentAttendee.user?.email ?? undefined,
+        nickname: currentAttendee.nickname ?? undefined,
+        linkedinUsername: currentAttendee.linkedin_username ?? undefined,
+        photoLink: currentAttendee.photo_link ?? undefined,
+        profession: {
+          name: currentAttendee.profession?.name || '',
+          categoryName: currentAttendee.profession?.category?.category || '',
+        },
+        goalsCategory: { name: currentAttendee.goal?.name || '' },
+        answers: attendeeAnswers.map(ans => ({
+          question: ans.question.question,
+          // enum -> string
+          questionType: String(ans.question.type),
+          answerLabel: ans.answerOption?.label ?? undefined,
+          textValue: ans.text_value ?? undefined,
+          numberValue:
+            ans.number_value == null ? undefined : Number(ans.number_value),
+          dateValue: ans.date_value ? ans.date_value.toISOString() : undefined,
+          rank: ans.rank ?? undefined,
+          weight: ans.weight == null ? undefined : Number(ans.weight),
+        })),
+      },
+    } satisfies AttendeeDataForAI;
+
+    // ---- AI: train + get immediate recs (parallel) ----
+    const aiRecommendations = await processAttendeeWithAI(aiData);
+
+    // ---- Take top-3 (no score in POST response), store to DB ----
+    let recommendations: RecommendationResponse[] = [];
+    if (aiRecommendations?.recommendations?.length) {
+      const top = aiRecommendations.recommendations
+        .filter(r => r.targetAttendeeId !== attendeeId)
+        .slice(0, 3);
+
+      for (const rec of top) {
+        const target = await getEnrichedAttendeeData(rec.targetAttendeeId);
+        if (!target) continue;
+
+        recommendations.push({
+          targetAttendeeId: rec.targetAttendeeId,
+          reasoning: rec.reasoning,
+          targetAttendee: target,
+        });
+
+        // Persist recs (active)
+        await prisma.recommendation.upsert({
+          where: {
+            event_id_source_attendee_id_target_attendee_id: {
+              event_id: currentAttendee.event_id,
+              source_attendee_id: attendeeId,
+              target_attendee_id: rec.targetAttendeeId,
+            },
+          },
+          update: {
+            score: rec.score,
+            reasoning: rec.reasoning,
+            is_active: true,
+          },
+          create: {
+            event_id: currentAttendee.event_id,
+            source_attendee_id: attendeeId,
+            target_attendee_id: rec.targetAttendeeId,
+            score: rec.score,
+            reasoning: rec.reasoning,
+            is_active: true,
+          },
+        });
+      }
+    }
+
+    const payload: SubmitAnswersResponse = {
+      attendeeId,
+      answersProcessed: totalCreated,
+      recommendations,
+    };
+
+    sendSuccess(res, 'Answers submitted successfully', payload, 200);
+  } catch (error) {
+    logger.error('Submit answers error:', error);
+    sendError(
+      res,
+      'Failed to submit answers',
+      [
+        {
+          field: 'server',
+          message: 'An error occurred while submitting answers',
+        },
+      ],
+      500
+    );
+  }
+};
+
+/**
+ * GET /api/attendee/recommendations/:attendeeId
+ * Always triggers fresh AI recs; falls back to stored if AI is unavailable.
+ * Returns score in the response, per your spec.
+ */
+export const getRecommendations = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const { attendeeId } = req.params;
+    const user = req.user;
+    const attendeeToken = req.attendee;
+
+    // ---- Ownership & auth checks ----
+    if (user) {
+      const owned = await prisma.attendee.findFirst({
+        where: { id: attendeeId, user_id: user.id, is_active: true },
+        select: { id: true },
+      });
+      if (!owned) {
+        sendError(
+          res,
+          'Attendee not found',
+          [
+            {
+              field: 'attendeeId',
+              message: 'Attendee not found or does not belong to user',
+            },
+          ],
+          404
+        );
+        return;
+      }
+    } else if (attendeeToken) {
+      if (attendeeToken.id !== attendeeId) {
+        sendError(
+          res,
+          'Forbidden',
+          [{ field: 'attendeeId', message: 'Token does not match attendee' }],
+          403
+        );
+        return;
+      }
+    } else {
+      sendError(
+        res,
+        'Authentication required',
+        [{ field: 'auth', message: 'No valid authentication found' }],
+        401
+      );
+      return;
+    }
+
+    // ---- Build AI payload from current data ----
+    const currentAttendee = await prisma.attendee.findUnique({
+      where: { id: attendeeId },
+      include: {
+        event: true,
+        user: {
+          select: { id: true, email: true, username: true, name: true },
+        },
+        profession: { include: { category: true } },
+        goal: true,
+      },
+    });
+    if (!currentAttendee) {
+      sendError(
+        res,
+        'Attendee not found',
+        [{ field: 'attendeeId', message: 'Attendee not found' }],
+        404
+      );
+      return;
+    }
+
+    const attendeeAnswers = await prisma.attendeeAnswer.findMany({
+      where: { attendee_id: attendeeId, is_active: true },
+      include: { question: true, answerOption: true },
+    });
+
+    const aiData = {
+      eventId: currentAttendee.event_id,
+      attendee: {
+        attendeeId,
+        userId: currentAttendee.user?.id ?? undefined,
+        userName:
+          currentAttendee.nickname ||
+          currentAttendee.user?.username ||
+          currentAttendee.user?.name ||
+          currentAttendee.user?.email ||
+          '',
+        userEmail: currentAttendee.user?.email ?? undefined,
+        nickname: currentAttendee.nickname ?? undefined,
+        linkedinUsername: currentAttendee.linkedin_username ?? undefined,
+        photoLink: currentAttendee.photo_link ?? undefined,
+        profession: {
+          name: currentAttendee.profession?.name || '',
+          categoryName: currentAttendee.profession?.category?.category || '',
+        },
+        goalsCategory: { name: currentAttendee.goal?.name || '' },
+        answers: attendeeAnswers.map(ans => ({
+          question: ans.question.question,
+          questionType: String(ans.question.type),
+          answerLabel: ans.answerOption?.label ?? undefined,
+          textValue: ans.text_value ?? undefined,
+          numberValue:
+            ans.number_value == null ? undefined : Number(ans.number_value),
+          dateValue: ans.date_value ? ans.date_value.toISOString() : undefined,
+          rank: ans.rank ?? undefined,
+          weight: ans.weight == null ? undefined : Number(ans.weight),
+        })),
+      },
+    } satisfies AttendeeDataForAI;
+
+    // ---- Always trigger fresh AI; fallback to stored if needed ----
+    let recs: RecommendationResponse[] = [];
+    const aiRecommendations = await getAIRecommendations(aiData);
+
+    if (aiRecommendations?.recommendations?.length) {
+      // Deactivate prior active recs for this source (optional hygiene)
+      await prisma.recommendation.updateMany({
+        where: {
+          event_id: currentAttendee.event_id,
+          source_attendee_id: attendeeId,
+          is_active: true,
+        },
+        data: { is_active: false },
+      });
+
+      for (const rec of aiRecommendations.recommendations) {
+        if (rec.targetAttendeeId === attendeeId) continue;
+
+        // Store as active
+        await prisma.recommendation.upsert({
+          where: {
+            event_id_source_attendee_id_target_attendee_id: {
+              event_id: currentAttendee.event_id,
+              source_attendee_id: attendeeId,
+              target_attendee_id: rec.targetAttendeeId,
+            },
+          },
+          update: {
+            score: rec.score,
+            reasoning: rec.reasoning,
+            is_active: true,
+          },
+          create: {
+            event_id: currentAttendee.event_id,
+            source_attendee_id: attendeeId,
+            target_attendee_id: rec.targetAttendeeId,
+            score: rec.score,
+            reasoning: rec.reasoning,
+            is_active: true,
+          },
+        });
+
+        const target = await getEnrichedAttendeeData(rec.targetAttendeeId);
+        if (target) {
+          recs.push({
+            targetAttendeeId: rec.targetAttendeeId,
+            score: rec.score,
+            reasoning: rec.reasoning,
+            targetAttendee: target,
+          });
+        }
+      }
+    } else {
+      // AI unavailable → fallback to stored active recs
+      const stored = await prisma.recommendation.findMany({
+        where: { source_attendee_id: attendeeId, is_active: true },
+        orderBy: { score: 'desc' },
+        take: 10,
+      });
+
+      for (const s of stored) {
+        const target = await getEnrichedAttendeeData(s.target_attendee_id);
+        if (target) {
+          recs.push({
+            targetAttendeeId: s.target_attendee_id,
+            score: s.score == null ? undefined : Number(s.score),
+            reasoning: s.reasoning,
+            targetAttendee: target,
+          });
+        }
+      }
+    }
+
+    const payload: GetRecommendationsResponse = {
+      attendeeId,
+      eventId: currentAttendee.event_id,
+      recommendations: recs,
+    };
+
+    sendSuccess(res, 'Recommendations retrieved successfully', payload, 200);
+  } catch (error) {
+    logger.error('Get recommendations error:', error);
+    sendError(
+      res,
+      'Failed to get recommendations',
+      [
+        {
+          field: 'server',
+          message: 'An error occurred while getting recommendations',
+        },
+      ],
+      500
+    );
+  }
+};
+
+/**
+ * Enrich an attendee with public-facing profile fields and shareable answers.
+ * Ensures all optional fields use `undefined` (not `null`) and enums -> string.
+ */
+async function getEnrichedAttendeeData(targetAttendeeId: string) {
+  const attendee = await prisma.attendee.findUnique({
+    where: { id: targetAttendeeId },
+    include: {
+      profession: { include: { category: true } },
+      goal: true,
+      attendeeAnswers: {
+        where: {
+          is_active: true,
+          question: { is_shareable: true },
+        },
+        include: {
+          question: true,
+          answerOption: true,
+        },
+      },
+    },
+  });
+
+  if (!attendee) return null;
+
+  return {
+    nickname: attendee.nickname || '',
+    profession: {
+      name: attendee.profession?.name || '',
+      categoryName: attendee.profession?.category?.category || '',
+    },
+    goalsCategory: {
+      name: attendee.goal?.name || '',
+    },
+    // optional string fields → undefined (not null)
+    linkedinUsername: attendee.linkedin_username ?? undefined,
+    // required string in your API—fallback to empty string if null
+    photoLink: attendee.photo_link ?? '',
+    shareableAnswers: attendee.attendeeAnswers.map(ans => ({
+      question: ans.question.question,
+      // Prisma enum -> string for the outward API
+      questionType: String(ans.question.type),
+      // all optionals as undefined (never null)
+      answerLabel: ans.answerOption?.label ?? undefined,
+      textValue: ans.text_value ?? undefined,
+      numberValue:
+        ans.number_value == null ? undefined : Number(ans.number_value),
+      dateValue: ans.date_value ? ans.date_value.toISOString() : undefined,
+      rank: ans.rank ?? undefined,
+    })),
+  };
+}

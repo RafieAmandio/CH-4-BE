@@ -1,4 +1,4 @@
-import { Response, NextFunction } from 'express';
+import { Response, NextFunction, Request } from 'express';
 import { extractTokenFromHeader, verifyToken } from '../utils/token.js';
 import { sendError } from '../utils/response.js';
 import prisma from '../config/database.js';
@@ -9,151 +9,137 @@ import {
   extractSupabaseToken,
 } from '../utils/supabase.js';
 
-// Define authentication types
 export type AuthType = 'USER' | 'ATTENDEE' | 'EMPTY';
+
+/** Resolve attendeeId from the request if present */
+function getAttendeeIdFromRequest(req: Request): string | undefined {
+  const fromParams = (req.params as any)?.attendeeId;
+  const fromBody = (req.body as any)?.attendeeId;
+  const fromQuery = typeof (req.query as any)?.attendeeId === 'string' ? (req.query as any).attendeeId : undefined;
+  return fromParams ?? fromBody ?? fromQuery ?? undefined;
+}
 
 /**
  * Flexible authentication middleware
- * @param allowedTypes - Array of allowed authentication types
+ * - allowedTypes is an OR (any matching type grants access)
+ * - If ATTENDEE is required *and* USER is not allowed, a USER token must be tied to an attendeeId (token/route) owned by that user.
  */
 export const authenticate = (allowedTypes: AuthType[]) => {
-  return async (
-    req: AuthRequest,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> => {
+  return async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-      // Extract token from Authorization header
       const authHeader = req.headers.authorization;
       const token = extractTokenFromHeader(authHeader);
 
-      // Handle EMPTY case (no token)
+      // No token case
       if (!token) {
         if (allowedTypes.includes('EMPTY')) {
-          next();
-          return;
-        } else {
-          sendError(
-            res,
-            'Authentication required',
-            [{ field: 'token', message: 'No token provided' }],
-            401
-          );
-          return;
+          return next();
         }
+        return sendError(res, 'Authentication required', [{ field: 'token', message: 'No token provided' }], 401);
       }
 
-      // Verify token
       const payload = verifyToken(token);
-
       if (!payload) {
         if (allowedTypes.includes('EMPTY')) {
-          next();
-          return;
-        } else {
-          sendError(
-            res,
-            'Authentication failed',
-            [{ field: 'token', message: 'Invalid or expired token' }],
-            401
-          );
-          return;
+          return next();
         }
+        return sendError(res, 'Authentication failed', [{ field: 'token', message: 'Invalid or expired token' }], 401);
       }
 
-      // Handle USER token (has email)
+      const wantsUser = allowedTypes.includes('USER');
+      const wantsAttendee = allowedTypes.includes('ATTENDEE');
+      const attendeeOnly = wantsAttendee && !wantsUser; // route requires attendee role specifically
+
+      // ----- USER token branch (payload has email) -----
       if (payload.email) {
-        if (!allowedTypes.includes('USER')) {
-          sendError(
-            res,
-            'Authentication failed',
-            [
-              {
-                field: 'token',
-                message: 'User token not allowed for this endpoint',
-              },
-            ],
-            403
-          );
-          return;
-        }
-
-        const user = await prisma.user.findUnique({
-          where: { id: payload.id },
-        });
-
+        const user = await prisma.user.findUnique({ where: { id: payload.id } });
         if (!user) {
-          sendError(
-            res,
-            'Authentication failed',
-            [{ field: 'token', message: 'User not found' }],
-            401
-          );
-          return;
+          return sendError(res, 'Authentication failed', [{ field: 'token', message: 'User not found' }], 401);
         }
-
         req.user = user;
 
-        // If token has attendeeId and ATTENDEE is allowed, attach attendee
-        if (payload.attendeeId && allowedTypes.includes('ATTENDEE')) {
-          const attendee = await prisma.attendee.findFirst({
-            where: {
-              id: payload.attendeeId as string,
-              user_id: user.id,
-            },
-          });
+        // If the route *requires* attendee role, or allows it, try to attach attendee
+        if (wantsAttendee) {
+          const resolvedAttendeeId =
+            (payload.attendeeId as string | undefined) ?? getAttendeeIdFromRequest(req);
 
-          if (attendee) {
-            req.attendee = attendee;
+          if (resolvedAttendeeId) {
+            const attendee = await prisma.attendee.findFirst({
+              where: { id: resolvedAttendeeId, user_id: user.id, is_active: true },
+            });
+            if (attendee) {
+              req.attendee = attendee;
+            }
+          }
+
+          // If it’s attendee-only and we didn’t attach an attendee, block
+          if (attendeeOnly && !req.attendee) {
+            return sendError(
+              res,
+              'Forbidden',
+              [
+                {
+                  field: 'attendeeId',
+                  message:
+                    'Attendee role required. Provide an attendeeId (in token, path, body, or query) that belongs to this user.',
+                },
+              ],
+              403
+            );
           }
         }
 
-        next();
-        return;
-      }
-
-      // Handle ATTENDEE token (no email, visitor)
-      else {
-        if (!allowedTypes.includes('ATTENDEE')) {
-          sendError(
-            res,
-            'Authentication failed',
-            [
-              {
-                field: 'token',
-                message: 'Attendee token not allowed for this endpoint',
-              },
-            ],
-            403
-          );
-          return;
+        // If the route allows USER (alone or in combination), we’re good
+        if (wantsUser || (wantsAttendee && req.attendee)) {
+          return next();
         }
 
-        const attendee = await prisma.attendee.findFirst({
-          where: {
-            id: payload.id as string,
-            user_id: null, // Visitors have no user_id
-            is_active: true,
-          },
-        });
-
-        if (!attendee) {
-          sendError(
-            res,
-            'Authentication failed',
-            [{ field: 'token', message: 'Attendee not found or inactive' }],
-            401
-          );
-          return;
-        }
-
-        req.attendee = attendee;
-        next();
-        return;
+        // USER not allowed and no attendee attached (or route requires attendee)
+        return sendError(
+          res,
+          'Authentication failed',
+          [{ field: 'token', message: 'User token not allowed for this endpoint' }],
+          403
+        );
       }
+
+      // ----- ATTENDEE token branch (no email) -----
+      if (!wantsAttendee) {
+        return sendError(
+          res,
+          'Authentication failed',
+          [{ field: 'token', message: 'Attendee token not allowed for this endpoint' }],
+          403
+        );
+      }
+
+      const attendeeId = payload.attendeeId as string | undefined;
+      if (!attendeeId) {
+        return sendError(
+          res,
+          'Authentication failed',
+          [{ field: 'token', message: 'Attendee token missing attendeeId' }],
+          401
+        );
+      }
+
+      const attendee = await prisma.attendee.findFirst({
+        where: { id: attendeeId, is_active: true },
+      });
+      if (!attendee) {
+        return sendError(
+          res,
+          'Authentication failed',
+          [{ field: 'token', message: 'Attendee not found or inactive' }],
+          401
+        );
+      }
+
+      req.attendee = attendee;
+      return next();
     } catch (error) {
       logger.error('Authentication error:', error);
-      sendError(
+      return sendError(
         res,
         'Authentication error',
         [{ field: 'auth', message: 'An error occurred during authentication' }],

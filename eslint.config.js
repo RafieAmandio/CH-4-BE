@@ -35,6 +35,7 @@ export default [
         test: 'readonly',
         expect: 'readonly',
         jest: 'readonly',
+        fetch: 'readonly'
       },
     },
     plugins: {
@@ -73,5 +74,5 @@ export default [
       'build/',
       'coverage/',
     ],
-  },
+  }
 ];

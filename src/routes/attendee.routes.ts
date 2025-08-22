@@ -5,6 +5,8 @@ import {
   createAttendeeValidation,
   getGoalsCategoriesValidation,
   updateGoalsCategoryValidation,
+  submitAnswersValidation,
+  getRecommendationsValidation,
 } from '../validations/attendee.validation.js';
 import { validate } from '../utils/validation.js';
 import { authenticate } from '../middlewares/auth.middleware.js';
@@ -43,7 +45,7 @@ router.post(
  */
 router.get(
   '/goals-categories',
-  authenticate(['USER', 'ATTENDEE']),
+  authenticate(['ATTENDEE']),
   getGoalsCategoriesValidation,
   validate,
   attendeeController.getGoalsCategories
@@ -56,7 +58,7 @@ router.get(
  */
 router.put(
   '/:attendeeId/goals-category',
-  authenticate(['USER', 'ATTENDEE']),
+  authenticate(['ATTENDEE']),
   updateGoalsCategoryValidation,
   validate,
   attendeeController.updateGoalsCategory
@@ -71,6 +73,32 @@ router.get(
   '/recommendations/:attendeeId',
   authenticate(['ATTENDEE']) // Only attendee tokens allowed
   // controller
+);
+
+/**
+ * @route POST /api/attendee/answers
+ * @desc Submit attendee answers and get AI recommendations
+ * @access Private (attendee owner only)
+ */
+router.post(
+  '/answers',
+  authenticate(['ATTENDEE']),
+  submitAnswersValidation,
+  validate,
+  attendeeController.submitAnswers
+);
+
+/**
+ * @route GET /api/attendee/recommendations/:attendeeId
+ * @desc Get AI recommendations for attendee
+ * @access Private (attendee owner only)
+ */
+router.get(
+  '/recommendations/:attendeeId',
+  authenticate(['ATTENDEE']),
+  getRecommendationsValidation,
+  validate,
+  attendeeController.getRecommendations
 );
 
 export default router;
