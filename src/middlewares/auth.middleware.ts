@@ -15,7 +15,10 @@ export type AuthType = 'USER' | 'ATTENDEE' | 'EMPTY';
 function getAttendeeIdFromRequest(req: Request): string | undefined {
   const fromParams = (req.params as any)?.attendeeId;
   const fromBody = (req.body as any)?.attendeeId;
-  const fromQuery = typeof (req.query as any)?.attendeeId === 'string' ? (req.query as any).attendeeId : undefined;
+  const fromQuery =
+    typeof (req.query as any)?.attendeeId === 'string'
+      ? (req.query as any).attendeeId
+      : undefined;
   return fromParams ?? fromBody ?? fromQuery ?? undefined;
 }
 
@@ -25,7 +28,11 @@ function getAttendeeIdFromRequest(req: Request): string | undefined {
  * - If ATTENDEE is required *and* USER is not allowed, a USER token must be tied to an attendeeId (token/route) owned by that user.
  */
 export const authenticate = (allowedTypes: AuthType[]) => {
-  return async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  return async (
+    req: AuthRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     try {
       const authHeader = req.headers.authorization;
       const token = extractTokenFromHeader(authHeader);
@@ -35,7 +42,12 @@ export const authenticate = (allowedTypes: AuthType[]) => {
         if (allowedTypes.includes('EMPTY')) {
           return next();
         }
-        return sendError(res, 'Authentication required', [{ field: 'token', message: 'No token provided' }], 401);
+        return sendError(
+          res,
+          'Authentication required',
+          [{ field: 'token', message: 'No token provided' }],
+          401
+        );
       }
 
       const payload = verifyToken(token);
@@ -43,7 +55,12 @@ export const authenticate = (allowedTypes: AuthType[]) => {
         if (allowedTypes.includes('EMPTY')) {
           return next();
         }
-        return sendError(res, 'Authentication failed', [{ field: 'token', message: 'Invalid or expired token' }], 401);
+        return sendError(
+          res,
+          'Authentication failed',
+          [{ field: 'token', message: 'Invalid or expired token' }],
+          401
+        );
       }
 
       const wantsUser = allowedTypes.includes('USER');
@@ -52,20 +69,32 @@ export const authenticate = (allowedTypes: AuthType[]) => {
 
       // ----- USER token branch (payload has email) -----
       if (payload.email) {
-        const user = await prisma.user.findUnique({ where: { id: payload.id } });
+        const user = await prisma.user.findUnique({
+          where: { id: payload.id },
+        });
         if (!user) {
-          return sendError(res, 'Authentication failed', [{ field: 'token', message: 'User not found' }], 401);
+          return sendError(
+            res,
+            'Authentication failed',
+            [{ field: 'token', message: 'User not found' }],
+            401
+          );
         }
         req.user = user;
 
         // If the route *requires* attendee role, or allows it, try to attach attendee
         if (wantsAttendee) {
           const resolvedAttendeeId =
-            (payload.attendeeId as string | undefined) ?? getAttendeeIdFromRequest(req);
+            (payload.attendeeId as string | undefined) ??
+            getAttendeeIdFromRequest(req);
 
           if (resolvedAttendeeId) {
             const attendee = await prisma.attendee.findFirst({
-              where: { id: resolvedAttendeeId, user_id: user.id, is_active: true },
+              where: {
+                id: resolvedAttendeeId,
+                user_id: user.id,
+                is_active: true,
+              },
             });
             if (attendee) {
               req.attendee = attendee;
@@ -98,7 +127,12 @@ export const authenticate = (allowedTypes: AuthType[]) => {
         return sendError(
           res,
           'Authentication failed',
-          [{ field: 'token', message: 'User token not allowed for this endpoint' }],
+          [
+            {
+              field: 'token',
+              message: 'User token not allowed for this endpoint',
+            },
+          ],
           403
         );
       }
@@ -108,7 +142,12 @@ export const authenticate = (allowedTypes: AuthType[]) => {
         return sendError(
           res,
           'Authentication failed',
-          [{ field: 'token', message: 'Attendee token not allowed for this endpoint' }],
+          [
+            {
+              field: 'token',
+              message: 'Attendee token not allowed for this endpoint',
+            },
+          ],
           403
         );
       }
