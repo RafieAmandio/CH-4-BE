@@ -13,6 +13,7 @@ import {
   SubmitAnswersResponse,
   GetRecommendationsResponse,
   RecommendationResponse,
+  ValidateEventResponse,
 } from '../types/attendee.types.js';
 import { CreateAttendeeInput } from '../types/attendee.types.js';
 import { generateToken } from '../utils/token.js';
@@ -962,3 +963,110 @@ async function getEnrichedAttendeeData(targetAttendeeId: string) {
     })),
   };
 }
+
+/**
+ * Validate event by code for attendee registration
+ */
+export const validateEvent = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { code } = req.params;
+
+    // Find event by code
+    const event = await prisma.event.findUnique({
+      where: { code: code },
+      include: {
+        creator: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+          },
+        },
+      },
+    });
+
+    // Check if event exists
+    if (!event) {
+      sendError(
+        res,
+        'Event not found',
+        [{ field: 'code', message: 'Event with this code does not exist' }],
+        404
+      );
+      return;
+    }
+
+    // Check if event is active
+    if (!event.is_active) {
+      sendError(
+        res,
+        'Event not available',
+        [{ field: 'code', message: 'Event is no longer active' }],
+        404
+      );
+      return;
+    }
+
+    // Check if event status allows registration (UPCOMING or ONGOING)
+    if (!['UPCOMING', 'ONGOING'].includes(event.status)) {
+      sendError(
+        res,
+        'Event not available for registration',
+        [
+          {
+            field: 'code',
+            message:
+              'Event is not available for registration (must be upcoming or ongoing)',
+          },
+        ],
+        400
+      );
+      return;
+    }
+
+    // Transform the data to match the API contract
+    const responseData: ValidateEventResponse = {
+      id: event.id,
+      name: event.name,
+      start: event.start.toISOString(),
+      end: event.end.toISOString(),
+      detail: event.detail ?? undefined,
+      photo_link: event.photo_link ?? undefined,
+      location_name: event.location_name ?? undefined,
+      location_address: event.location_address ?? undefined,
+      location_link: event.location_link ?? undefined,
+      latitude: event.latitude
+        ? parseFloat(event.latitude.toString())
+        : undefined,
+      longitude: event.longitude
+        ? parseFloat(event.longitude.toString())
+        : undefined,
+      link: event.link ?? undefined,
+      status: event.status,
+      current_participants: event.current_participants,
+      code: event.code,
+      creator: {
+        id: event.creator.id,
+        name: event.creator.name,
+      },
+    };
+
+    sendSuccess(res, 'Event validated successfully', responseData, 200);
+  } catch (error) {
+    logger.error('Validate event error:', error);
+    sendError(
+      res,
+      'Failed to validate event',
+      [
+        {
+          field: 'server',
+          message: 'An error occurred while validating the event',
+        },
+      ],
+      500
+    );
+  }
+};

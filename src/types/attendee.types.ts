@@ -135,3 +135,25 @@ export interface GetRecommendationsResponse {
   eventId: string;
   recommendations: RecommendationResponse[];
 }
+
+export interface ValidateEventResponse {
+  id: string;
+  name: string;
+  start: string;
+  end: string;
+  detail?: string;
+  photo_link?: string;
+  location_name?: string;
+  location_address?: string;
+  location_link?: string;
+  latitude?: number;
+  longitude?: number;
+  link?: string;
+  status: string;
+  current_participants: number;
+  code: string;
+  creator: {
+    id: string;
+    name: string;
+  };
+}

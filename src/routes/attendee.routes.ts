@@ -7,6 +7,7 @@ import {
   updateGoalsCategoryValidation,
   submitAnswersValidation,
   getRecommendationsValidation,
+  validateEventValidation,
 } from '../validations/attendee.validation.js';
 import { validate } from '../utils/validation.js';
 import { authenticate } from '../middlewares/auth.middleware.js';
@@ -86,6 +87,18 @@ router.post(
   submitAnswersValidation,
   validate,
   attendeeController.submitAnswers
+);
+
+/**
+ * @route GET /api/attendee/validate-event/:code
+ * @desc Validate event by code for registration
+ * @access Public
+ */
+router.get(
+  '/validate-event/:code',
+  validateEventValidation,
+  validate,
+  attendeeController.validateEvent
 );
 
 /**
