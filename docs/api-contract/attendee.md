@@ -15,9 +15,73 @@ This document outlines the API contract for attendee management, which includes 
 
 ---
 
+### 1. Validate Event
+
+**Endpoint:** `GET /api/attendee/validate-event/{code}`
+
+**Description:** Validates an event by its unique code and returns event details if it's active and available for registration. This endpoint is used after QR code scanning.
+
+**Headers:**
+- No authentication required (public endpoint)
+
+**Path Parameters:**
+- `code` - Event code (6-digit string) (required)
+
+**Response (Success - Active Event):**
+```json
+{
+  "message": "Event validated successfully",
+  "data": {
+    "id": "uuid",
+    "name": "string",
+    "start": "datetime",
+    "end": "datetime",
+    "detail": "string|null",
+    "photo_link": "string|null",
+    "location_name": "string|null",
+    "location_address": "string|null",
+    "location_link": "string|null",
+    "latitude": "decimal|null",
+    "longitude": "decimal|null",
+    "link": "string|null",
+    "status": "UPCOMING|ONGOING",
+    "current_participants": "number",
+    "code": "string",
+    "creator": {
+      "id": "uuid",
+      "name": "string",
+      "username": "string|null"
+    }
+  }
+}
+```
+
+**Response (Event Not Found or Inactive):**
+```json
+{
+  "error": "Event not found or inactive",
+  "details": [
+    {
+      "field": "code",
+      "message": "Event with this code is not found, inactive, or not available for registration"
+    }
+  ]
+}
+```
+
+**Business Logic:**
+- Validates event exists by code
+- Only returns events with status `UPCOMING` or `ONGOING`
+- Excludes `DRAFT` and `COMPLETED` events
+- Only returns active events (`is_active: true`)
+- Public endpoint - no authentication required
+- Creator email is excluded from public response
+
+---
+
 ## Endpoints
 
-### 1. Get Professions
+### 2. Get Professions
 
 **Endpoint:** `GET /api/attendee/professions`
 
@@ -53,7 +117,7 @@ This document outlines the API contract for attendee management, which includes 
 
 ---
 
-### 2. Create Attendee
+### 3. Create Attendee
 
 **Endpoint:** `POST /api/attendee/register`
 
@@ -65,7 +129,7 @@ This document outlines the API contract for attendee management, which includes 
 **Request Body:**
 ```json
 {
-  "eventId": "uuid",
+  "eventCode": "uuid",
   "nickname": "string",
   "userEmail": "string|null", 
   "professionId": "uuid",
@@ -75,7 +139,7 @@ This document outlines the API contract for attendee management, which includes 
 ```
 
 **Request Fields:**
-- `eventId` - Event identifier (required)
+- `eventCode` - Event identifier (required)
 - `nickname` - Attendee's display name (required) - can be real name or preferred name
 - `userEmail` - Attendee's email address (optional)
 - `professionId` - Selected profession from professions table (required)
@@ -119,7 +183,7 @@ This document outlines the API contract for attendee management, which includes 
 
 ---
 
-### 3. Get Goals Categories
+### 4. Get Goals Categories
 
 **Endpoint:** `GET /api/attendee/goals-categories`
 
@@ -146,7 +210,7 @@ This document outlines the API contract for attendee management, which includes 
 
 ---
 
-### 4. Update Attendee with Goals Category
+### 5. Update Attendee with Goals Category
 
 **Endpoint:** `PUT /api/attendee/{attendeeId}/goals-category`
 
@@ -252,7 +316,7 @@ This document outlines the API contract for attendee management, which includes 
 
 ---
 
-### 5. Submit User Answers
+### 6. Submit User Answers
 
 **Endpoint:** `POST /api/attendee/answers`
 
@@ -360,7 +424,7 @@ This document outlines the API contract for attendee management, which includes 
 
 ---
 
-### 6. Get Recommendations
+### 7. Get Recommendations
 
 **Endpoint:** `GET /api/attendee/recommendations/{attendeeId}`
 
