@@ -18,7 +18,8 @@
     "test:ci": "DATABASE_URL=file:./test.db prisma generate --schema=./prisma/schema.test.prisma && DATABASE_URL=file:./test.db prisma db push --schema=./prisma/schema.test.prisma --force-reset && jest --ci --coverage --watchAll=false && rm -f test.db",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:studio": "prisma studio"
+    "prisma:studio": "prisma studio",
+    "prisma:seed": "tsx prisma/seed.ts"
   },
   "keywords": [
     "express",
