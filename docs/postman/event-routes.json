@@ -1,0 +1,442 @@
+{
+  "info": {
+    "name": "Event API",
+    "description": "Event management endpoints for creating, retrieving, updating, and deleting events",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create Event",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{auth_token}}",
+            "description": "JWT authentication token"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Tech Conference 2024\",\n  \"start\": \"2024-06-15T09:00:00.000Z\",\n  \"end\": \"2024-06-15T17:00:00.000Z\",\n  \"detail\": \"Annual technology conference featuring the latest innovations\",\n  \"photoLink\": \"https://example.com/event-banner.jpg\",\n  \"locationName\": \"Convention Center\",\n  \"locationAddress\": \"123 Main St, City, State 12345\",\n  \"locationLink\": \"https://maps.google.com/location\",\n  \"latitude\": 40.7128,\n  \"longitude\": -74.0060,\n  \"link\": \"https://techconf2024.com\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/events",
+          "host": ["{{base_url}}"],
+          "path": ["api", "events"]
+        },
+        "description": "Create a new event. All fields except name, start, and end are optional."
+      },
+      "response": [
+        {
+          "name": "Success Response",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Tech Conference 2024\",\n  \"start\": \"2024-06-15T09:00:00.000Z\",\n  \"end\": \"2024-06-15T17:00:00.000Z\",\n  \"detail\": \"Annual technology conference featuring the latest innovations\",\n  \"photoLink\": \"https://example.com/event-banner.jpg\",\n  \"locationName\": \"Convention Center\",\n  \"locationAddress\": \"123 Main St, City, State 12345\",\n  \"locationLink\": \"https://maps.google.com/location\",\n  \"latitude\": 40.7128,\n  \"longitude\": -74.0060,\n  \"link\": \"https://techconf2024.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/events",
+              "host": ["{{base_url}}"],
+              "path": ["api", "events"]
+            }
+          },
+          "status": "Created",
+          "code": 201,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n  \"message\": \"Event created successfully\",\n  \"data\": {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n    \"name\": \"Tech Conference 2024\",\n    \"start\": \"2024-06-15T09:00:00.000Z\",\n    \"end\": \"2024-06-15T17:00:00.000Z\",\n    \"detail\": \"Annual technology conference featuring the latest innovations\",\n    \"photoLink\": \"https://example.com/event-banner.jpg\",\n    \"locationName\": \"Convention Center\",\n    \"locationAddress\": \"123 Main St, City, State 12345\",\n    \"locationLink\": \"https://maps.google.com/location\",\n    \"latitude\": 40.7128,\n    \"longitude\": -74.0060,\n    \"link\": \"https://techconf2024.com\",\n    \"status\": \"UPCOMING\",\n    \"currentParticipants\": 0,\n    \"maxParticipants\": null,\n    \"code\": \"ABC123\",\n    \"creator\": {\n      \"id\": \"user-uuid\",\n      \"name\": \"John Doe\",\n      \"username\": \"johndoe\",\n      \"email\": \"john@example.com\"\n    },\n    \"createdAt\": \"2024-01-01T00:00:00.000Z\",\n    \"updatedAt\": \"2024-01-01T00:00:00.000Z\"\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Get All Events",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{auth_token}}",
+            "description": "JWT authentication token"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/events?page=1&limit=10&filter=created&sortBy=start&sortOrder=desc",
+          "host": ["{{base_url}}"],
+          "path": ["api", "events"],
+          "query": [
+            {
+              "key": "page",
+              "value": "1",
+              "description": "Page number (default: 1)"
+            },
+            {
+              "key": "limit",
+              "value": "10",
+              "description": "Items per page (default: 10, max: 100)"
+            },
+            {
+              "key": "filter",
+              "value": "created",
+              "description": "Filter events: 'created' (user's events) or 'all' (all events)"
+            },
+            {
+              "key": "search",
+              "value": "",
+              "description": "Search term (searches in name, description, location)",
+              "disabled": true
+            },
+            {
+              "key": "sortBy",
+              "value": "start",
+              "description": "Field to sort by (name, start, end, created_at)"
+            },
+            {
+              "key": "sortOrder",
+              "value": "desc",
+              "description": "Sort order: 'asc' or 'desc'"
+            }
+          ]
+        },
+        "description": "Retrieve all events with pagination, search, and sorting capabilities"
+      },
+      "response": [
+        {
+          "name": "Success Response",
+          "originalRequest": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/events?page=1&limit=10&filter=created",
+              "host": ["{{base_url}}"],
+              "path": ["api", "events"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "filter",
+                  "value": "created"
+                }
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n  \"message\": \"Events retrieved successfully\",\n  \"data\": {\n    \"items\": [\n      {\n        \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n        \"name\": \"Tech Conference 2024\",\n        \"start\": \"2024-06-15T09:00:00.000Z\",\n        \"end\": \"2024-06-15T17:00:00.000Z\",\n        \"detail\": \"Annual technology conference\",\n        \"photoLink\": \"https://example.com/event-banner.jpg\",\n        \"locationName\": \"Convention Center\",\n        \"locationAddress\": \"123 Main St, City, State 12345\",\n        \"locationLink\": \"https://maps.google.com/location\",\n        \"link\": \"https://techconf2024.com\",\n        \"status\": \"UPCOMING\",\n        \"currentParticipants\": 5,\n        \"maxParticipants\": 100,\n        \"code\": \"ABC123\",\n        \"creator\": {\n          \"id\": \"user-uuid\",\n          \"name\": \"John Doe\",\n          \"username\": \"johndoe\",\n          \"email\": \"john@example.com\"\n        },\n        \"createdAt\": \"2024-01-01T00:00:00.000Z\",\n        \"updatedAt\": \"2024-01-01T00:00:00.000Z\"\n      }\n    ],\n    \"pagination\": {\n      \"currentPage\": 1,\n      \"totalPages\": 1,\n      \"totalItems\": 1,\n      \"itemsPerPage\": 10,\n      \"hasNextPage\": false,\n      \"hasPreviousPage\": false\n    }\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Get Event by ID",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{auth_token}}",
+            "description": "JWT authentication token"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/events/{{event_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "events", "{{event_id}}"]
+        },
+        "description": "Retrieve a single event by its ID"
+      },
+      "response": [
+        {
+          "name": "Success Response",
+          "originalRequest": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/events/550e8400-e29b-41d4-a716-446655440000",
+              "host": ["{{base_url}}"],
+              "path": ["api", "events", "550e8400-e29b-41d4-a716-446655440000"]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n  \"message\": \"Event details retrieved successfully\",\n  \"data\": {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n    \"name\": \"Tech Conference 2024\",\n    \"start\": \"2024-06-15T09:00:00.000Z\",\n    \"end\": \"2024-06-15T17:00:00.000Z\",\n    \"detail\": \"Annual technology conference featuring the latest innovations\",\n    \"photoLink\": \"https://example.com/event-banner.jpg\",\n    \"locationName\": \"Convention Center\",\n    \"locationAddress\": \"123 Main St, City, State 12345\",\n    \"locationLink\": \"https://maps.google.com/location\",\n    \"latitude\": 40.7128,\n    \"longitude\": -74.0060,\n    \"link\": \"https://techconf2024.com\",\n    \"status\": \"UPCOMING\",\n    \"currentParticipants\": 5,\n    \"maxParticipants\": 100,\n    \"code\": \"ABC123\",\n    \"creator\": {\n      \"id\": \"user-uuid\",\n      \"name\": \"John Doe\",\n      \"username\": \"johndoe\",\n      \"email\": \"john@example.com\"\n    },\n    \"createdAt\": \"2024-01-01T00:00:00.000Z\",\n    \"updatedAt\": \"2024-01-01T00:00:00.000Z\"\n  }\n}"
+        },
+        {
+          "name": "Event Not Found",
+          "originalRequest": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/events/invalid-id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "events", "invalid-id"]
+            }
+          },
+          "status": "Not Found",
+          "code": 404,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n  \"message\": \"Event not found\",\n  \"errors\": [\n    {\n      \"field\": \"id\",\n      \"message\": \"Event with specified id does not exist\"\n    }\n  ]\n}"
+        }
+      ]
+    },
+    {
+      "name": "Update Event",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{auth_token}}",
+            "description": "JWT authentication token"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Updated Tech Conference 2024\",\n  \"start\": \"2024-06-15T10:00:00.000Z\",\n  \"end\": \"2024-06-15T18:00:00.000Z\",\n  \"detail\": \"Updated description for the annual technology conference\",\n  \"photoLink\": \"https://example.com/updated-banner.jpg\",\n  \"locationName\": \"Updated Convention Center\",\n  \"locationAddress\": \"456 Updated St, New City, State 54321\",\n  \"locationLink\": \"https://maps.google.com/updated-location\",\n  \"latitude\": 40.7589,\n  \"longitude\": -73.9851,\n  \"link\": \"https://updatedtechconf2024.com\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/events/{{event_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "events", "{{event_id}}"]
+        },
+        "description": "Update an existing event. Only the event creator can update the event."
+      },
+      "response": [
+        {
+          "name": "Success Response",
+          "originalRequest": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Tech Conference 2024\",\n  \"start\": \"2024-06-15T10:00:00.000Z\",\n  \"end\": \"2024-06-15T18:00:00.000Z\",\n  \"detail\": \"Updated description for the annual technology conference\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/events/550e8400-e29b-41d4-a716-446655440000",
+              "host": ["{{base_url}}"],
+              "path": ["api", "events", "550e8400-e29b-41d4-a716-446655440000"]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n  \"message\": \"Event updated successfully\",\n  \"data\": {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n    \"name\": \"Updated Tech Conference 2024\",\n    \"start\": \"2024-06-15T10:00:00.000Z\",\n    \"end\": \"2024-06-15T18:00:00.000Z\",\n    \"detail\": \"Updated description for the annual technology conference\",\n    \"photoLink\": \"https://example.com/updated-banner.jpg\",\n    \"locationName\": \"Updated Convention Center\",\n    \"locationAddress\": \"456 Updated St, New City, State 54321\",\n    \"locationLink\": \"https://maps.google.com/updated-location\",\n    \"latitude\": 40.7589,\n    \"longitude\": -73.9851,\n    \"link\": \"https://updatedtechconf2024.com\",\n    \"status\": \"UPCOMING\",\n    \"currentParticipants\": 5,\n    \"maxParticipants\": 100,\n    \"code\": \"ABC123\",\n    \"creator\": {\n      \"id\": \"user-uuid\",\n      \"name\": \"John Doe\",\n      \"username\": \"johndoe\",\n      \"email\": \"john@example.com\"\n    },\n    \"createdAt\": \"2024-01-01T00:00:00.000Z\",\n    \"updatedAt\": \"2024-01-15T12:00:00.000Z\"\n  }\n}"
+        },
+        {
+          "name": "Unauthorized - Not Event Creator",
+          "originalRequest": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Event Name\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/events/550e8400-e29b-41d4-a716-446655440000",
+              "host": ["{{base_url}}"],
+              "path": ["api", "events", "550e8400-e29b-41d4-a716-446655440000"]
+            }
+          },
+          "status": "Forbidden",
+          "code": 403,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n  \"message\": \"Access denied\",\n  \"errors\": [\n    {\n      \"field\": \"authorization\",\n      \"message\": \"You can only update events you created\"\n    }\n  ]\n}"
+        }
+      ]
+    },
+    {
+      "name": "Delete Event",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{auth_token}}",
+            "description": "JWT authentication token"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/events/{{event_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "events", "{{event_id}}"]
+        },
+        "description": "Delete an event. Only the event creator can delete the event."
+      },
+      "response": [
+        {
+          "name": "Success Response",
+          "originalRequest": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/events/550e8400-e29b-41d4-a716-446655440000",
+              "host": ["{{base_url}}"],
+              "path": ["api", "events", "550e8400-e29b-41d4-a716-446655440000"]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n  \"message\": \"Event deleted successfully\",\n  \"data\": null\n}"
+        },
+        {
+          "name": "Unauthorized - Not Event Creator",
+          "originalRequest": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/events/550e8400-e29b-41d4-a716-446655440000",
+              "host": ["{{base_url}}"],
+              "path": ["api", "events", "550e8400-e29b-41d4-a716-446655440000"]
+            }
+          },
+          "status": "Forbidden",
+          "code": 403,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n  \"message\": \"Access denied\",\n  \"errors\": [\n    {\n      \"field\": \"authorization\",\n      \"message\": \"You can only delete events you created\"\n    }\n  ]\n}"
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "description": "Base URL for the API"
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "description": "JWT authentication token obtained from login"
+    },
+    {
+      "key": "event_id",
+      "value": "550e8400-e29b-41d4-a716-446655440000",
+      "description": "Event UUID for testing"
+    }
+  ]
+}

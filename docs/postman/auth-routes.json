@@ -1,0 +1,298 @@
+{
+  "info": {
+    "name": "Authentication API",
+    "description": "Authentication endpoints for user registration, login, OAuth callback, and profile management",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Register User",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"auth_provider\": \"EMAIL\",\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\",\n  \"username\": \"johndoe\",\n  \"name\": \"John Doe\",\n  \"is_active\": true\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/auth/register",
+          "host": ["{{base_url}}"],
+          "path": ["api", "auth", "register"]
+        },
+        "description": "Register a new user with email and password authentication"
+      },
+      "response": [
+        {
+          "name": "Success Response",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"auth_provider\": \"EMAIL\",\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\",\n  \"username\": \"johndoe\",\n  \"name\": \"John Doe\",\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "register"]
+            }
+          },
+          "status": "Created",
+          "code": 201,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n  \"message\": \"User registered successfully\",\n  \"data\": {\n    \"user\": {\n      \"id\": \"uuid\",\n      \"auth_provider\": \"EMAIL\",\n      \"email\": \"user@example.com\",\n      \"username\": \"johndoe\",\n      \"name\": \"John Doe\",\n      \"linkedinUsername\": null,\n      \"photoLink\": null,\n      \"professionId\": null,\n      \"is_active\": true,\n      \"created_at\": \"2024-01-01T00:00:00.000Z\",\n      \"updated_at\": \"2024-01-01T00:00:00.000Z\"\n    },\n    \"token\": \"jwt_token\"\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Login User",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/auth/login",
+          "host": ["{{base_url}}"],
+          "path": ["api", "auth", "login"]
+        },
+        "description": "Authenticate a user with email and password"
+      },
+      "response": [
+        {
+          "name": "Success Response",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n  \"message\": \"Login successful\",\n  \"data\": {\n    \"user\": {\n      \"id\": \"uuid\",\n      \"auth_provider\": \"EMAIL\",\n      \"email\": \"user@example.com\",\n      \"username\": \"johndoe\",\n      \"name\": \"John Doe\",\n      \"linkedinUsername\": null,\n      \"photoLink\": null,\n      \"professionId\": null,\n      \"is_active\": true,\n      \"created_at\": \"2024-01-01T00:00:00.000Z\",\n      \"updated_at\": \"2024-01-01T00:00:00.000Z\"\n    },\n    \"token\": \"jwt_token\"\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "OAuth Callback",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{supabase_token}}",
+            "description": "Supabase OAuth token"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/auth/callback",
+          "host": ["{{base_url}}"],
+          "path": ["api", "auth", "callback"]
+        },
+        "description": "Handle OAuth authentication callback from Supabase for Apple, LinkedIn, and other OAuth providers"
+      },
+      "response": [
+        {
+          "name": "Existing User Login",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{supabase_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/callback",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "callback"]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n  \"message\": \"Login successful\",\n  \"data\": {\n    \"user\": {\n      \"id\": \"uuid\",\n      \"auth_provider\": \"APPLE\",\n      \"email\": \"user@example.com\",\n      \"username\": null,\n      \"name\": \"John Doe\",\n      \"linkedinUsername\": null,\n      \"photoLink\": null,\n      \"professionId\": null,\n      \"is_active\": true,\n      \"created_at\": \"2024-01-01T00:00:00.000Z\",\n      \"updated_at\": \"2024-01-01T00:00:00.000Z\",\n      \"isFirst\": false\n    },\n    \"token\": \"jwt_token\"\n  }\n}"
+        },
+        {
+          "name": "New User Signup",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{supabase_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/callback",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "callback"]
+            }
+          },
+          "status": "Created",
+          "code": 201,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n  \"message\": \"User created and logged in successfully\",\n  \"data\": {\n    \"user\": {\n      \"id\": \"uuid\",\n      \"auth_provider\": \"LINKEDIN\",\n      \"email\": \"user@example.com\",\n      \"username\": null,\n      \"name\": \"John Doe\",\n      \"linkedinUsername\": \"johndoe\",\n      \"photoLink\": \"https://example.com/photo.jpg\",\n      \"professionId\": null,\n      \"is_active\": true,\n      \"created_at\": \"2024-01-01T00:00:00.000Z\",\n      \"updated_at\": \"2024-01-01T00:00:00.000Z\",\n      \"isFirst\": true\n    },\n    \"token\": \"jwt_token\"\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Get Profile",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}",
+            "description": "JWT token from login/register"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/auth/profile",
+          "host": ["{{base_url}}"],
+          "path": ["api", "auth", "profile"]
+        },
+        "description": "Retrieve the current authenticated user's profile information"
+      },
+      "response": [
+        {
+          "name": "Success Response",
+          "originalRequest": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "profile"]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n  \"message\": \"Profile retrieved successfully\",\n  \"data\": {\n    \"id\": \"uuid\",\n    \"auth_provider\": \"EMAIL\",\n    \"email\": \"user@example.com\",\n    \"username\": \"johndoe\",\n    \"name\": \"John Doe\",\n    \"linkedinUsername\": null,\n    \"photoLink\": null,\n    \"professionId\": null,\n    \"is_active\": true,\n    \"created_at\": \"2024-01-01T00:00:00.000Z\",\n    \"updated_at\": \"2024-01-01T00:00:00.000Z\"\n  }\n}"
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "description": "Base URL for the API"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "description": "JWT token obtained from login/register"
+    },
+    {
+      "key": "supabase_token",
+      "value": "",
+      "description": "Supabase OAuth token for callback"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  }
+}

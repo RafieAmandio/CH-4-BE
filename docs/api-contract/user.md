@@ -69,7 +69,7 @@ All user endpoints use the base path: `/api/users`
 
 **Request Fields:**
 - `name` - User's display name (required)
-- `email` - User's email address (required)
+- `email` - User's email address (optional)
 - `linkedinUsername` - LinkedIn profile username (optional)
 - `photoLink` - URL to profile photo (required)
 - `professionId` - Selected profession from professions table (required)
@@ -168,7 +168,7 @@ All user endpoints use the base path: `/api/users`
 **Request Fields:**
 All fields are optional. Only include fields you want to update.
 - `name` - User's full name
-- `username` - Unique username
+- `username` - Unique username (disabled)
 - `linkedinUsername` - LinkedIn profile username
 - `photoLink` - Profile photo URL
 - `professionId` - Selected profession ID
