@@ -310,6 +310,70 @@ All fields are optional. Only include fields you want to update.
 
 ---
 
+### 6. Validate Event by Code
+
+**Endpoint:** `GET /api/events/validate/{code}`
+
+**Description:** Validates an event by its unique code and returns event details if it's active (UPCOMING or ONGOING status). This endpoint is typically used for QR code scanning.
+
+**Headers:**
+- No authentication required (public endpoint)
+
+**Path Parameters:**
+- `code` - Event code (6-digit string) (required)
+
+**Response (Success - Active Event):**
+```json
+{
+  "message": "Event validated successfully",
+  "data": {
+    "id": "uuid",
+    "name": "string",
+    "start": "datetime",
+    "end": "datetime",
+    "detail": "string|null",
+    "photo_link": "string|null",
+    "location_name": "string|null",
+    "location_address": "string|null",
+    "location_link": "string|null",
+    "latitude": "decimal|null",
+    "longitude": "decimal|null",
+    "link": "string|null",
+    "status": "UPCOMING|ONGOING",
+    "current_participants": "number",
+    "code": "string",
+    "creator": {
+      "id": "uuid",
+      "name": "string",
+      "username": "string|null"
+    }
+  }
+}
+```
+
+**Response (Event Not Found or Inactive):**
+```json
+{
+  "error": "Event not found or inactive",
+  "details": [
+    {
+      "field": "code",
+      "message": "Event with this code is not found, inactive, or not available for registration"
+    }
+  ]
+}
+```
+
+**Business Logic:**
+- Validates event exists by code
+- Only returns events with status `UPCOMING` or `ONGOING`
+- Excludes `DRAFT` and `COMPLETED` events
+- Only returns active events (`is_active: true`)
+- Public endpoint - no authentication required
+- Creator email is excluded from public response
+
+---
+
 ## Event Status Enum
 
 | Status | Description |
