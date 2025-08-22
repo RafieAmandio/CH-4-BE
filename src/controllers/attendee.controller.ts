@@ -3,7 +3,13 @@ import { AuthRequest } from '../types/index.js';
 import { sendSuccess, sendError } from '../utils/response.js';
 import { logger } from '../config/logger.js';
 import prisma from '../config/database.js';
-import { ProfessionCategoryResponse } from '../types/attendee.types.js';
+import {
+  ProfessionCategoryResponse,
+  GoalsCategoryResponse,
+  UpdateGoalsCategoryInput,
+  QuestionResponse,
+  UpdateGoalsCategoryResponse,
+} from '../types/attendee.types.js';
 import { CreateAttendeeInput } from '../types/attendee.types.js';
 import { generateToken } from '../utils/token.js';
 
@@ -172,6 +178,244 @@ export const createAttendee = async (
         {
           field: 'server',
           message: 'An error occurred while registering attendee',
+        },
+      ],
+      500
+    );
+  }
+};
+
+/**
+ * Get all active goals categories
+ */
+export const getGoalsCategories = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    // Get all active goals categories
+    const goalsCategories = await prisma.goalsCategory.findMany({
+      where: {
+        is_active: true,
+        deleted_at: null,
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+      orderBy: {
+        name: 'asc',
+      },
+    });
+
+    // Transform the data to match the API contract
+    const responseData: GoalsCategoryResponse[] = goalsCategories.map(
+      category => ({
+        id: category.id,
+        name: category.name,
+      })
+    );
+
+    sendSuccess(
+      res,
+      'Goals categories retrieved successfully',
+      responseData,
+      200
+    );
+  } catch (error) {
+    logger.error('Get goals categories error:', error);
+    sendError(
+      res,
+      'Failed to retrieve goals categories',
+      [
+        {
+          field: 'server',
+          message: 'An error occurred while retrieving goals categories',
+        },
+      ],
+      500
+    );
+  }
+};
+
+/**
+ * Update attendee's goals category and return questions
+ */
+export const updateGoalsCategory = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const { attendeeId } = req.params;
+    const { goalsCategoryId }: UpdateGoalsCategoryInput = req.body;
+    const user = req.user;
+    const attendee = req.attendee;
+
+    // Validate ownership
+    if (user) {
+      // User token - check if attendee belongs to user
+      const userAttendee = await prisma.attendee.findFirst({
+        where: {
+          id: attendeeId,
+          user_id: user.id,
+          is_active: true,
+        },
+      });
+
+      if (!userAttendee) {
+        sendError(
+          res,
+          'Attendee not found',
+          [
+            {
+              field: 'attendeeId',
+              message: 'Attendee not found or does not belong to user',
+            },
+          ],
+          404
+        );
+        return;
+      }
+    } else if (attendee) {
+      // Attendee token - check if attendee ID matches
+      if (attendee.id !== attendeeId) {
+        sendError(
+          res,
+          'Unauthorized',
+          [
+            {
+              field: 'attendeeId',
+              message: 'Attendee ID does not match token',
+            },
+          ],
+          403
+        );
+        return;
+      }
+    } else {
+      sendError(
+        res,
+        'Authentication required',
+        [{ field: 'auth', message: 'No valid authentication found' }],
+        401
+      );
+      return;
+    }
+
+    // Check if goals category exists and is active
+    const goalsCategory = await prisma.goalsCategory.findUnique({
+      where: { id: goalsCategoryId },
+    });
+
+    if (!goalsCategory || !goalsCategory.is_active) {
+      sendError(
+        res,
+        'Goals category not found',
+        [
+          {
+            field: 'goalsCategoryId',
+            message: 'Goals category not found or inactive',
+          },
+        ],
+        404
+      );
+      return;
+    }
+
+    // Update attendee's goals category
+    const updatedAttendee = await prisma.attendee.update({
+      where: { id: attendeeId },
+      data: {
+        goals_category_id: goalsCategoryId,
+      },
+    });
+
+    // Get questions for this goals category with answer options
+    const questions = await prisma.question.findMany({
+      where: {
+        goals_category_id: goalsCategoryId,
+        is_active: true,
+        deleted_at: null,
+      },
+      include: {
+        answerOptions: {
+          where: { is_active: true, deleted_at: null },
+          select: { id: true, label: true, value: true, display_order: true },
+          orderBy: { display_order: 'asc' },
+        },
+        questionOrders: {
+          where: {
+            goals_category_id: goalsCategoryId,
+            is_active: true,
+            deleted_at: null,
+          },
+          select: { display_order: true },
+          orderBy: { display_order: 'asc' },
+          take: 1, // ensure only the one for this category
+        },
+      },
+    });
+
+    // Transform questions data to match API contract
+    const transformedQuestions: QuestionResponse[] = questions
+      .map(q => {
+        const displayOrder =
+          q.questionOrders?.[0]?.display_order ?? Number.MAX_SAFE_INTEGER;
+
+        return {
+          id: q.id,
+          question: q.question,
+          type: q.type as QuestionResponse['type'], // align Prisma enum to your union
+          placeholder: q.placeholder ?? undefined, // null -> undefined
+          displayOrder,
+          isRequired: q.is_required,
+          isShareable: q.is_shareable,
+          constraints: {
+            minSelect: q.min_select,
+            maxSelect: q.max_select ?? undefined, // null -> undefined
+            requireRanking: q.require_ranking,
+            isUsingOther: q.is_using_other,
+            textMaxLen: q.text_max_len ?? undefined, // null -> undefined
+            numberMin: q.number_min
+              ? parseFloat(q.number_min.toString())
+              : undefined,
+            numberMax: q.number_max
+              ? parseFloat(q.number_max.toString())
+              : undefined,
+            numberStep: q.number_step
+              ? parseFloat(q.number_step.toString())
+              : undefined,
+          },
+          answerOptions: q.answerOptions.map(opt => ({
+            id: opt.id,
+            label: opt.label,
+            value: opt.value ?? undefined, // null -> undefined to satisfy `value?: string`
+            displayOrder: opt.display_order,
+          })),
+        };
+      })
+      .sort((a, b) => a.displayOrder - b.displayOrder);
+
+    // Prepare response
+    const responseData: UpdateGoalsCategoryResponse = {
+      attendeeId: updatedAttendee.id,
+      goalsCategory: {
+        id: goalsCategory.id,
+        name: goalsCategory.name,
+      },
+      questions: transformedQuestions,
+    };
+
+    sendSuccess(res, 'Goals category updated successfully', responseData, 200);
+  } catch (error) {
+    logger.error('Update goals category error:', error);
+    sendError(
+      res,
+      'Failed to update goals category',
+      [
+        {
+          field: 'server',
+          message: 'An error occurred while updating goals category',
         },
       ],
       500

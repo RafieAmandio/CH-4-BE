@@ -3,6 +3,8 @@ import * as attendeeController from '../controllers/attendee.controller.js';
 import {
   getProfessionsValidation,
   createAttendeeValidation,
+  getGoalsCategoriesValidation,
+  updateGoalsCategoryValidation,
 } from '../validations/attendee.validation.js';
 import { validate } from '../utils/validation.js';
 import { authenticate } from '../middlewares/auth.middleware.js';
@@ -35,15 +37,29 @@ router.post(
 );
 
 /**
+ * @route GET /api/attendee/goals-categories
+ * @desc Get all active goals categories
+ * @access Private (requires authentication)
+ */
+router.get(
+  '/goals-categories',
+  authenticate(['USER', 'ATTENDEE']),
+  getGoalsCategoriesValidation,
+  validate,
+  attendeeController.getGoalsCategories
+);
+
+/**
  * @route PUT /api/attendee/:attendeeId/goals-category
- * @desc Update attendee's goals category
- * @access Attendee only (user with attendee context or visitor attendee)
+ * @desc Update attendee's goals category and get questions
+ * @access Private (attendee owner only)
  */
 router.put(
   '/:attendeeId/goals-category',
-  authenticate(['USER', 'ATTENDEE']) // Allow user tokens and attendee tokens
-  // validation,
-  // controller
+  authenticate(['USER', 'ATTENDEE']),
+  updateGoalsCategoryValidation,
+  validate,
+  attendeeController.updateGoalsCategory
 );
 
 /**

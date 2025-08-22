@@ -1,4 +1,4 @@
-import { body } from 'express-validator';
+import { body, param } from 'express-validator';
 
 // Get professions - no validation needed (public endpoint, no params)
 export const getProfessionsValidation = [
@@ -46,4 +46,24 @@ export const createAttendeeValidation = [
     .withMessage('Photo link is required')
     .isURL()
     .withMessage('Photo link must be a valid URL'),
+];
+
+// Get goals categories - no validation needed
+export const getGoalsCategoriesValidation = [
+  // No validation required for this endpoint
+];
+
+// Update attendee with goals category
+export const updateGoalsCategoryValidation = [
+  param('attendeeId')
+    .notEmpty()
+    .withMessage('Attendee ID is required')
+    .isUUID()
+    .withMessage('Attendee ID must be a valid UUID'),
+
+  body('goalsCategoryId')
+    .notEmpty()
+    .withMessage('Goals category ID is required')
+    .isUUID()
+    .withMessage('Goals category ID must be a valid UUID'),
 ];
