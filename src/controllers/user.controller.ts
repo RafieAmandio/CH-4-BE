@@ -282,21 +282,21 @@ export const updateMyProfile = async (
     }
 
     // Check if username is already taken by another user
-    if (username && username !== user.username) {
-      const existingUser = await prisma.user.findUnique({
-        where: { username },
-      });
+    // if (username && username !== user.username) {
+    //   const existingUser = await prisma.user.findUnique({
+    //     where: { username },
+    //   });
 
-      if (existingUser) {
-        sendError(
-          res,
-          'Username already taken',
-          [{ field: 'username', message: 'This username is already in use' }],
-          400
-        );
-        return;
-      }
-    }
+    //   if (existingUser) {
+    //     sendError(
+    //       res,
+    //       'Username already taken',
+    //       [{ field: 'username', message: 'This username is already in use' }],
+    //       400
+    //     );
+    //     return;
+    //   }
+    // }
 
     // Check if email is already taken by another user
     if (email && email !== user.email) {

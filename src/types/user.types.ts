@@ -11,7 +11,7 @@ export interface UpdateProfileInput {
 
 export interface CompleteRegistrationInput {
   name: string;
-  email: string;
+  email?: string;
   linkedinUsername?: string;
   photoLink: string;
   professionId: string;
