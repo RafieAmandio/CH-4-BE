@@ -256,57 +256,20 @@ export const updateGoalsCategory = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { attendeeId } = req.params;
     const { goalsCategoryId }: UpdateGoalsCategoryInput = req.body;
-    const user = req.user;
-    const attendee = req.attendee;
+    const attendeeToken = req.attendee;
 
-    // Validate ownership
-    if (user) {
-      // User token - check if attendee belongs to user
-      const userAttendee = await prisma.attendee.findFirst({
-        where: {
-          id: attendeeId,
-          user_id: user.id,
-          is_active: true,
-        },
-      });
+    // Determine attendeeId from token
+    let attendeeId: string;
 
-      if (!userAttendee) {
-        sendError(
-          res,
-          'Attendee not found',
-          [
-            {
-              field: 'attendeeId',
-              message: 'Attendee not found or does not belong to user',
-            },
-          ],
-          404
-        );
-        return;
-      }
-    } else if (attendee) {
-      // Attendee token - check if attendee ID matches
-      if (attendee.id !== attendeeId) {
-        sendError(
-          res,
-          'Unauthorized',
-          [
-            {
-              field: 'attendeeId',
-              message: 'Attendee ID does not match token',
-            },
-          ],
-          403
-        );
-        return;
-      }
+    if (attendeeToken) {
+      attendeeId = attendeeToken.id;
     } else {
+      console.log('No attendee ID found in token');
       sendError(
         res,
         'Authentication required',
-        [{ field: 'auth', message: 'No valid authentication found' }],
+        [{ field: 'auth', message: 'No valid attendee authentication found' }],
         401
       );
       return;
@@ -443,53 +406,35 @@ export const submitAnswers = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { attendeeId, answers }: SubmitAnswersInput = req.body;
-    const user = req.user;
+    // Get attendeeId from token instead of params
+    const { answers }: SubmitAnswersInput = req.body;
     const attendeeToken = req.attendee;
 
-    // ---- Ownership & auth checks ----
-    if (user) {
-      const owned = await prisma.attendee.findFirst({
-        where: { id: attendeeId, user_id: user.id, is_active: true },
-        select: { id: true },
-      });
-      if (!owned) {
-        sendError(
-          res,
-          'Attendee not found',
-          [
-            {
-              field: 'attendeeId',
-              message: 'Attendee not found or does not belong to user',
-            },
-          ],
-          404
-        );
-        return;
-      }
-    } else if (attendeeToken) {
-      if (attendeeToken.id !== attendeeId) {
-        sendError(
-          res,
-          'Forbidden',
-          [{ field: 'attendeeId', message: 'Token does not match attendee' }],
-          403
-        );
-        return;
-      }
+    // Determine attendeeId from token
+    let attendeeId: string;
+
+    if (attendeeToken) {
+      attendeeId = attendeeToken.id;
     } else {
+      console.log('No attendee ID found in token');
       sendError(
         res,
         'Authentication required',
-        [{ field: 'auth', message: 'No valid authentication found' }],
+        [{ field: 'auth', message: 'No valid attendee authentication found' }],
         401
       );
       return;
     }
 
-    // ---- Load attendee context ----
+    console.log('Submit answers called with:', {
+      attendeeId,
+      answersCount: answers?.length,
+      hasAttendeeToken: !!attendeeToken
+    });
+
+    // ---- Simplified ownership check since attendeeId comes from token ----
     const currentAttendee = await prisma.attendee.findUnique({
-      where: { id: attendeeId },
+      where: { id: attendeeId, is_active: true },
       include: {
         event: true,
         user: {
@@ -501,23 +446,25 @@ export const submitAnswers = async (
     });
 
     if (!currentAttendee) {
+      console.log('Attendee not found:', attendeeId);
       sendError(
         res,
         'Attendee not found',
-        [{ field: 'attendeeId', message: 'Attendee not found' }],
+        [{ field: 'attendee', message: 'Attendee not found or inactive' }],
         404
       );
       return;
     }
+
     if (!currentAttendee.goals_category_id) {
+      console.log('No goals category set:', attendeeId);
       sendError(
         res,
         'Goals category required',
         [
           {
-            field: 'attendeeId',
-            message:
-              'Attendee must select a goals category before submitting answers',
+            field: 'attendee',
+            message: 'Attendee must select a goals category before submitting answers',
           },
         ],
         400
@@ -527,6 +474,8 @@ export const submitAnswers = async (
 
     // ---- Validate questions belong to attendee's goals category ----
     const questionIds = Array.from(new Set(answers.map(a => a.questionId)));
+    console.log('Validating questions:', { questionIds, goalsCategoryId: currentAttendee.goals_category_id });
+
     const validQuestions = await prisma.question.findMany({
       where: {
         id: { in: questionIds },
@@ -535,9 +484,12 @@ export const submitAnswers = async (
       },
       select: { id: true },
     });
+
     const validSet = new Set(validQuestions.map(q => q.id));
     const invalid = questionIds.filter(id => !validSet.has(id));
+
     if (invalid.length > 0) {
+      console.log('Invalid questions found:', invalid);
       sendError(
         res,
         'Invalid question(s)',
@@ -574,23 +526,26 @@ export const submitAnswers = async (
             question_id: g.questionId,
             answer_option_id: g.answerOptionId ?? null,
             text_value: g.textValue ?? null,
-            number_value:
-              g.numberValue == null ? null : (g.numberValue as unknown as any),
+            number_value: g.numberValue == null ? null : g.numberValue,
             date_value: g.dateValue ? new Date(g.dateValue) : null,
             rank: g.rank ?? null,
-            weight: g.weight == null ? null : (g.weight as unknown as any), // Prisma.Decimal compatible
+            weight: g.weight ?? null,
             is_active: true,
           })),
         })
       );
     }
 
+    console.log('Executing transaction with', txs.length, 'operations');
     const results = await prisma.$transaction(txs);
+
     for (const r of results) {
       if (typeof r?.count === 'number') totalCreated += r.count;
     }
 
-    // ---- Reload answers to build AI payload (with labels & types) ----
+    console.log('Transaction completed. Created', totalCreated, 'answers');
+
+    // ---- Reload answers to build AI payload ----
     const attendeeAnswers = await prisma.attendeeAnswer.findMany({
       where: { attendee_id: attendeeId, is_active: true },
       include: { question: true, answerOption: true },
@@ -618,7 +573,6 @@ export const submitAnswers = async (
         goalsCategory: { name: currentAttendee.goal?.name || '' },
         answers: attendeeAnswers.map(ans => ({
           question: ans.question.question,
-          // enum -> string
           questionType: String(ans.question.type),
           answerLabel: ans.answerOption?.label ?? undefined,
           textValue: ans.text_value ?? undefined,
@@ -632,59 +586,71 @@ export const submitAnswers = async (
     } satisfies AttendeeDataForAI;
 
     // ---- AI: train + get immediate recs (parallel) ----
-    const aiRecommendations = await processAttendeeWithAI(aiData);
-
-    // ---- Take top-3 (no score in POST response), store to DB ----
     let recommendations: RecommendationResponse[] = [];
-    if (aiRecommendations?.recommendations?.length) {
-      const top = aiRecommendations.recommendations
-        .filter(r => r.targetAttendeeId !== attendeeId)
-        .slice(0, 3);
 
-      for (const rec of top) {
-        const target = await getEnrichedAttendeeData(rec.targetAttendeeId);
-        if (!target) continue;
+    try {
+      const aiRecommendations = await processAttendeeWithAI(aiData);
 
-        recommendations.push({
-          targetAttendeeId: rec.targetAttendeeId,
-          reasoning: rec.reasoning,
-          targetAttendee: target,
-        });
+      if (aiRecommendations?.recommendations?.length) {
+        const top = aiRecommendations.recommendations
+          .filter(r => r.targetAttendeeId !== attendeeId)
+          .slice(0, 3);
 
-        // Persist recs (active)
-        await prisma.recommendation.upsert({
-          where: {
-            event_id_source_attendee_id_target_attendee_id: {
+        console.log('Got', top.length, 'AI recommendations');
+
+        for (const rec of top) {
+          const target = await getEnrichedAttendeeData(rec.targetAttendeeId);
+          if (!target) continue;
+
+          recommendations.push({
+            targetAttendeeId: rec.targetAttendeeId,
+            reasoning: rec.reasoning,
+            targetAttendee: target,
+          });
+
+          // Persist recommendations
+          await prisma.recommendation.upsert({
+            where: {
+              event_id_source_attendee_id_target_attendee_id: {
+                event_id: currentAttendee.event_id,
+                source_attendee_id: attendeeId,
+                target_attendee_id: rec.targetAttendeeId,
+              },
+            },
+            update: {
+              score: rec.score,
+              reasoning: rec.reasoning,
+              is_active: true,
+            },
+            create: {
               event_id: currentAttendee.event_id,
               source_attendee_id: attendeeId,
               target_attendee_id: rec.targetAttendeeId,
+              score: rec.score,
+              reasoning: rec.reasoning,
+              is_active: true,
             },
-          },
-          update: {
-            score: rec.score,
-            reasoning: rec.reasoning,
-            is_active: true,
-          },
-          create: {
-            event_id: currentAttendee.event_id,
-            source_attendee_id: attendeeId,
-            target_attendee_id: rec.targetAttendeeId,
-            score: rec.score,
-            reasoning: rec.reasoning,
-            is_active: true,
-          },
-        });
+          });
+        }
       }
+    } catch (aiError) {
+      console.error('AI processing error:', aiError);
+      // Continue without AI recommendations rather than failing completely
     }
 
     const payload: SubmitAnswersResponse = {
-      attendeeId,
       answersProcessed: totalCreated,
       recommendations,
     };
 
+    console.log('Submit answers successful:', {
+      answersProcessed: totalCreated,
+      recommendationsCount: recommendations.length
+    });
+
     sendSuccess(res, 'Answers submitted successfully', payload, 200);
   } catch (error) {
+    console.error('Submit answers error:', error);
     logger.error('Submit answers error:', error);
     sendError(
       res,
@@ -701,62 +667,39 @@ export const submitAnswers = async (
 };
 
 /**
- * GET /api/attendee/recommendations/:attendeeId
+ * GET /api/attendee/recommendations
  * Always triggers fresh AI recs; falls back to stored if AI is unavailable.
  * Returns score in the response, per your spec.
+ * attendeeId comes from token, not params
  */
 export const getRecommendations = async (
   req: AuthRequest,
   res: Response
 ): Promise<void> => {
   try {
-    const { attendeeId } = req.params;
-    const user = req.user;
     const attendeeToken = req.attendee;
 
-    // ---- Ownership & auth checks ----
-    if (user) {
-      const owned = await prisma.attendee.findFirst({
-        where: { id: attendeeId, user_id: user.id, is_active: true },
-        select: { id: true },
-      });
-      if (!owned) {
-        sendError(
-          res,
-          'Attendee not found',
-          [
-            {
-              field: 'attendeeId',
-              message: 'Attendee not found or does not belong to user',
-            },
-          ],
-          404
-        );
-        return;
-      }
-    } else if (attendeeToken) {
-      if (attendeeToken.id !== attendeeId) {
-        sendError(
-          res,
-          'Forbidden',
-          [{ field: 'attendeeId', message: 'Token does not match attendee' }],
-          403
-        );
-        return;
-      }
+    // Get attendeeId from token
+    let attendeeId: string;
+
+    if (attendeeToken) {
+      attendeeId = attendeeToken.id;
     } else {
+      console.log('No attendee ID found in token');
       sendError(
         res,
         'Authentication required',
-        [{ field: 'auth', message: 'No valid authentication found' }],
+        [{ field: 'auth', message: 'No valid attendee authentication found' }],
         401
       );
       return;
     }
 
+    console.log('Get recommendations called with attendeeId from token:', attendeeId);
+
     // ---- Build AI payload from current data ----
     const currentAttendee = await prisma.attendee.findUnique({
-      where: { id: attendeeId },
+      where: { id: attendeeId, is_active: true },
       include: {
         event: true,
         user: {
@@ -766,11 +709,13 @@ export const getRecommendations = async (
         goal: true,
       },
     });
+
     if (!currentAttendee) {
+      console.log('Attendee not found:', attendeeId);
       sendError(
         res,
         'Attendee not found',
-        [{ field: 'attendeeId', message: 'Attendee not found' }],
+        [{ field: 'attendee', message: 'Attendee not found or inactive' }],
         404
       );
       return;
@@ -817,58 +762,70 @@ export const getRecommendations = async (
 
     // ---- Always trigger fresh AI; fallback to stored if needed ----
     let recs: RecommendationResponse[] = [];
-    const aiRecommendations = await getAIRecommendations(aiData);
 
-    if (aiRecommendations?.recommendations?.length) {
-      // Deactivate prior active recs for this source (optional hygiene)
-      await prisma.recommendation.updateMany({
-        where: {
-          event_id: currentAttendee.event_id,
-          source_attendee_id: attendeeId,
-          is_active: true,
-        },
-        data: { is_active: false },
-      });
+    try {
+      const aiRecommendations = await getAIRecommendations(aiData);
 
-      for (const rec of aiRecommendations.recommendations) {
-        if (rec.targetAttendeeId === attendeeId) continue;
+      if (aiRecommendations?.recommendations?.length) {
+        console.log('Got', aiRecommendations.recommendations.length, 'AI recommendations');
 
-        // Store as active
-        await prisma.recommendation.upsert({
+        // Deactivate prior active recs for this source (optional hygiene)
+        await prisma.recommendation.updateMany({
           where: {
-            event_id_source_attendee_id_target_attendee_id: {
+            event_id: currentAttendee.event_id,
+            source_attendee_id: attendeeId,
+            is_active: true,
+          },
+          data: { is_active: false },
+        });
+
+        for (const rec of aiRecommendations.recommendations) {
+          if (rec.targetAttendeeId === attendeeId) continue;
+
+          // Store as active
+          await prisma.recommendation.upsert({
+            where: {
+              event_id_source_attendee_id_target_attendee_id: {
+                event_id: currentAttendee.event_id,
+                source_attendee_id: attendeeId,
+                target_attendee_id: rec.targetAttendeeId,
+              },
+            },
+            update: {
+              score: rec.score,
+              reasoning: rec.reasoning,
+              is_active: true,
+            },
+            create: {
               event_id: currentAttendee.event_id,
               source_attendee_id: attendeeId,
               target_attendee_id: rec.targetAttendeeId,
+              score: rec.score,
+              reasoning: rec.reasoning,
+              is_active: true,
             },
-          },
-          update: {
-            score: rec.score,
-            reasoning: rec.reasoning,
-            is_active: true,
-          },
-          create: {
-            event_id: currentAttendee.event_id,
-            source_attendee_id: attendeeId,
-            target_attendee_id: rec.targetAttendeeId,
-            score: rec.score,
-            reasoning: rec.reasoning,
-            is_active: true,
-          },
-        });
-
-        const target = await getEnrichedAttendeeData(rec.targetAttendeeId);
-        if (target) {
-          recs.push({
-            targetAttendeeId: rec.targetAttendeeId,
-            score: rec.score,
-            reasoning: rec.reasoning,
-            targetAttendee: target,
           });
+
+          const target = await getEnrichedAttendeeData(rec.targetAttendeeId);
+          if (target) {
+            recs.push({
+              targetAttendeeId: rec.targetAttendeeId,
+              score: rec.score,
+              reasoning: rec.reasoning,
+              targetAttendee: target,
+            });
+          }
         }
+      } else {
+        console.log('No AI recommendations received, falling back to stored');
       }
-    } else {
-      // AI unavailable → fallback to stored active recs
+    } catch (aiError) {
+      console.error('AI service error, falling back to stored recommendations:', aiError);
+    }
+
+    // If no AI recs or AI failed, fallback to stored active recs
+    if (recs.length === 0) {
+      console.log('Using stored recommendations as fallback');
       const stored = await prisma.recommendation.findMany({
         where: { source_attendee_id: attendeeId, is_active: true },
         orderBy: { score: 'desc' },
@@ -894,8 +851,14 @@ export const getRecommendations = async (
       recommendations: recs,
     };
 
+    console.log('Get recommendations successful:', {
+      attendeeId,
+      recommendationsCount: recs.length
+    });
+
     sendSuccess(res, 'Recommendations retrieved successfully', payload, 200);
   } catch (error) {
+    console.error('Get recommendations error:', error);
     logger.error('Get recommendations error:', error);
     sendError(
       res,

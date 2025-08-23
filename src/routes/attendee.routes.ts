@@ -40,56 +40,6 @@ router.post(
 );
 
 /**
- * @route GET /api/attendee/goals-categories
- * @desc Get all active goals categories
- * @access Private (requires authentication)
- */
-router.get(
-  '/goals-categories',
-  authenticate(['ATTENDEE']),
-  getGoalsCategoriesValidation,
-  validate,
-  attendeeController.getGoalsCategories
-);
-
-/**
- * @route PUT /api/attendee/:attendeeId/goals-category
- * @desc Update attendee's goals category and get questions
- * @access Private (attendee owner only)
- */
-router.put(
-  '/:attendeeId/goals-category',
-  authenticate(['ATTENDEE']),
-  updateGoalsCategoryValidation,
-  validate,
-  attendeeController.updateGoalsCategory
-);
-
-/**
- * @route GET /api/attendee/recommendations/:attendeeId
- * @desc Get recommendations for attendee
- * @access Attendee only
- */
-router.get(
-  '/recommendations/:attendeeId',
-  authenticate(['ATTENDEE']) // Only attendee tokens allowed
-  // controller
-);
-
-/**
- * @route POST /api/attendee/answers
- * @desc Submit attendee answers and get AI recommendations
- * @access Private (attendee owner only)
- */
-router.post(
-  '/answers',
-  authenticate(['ATTENDEE']),
-  submitAnswersValidation,
-  validate,
-  attendeeController.submitAnswers
-);
-
-/**
  * @route GET /api/attendee/validate-event/:code
  * @desc Validate event by code for registration
  * @access Public
@@ -102,12 +52,51 @@ router.get(
 );
 
 /**
- * @route GET /api/attendee/recommendations/:attendeeId
- * @desc Get AI recommendations for attendee
- * @access Private (attendee owner only)
+ * @route GET /api/attendee/goals-categories
+ * @desc Get all active goals categories
+ * @access Private (requires attendee authentication)
  */
 router.get(
-  '/recommendations/:attendeeId',
+  '/goals-categories',
+  authenticate(['ATTENDEE']),
+  getGoalsCategoriesValidation,
+  validate,
+  attendeeController.getGoalsCategories
+);
+
+/**
+ * @route PUT /api/attendee/goals-category
+ * @desc Update attendee's goals category and get questions
+ * @access Private (attendee only - attendeeId from token)
+ */
+router.put(
+  '/goals-category',
+  authenticate(['ATTENDEE']),
+  updateGoalsCategoryValidation,
+  validate,
+  attendeeController.updateGoalsCategory
+);
+
+/**
+ * @route POST /api/attendee/answers
+ * @desc Submit attendee answers and get AI recommendations
+ * @access Private (attendee only - attendeeId from token)
+ */
+router.post(
+  '/answers',
+  authenticate(['ATTENDEE']),
+  submitAnswersValidation,
+  validate,
+  attendeeController.submitAnswers
+);
+
+/**
+ * @route GET /api/attendee/recommendations
+ * @desc Get AI recommendations for attendee
+ * @access Private (attendee only - attendeeId from token)
+ */
+router.get(
+  '/recommendations',
   authenticate(['ATTENDEE']),
   getRecommendationsValidation,
   validate,

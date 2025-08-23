@@ -45,13 +45,13 @@ export interface QuestionResponse {
   id: string;
   question: string;
   type:
-    | 'SINGLE_CHOICE'
-    | 'MULTI_SELECT'
-    | 'RANKED_CHOICE'
-    | 'FREE_TEXT'
-    | 'NUMBER'
-    | 'SCALE'
-    | 'DATE';
+  | 'SINGLE_CHOICE'
+  | 'MULTI_SELECT'
+  | 'RANKED_CHOICE'
+  | 'FREE_TEXT'
+  | 'NUMBER'
+  | 'SCALE'
+  | 'DATE';
   placeholder?: string;
   displayOrder: number;
   isRequired: boolean;
@@ -83,7 +83,6 @@ export interface UpdateGoalsCategoryResponse {
 }
 
 export interface SubmitAnswersInput {
-  attendeeId: string;
   answers: Array<{
     questionId: string;
     answerOptionId?: string;
@@ -125,7 +124,6 @@ export interface RecommendationResponse {
 }
 
 export interface SubmitAnswersResponse {
-  attendeeId: string;
   answersProcessed: number;
   recommendations: RecommendationResponse[];
 }

@@ -48,19 +48,14 @@ export const createAttendeeValidation = [
     .withMessage('Photo link must be a valid URL'),
 ];
 
-// Get goals categories - no validation needed
+// Get goals categories - no validation needed (attendeeId from token)
 export const getGoalsCategoriesValidation = [
-  // No validation required for this endpoint
+  // No validation required - attendeeId comes from token
 ];
 
-// Update attendee with goals category
+// Update attendee with goals category (attendeeId from token)
 export const updateGoalsCategoryValidation = [
-  param('attendeeId')
-    .notEmpty()
-    .withMessage('Attendee ID is required')
-    .isUUID()
-    .withMessage('Attendee ID must be a valid UUID'),
-
+  // Remove param validation since attendeeId comes from token
   body('goalsCategoryId')
     .notEmpty()
     .withMessage('Goals category ID is required')
@@ -69,12 +64,7 @@ export const updateGoalsCategoryValidation = [
 ];
 
 export const submitAnswersValidation = [
-  body('attendeeId')
-    .notEmpty()
-    .withMessage('Attendee ID is required')
-    .isUUID()
-    .withMessage('Attendee ID must be a valid UUID'),
-
+  // No attendeeId validation needed - comes from token
   body('answers')
     .isArray({ min: 1 })
     .withMessage('Answers array is required and must not be empty'),
@@ -93,7 +83,9 @@ export const submitAnswersValidation = [
   body('answers.*.textValue')
     .optional()
     .isString()
-    .withMessage('Text value must be a string'),
+    .withMessage('Text value must be a string')
+    .isLength({ max: 1000 })
+    .withMessage('Text value must not exceed 1000 characters'),
 
   body('answers.*.numberValue')
     .optional()
@@ -117,11 +109,7 @@ export const submitAnswersValidation = [
 ];
 
 export const getRecommendationsValidation = [
-  param('attendeeId')
-    .notEmpty()
-    .withMessage('Attendee ID is required')
-    .isUUID()
-    .withMessage('Attendee ID must be a valid UUID'),
+  // No validation required - attendeeId comes from token
 ];
 
 export const validateEventValidation = [
