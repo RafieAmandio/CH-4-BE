@@ -129,7 +129,7 @@ This document outlines the API contract for attendee management, which includes 
 **Request Body:**
 ```json
 {
-  "eventCode": "uuid",
+  "eventId": "uuid",
   "nickname": "string",
   "userEmail": "string|null", 
   "professionId": "uuid",
@@ -139,28 +139,17 @@ This document outlines the API contract for attendee management, which includes 
 ```
 
 **Request Fields:**
-- `eventCode` - Event identifier (required)
+- `eventId` - Event identifier (required)
 - `nickname` - Attendee's display name (required) - can be real name or preferred name
 - `userEmail` - Attendee's email address (optional)
 - `professionId` - Selected profession from professions table (required)
-- `linkedinUsername` - LinkedIn profile username
+- `linkedinUsername` - LinkedIn profile username (optional)
 - `photoLink` - URL to profile photo (required)
 
-**Response (Authenticated User):**
+**Response (Success):**
 ```json
 {
   "message": "Attendee registered successfully",
-  "data": {
-    "attendeeId": "uuid"
-    "accessToken": "jwt_token"
-  }
-}
-```
-
-**Response (Visitor/Guest):**
-```json
-{
-  "message": "Attendee registered successfully", 
   "data": {
     "attendeeId": "uuid",
     "accessToken": "jwt_token"
@@ -170,16 +159,16 @@ This document outlines the API contract for attendee management, which includes 
 
 **Response Fields:**
 - `attendeeId` - Created attendee identifier
-- `accessToken` - Temporary JWT token (only for visitors)
+- `accessToken` - JWT token (for both users and visitors)
 
 **Business Logic:**
 - If valid `Authorization` header with user token:
   - Create attendee with `user_id` populated
-  - Return only `attendeeId`
+  - Return enhanced user token with `attendeeId` embedded
 - If no valid token (visitor):
   - Create attendee without `user_id` 
-  - Generate temporary access token for subsequent API calls
-  - Return `attendeeId` and `accessToken`
+  - Generate visitor token with `attendeeId` as the primary identifier
+  - Return `attendeeId` and visitor `accessToken`
 
 ---
 
@@ -187,10 +176,10 @@ This document outlines the API contract for attendee management, which includes 
 
 **Endpoint:** `GET /api/attendee/goals-categories`
 
-**Description:** Returns all active goals categories available for selection.
+**Description:** Returns all active goals categories available for selection. Requires attendee authentication.
 
 **Headers:**
-- `Authorization: Bearer <token>` (required)
+- `Authorization: Bearer <attendee_token>` (required - attendee token only)
 
 **Response:**
 ```json
@@ -208,19 +197,20 @@ This document outlines the API contract for attendee management, which includes 
 - `id` - Unique identifier for the goals category
 - `name` - Display name of the goals category
 
+**Authentication:**
+- Requires attendee token (visitor or user-based)
+- `attendeeId` is extracted from the token automatically
+
 ---
 
 ### 5. Update Attendee with Goals Category
 
-**Endpoint:** `PUT /api/attendee/{attendeeId}/goals-category`
+**Endpoint:** `PUT /api/attendee/goals-category`
 
-**Description:** Updates the attendee's goals category selection and returns all questions for that category, ordered by display_order.
+**Description:** Updates the attendee's goals category selection and returns all questions for that category, ordered by display_order. The attendeeId is automatically extracted from the token.
 
 **Headers:**
-- `Authorization: Bearer <token>` (required)
-
-**Path Parameters:**
-- `attendeeId` - UUID of the attendee
+- `Authorization: Bearer <attendee_token>` (required - attendee token only)
 
 **Request Body:**
 ```json
@@ -276,43 +266,14 @@ This document outlines the API contract for attendee management, which includes 
 ```
 
 **Response Fields:**
-- `attendeeId` - Attendee identifier
+- `attendeeId` - Attendee identifier (from token)
 - `goalsCategory` - Selected goals category information
 - `questions` - Array of questions ordered by display_order
 
-**Question Object:**
-- `id` - Question identifier
-- `question` - Question text
-- `type` - Question type enum (see [Question Types](#question-types))
-- `placeholder` - Placeholder text for input fields
-- `displayOrder` - Order for display
-- `isRequired` - Whether question must be answered
-- `isShareable` - Whether answer should be displayed in recommendations
-- `constraints` - Type-specific constraints
-- `answerOptions` - Available options (for selection-based questions)
-
-**Constraints Object (conditional based on question type):**
-- `minSelect` - Minimum selections required
-- `maxSelect` - Maximum selections allowed
-- `requireRanking` - Whether ranking is required
-- `isUsingOther` - Whether "Other" option is available
-- `textMaxLen` - Maximum text length
-- `numberMin` - Minimum numeric value
-- `numberMax` - Maximum numeric value  
-- `numberStep` - Numeric step increment
-
-**Answer Option Object:**
-- `id` - Option identifier
-- `label` - Display text
-- `value` - Optional underlying value
-- `displayOrder` - Display order
-
-**Business Logic:**
-- Validates attendee exists and belongs to requesting user/token
-- Validates goals category exists and is active
-- Updates attendee's goals_category_id
-- Returns questions ordered by display_order with all answer options
-- Includes question constraints based on question type
+**Authentication:**
+- Requires attendee token (visitor or user-based)
+- `attendeeId` is extracted from the token automatically
+- No need to pass attendeeId in URL or body
 
 ---
 
@@ -320,15 +281,14 @@ This document outlines the API contract for attendee management, which includes 
 
 **Endpoint:** `POST /api/attendee/answers`
 
-**Description:** Submits answers for questionnaire completion.
+**Description:** Submits answers for questionnaire completion. The attendeeId is automatically extracted from the token.
 
 **Headers:**
-- `Authorization: Bearer <token>` (required)
+- `Authorization: Bearer <attendee_token>` (required - attendee token only)
 
 **Request Body:**
 ```json
 {
-  "attendeeId": "uuid",
   "answers": [
     {
       "questionId": "uuid",
@@ -344,8 +304,7 @@ This document outlines the API contract for attendee management, which includes 
 ```
 
 **Request Fields:**
-- `attendeeId` - ID of the attendee submitting answers
-- `answers` - Array of answer objects
+- `answers` - Array of answer objects (required)
 
 **Answer Object:**
 - `questionId` - Question being answered (required)
@@ -361,7 +320,6 @@ This document outlines the API contract for attendee management, which includes 
 {
   "message": "Answers submitted successfully",
   "data": {
-    "attendeeId": "uuid",
     "answersProcessed": "number",
     "recommendations": [
       {
@@ -397,44 +355,24 @@ This document outlines the API contract for attendee management, which includes 
 ```
 
 **Response Fields:**
-- `attendeeId` - ID of the attendee who submitted answers
 - `answersProcessed` - Number of answers successfully processed
-- `recommendations` - Array of top 3 AI-generated recommendations
+- `recommendations` - Array of top 3 AI-generated recommendations (without scores)
 
-**Recommendation Object:**
-- `targetAttendeeId` - Recommended attendee's ID
-- `reasoning` - AI-generated explanation for the match
-- `targetAttendee` - Complete attendee profile
-
-**Target Attendee Object:**
-- `nickname` - Preferred name
-- `profession` - Profession name and category
-- `goalsCategory` - Selected goals category
-- `linkedinUsername` - LinkedIn profile handle
-- `photoLink` - Profile photo URL
-- `shareableAnswers` - Only answers where `isShareable` is true
-
-**Business Logic:**
-1. Validate and store all submitted answers
-2. Call AI service endpoint `/ai/attendees/process` to submit attendee data for training
-3. Simultaneously (using singleton/multi-threading) call `/ai/attendees/recommendations` to generate recommendations
-4. Process AI response and enrich with attendee profile data
-5. Filter answers to only include those where `question.isShareable` is true
-6. Return top 3 recommendations along with submission confirmation
+**Authentication:**
+- Requires attendee token (visitor or user-based)
+- `attendeeId` is extracted from the token automatically
+- No need to pass attendeeId in body
 
 ---
 
 ### 7. Get Recommendations
 
-**Endpoint:** `GET /api/attendee/recommendations/{attendeeId}`
+**Endpoint:** `GET /api/attendee/recommendations`
 
-**Description:** Retrieves AI-generated networking recommendations for a specific attendee. This endpoint triggers the AI recommendation service to generate fresh recommendations based on all attendees in the same event.
+**Description:** Retrieves AI-generated networking recommendations for the authenticated attendee. This endpoint triggers the AI recommendation service to generate fresh recommendations based on all attendees in the same event. The attendeeId is automatically extracted from the token.
 
 **Headers:**
-- `Authorization: Bearer <token>` (required)
-
-**Path Parameters:**
-- `attendeeId` - UUID of the attendee requesting recommendations
+- `Authorization: Bearer <attendee_token>` (required - attendee token only)
 
 **Response:**
 ```json
@@ -477,7 +415,7 @@ This document outlines the API contract for attendee management, which includes 
 ```
 
 **Response Fields:**
-- `attendeeId` - Requesting attendee's ID
+- `attendeeId` - Requesting attendee's ID (from token)
 - `eventId` - Event identifier
 - `recommendations` - Array of recommendation objects
 
@@ -487,30 +425,62 @@ This document outlines the API contract for attendee management, which includes 
 - `reasoning` - AI-generated explanation for the match
 - `targetAttendee` - Complete attendee profile
 
-**Target Attendee Object:**
-- `nickname` - Preferred name
-- `profession` - Profession name and category
-- `goalsCategory` - Selected goals category
-- `linkedinUsername` - LinkedIn profile handle
-- `photoLink` - Profile photo URL
-- `shareableAnswers` - Only answers where `isShareable` is true
-
-**Shareable Answer Object:**
-- `question` - Question text
-- `questionType` - Type of question
-- `answerLabel` - Selected option text (for choice-based questions)
-- `textValue` - Free text response
-- `numberValue` - Numeric response
-- `dateValue` - Date response
-- `rank` - Ranking value (for ranked questions)
+**Authentication:**
+- Requires attendee token (visitor or user-based)
+- `attendeeId` is extracted from the token automatically
+- No need to pass attendeeId in URL
 
 **Business Logic:**
-1. Validate attendee exists and belongs to requesting user/token
-2. Call AI service endpoint `/ai/attendees/recommendations` with attendee data
-3. Process AI response and enrich with attendee profile data
-4. Filter answers to only include those where `question.isShareable` is true
-5. Store recommendations in database
-6. Return formatted response with complete attendee profiles
+1. Extract attendeeId from token
+2. Always call AI service endpoint `/ai/attendees/recommendations` with current attendee data
+3. If AI service returns recommendations:
+   - Deactivate previous stored recommendations
+   - Store new recommendations in database
+   - Return fresh recommendations with scores
+4. If AI service is unavailable:
+   - Fallback to stored recommendations from database
+   - Return stored recommendations with scores
+
+---
+
+## Token-Based Authentication System
+
+### Token Types
+
+**1. User Token (Enhanced)**
+- Contains user information + `attendeeId` when registered for an event
+- Used for authenticated users who have registered for an event
+- Structure: `{ id: userId, email: userEmail, attendeeId: attendeeId }`
+
+**2. Visitor Token**
+- Contains only attendee information for anonymous users
+- Used for visitors who register without a user account
+- Structure: `{ attendeeId: attendeeId }` (no email field)
+
+### Authentication Flow
+
+**For User Tokens:**
+1. Check if token contains `email` field (indicates user token)
+2. Validate user exists in database
+3. Extract `attendeeId` from token
+4. Verify attendee belongs to the user (if `attendeeId` present)
+
+**For Visitor Tokens:**
+1. Check if token lacks `email` field (indicates visitor token)
+2. Extract `attendeeId` from token
+3. Validate attendee exists and is active
+
+### Endpoint Authentication Requirements
+
+| Endpoint | Auth Required | Token Type | attendeeId Source |
+|----------|--------------|------------|------------------|
+| `GET /professions` | No | - | - |
+| `GET /validate-event/:code` | No | - | - |
+| `POST /register` | Optional | User/None | Generated |
+| `GET /goals-categories` | Yes | Attendee | Token |
+| `PUT /goals-category` | Yes | Attendee | Token |
+| `POST /answers` | Yes | Attendee | Token |
+| `GET /recommendations` | Yes | Attendee | Token |
 
 ---
 
@@ -533,7 +503,7 @@ This document outlines the API contract for attendee management, which includes 
 ## Validation Rules
 
 ### General Rules
-- `attendeeId` must belong to the authenticated user or valid temporary token
+- Valid attendee token must be provided for all authenticated endpoints
 - All required questions must have answers
 - Attendee must have a goals category selected before submitting answers
 
@@ -565,28 +535,39 @@ This document outlines the API contract for attendee management, which includes 
 ### 401 Unauthorized  
 ```json
 {
-  "error": "Invalid or expired token"
+  "error": "Authentication required",
+  "details": [
+    {
+      "field": "auth",
+      "message": "No valid attendee authentication found"
+    }
+  ]
 }
 ```
 
 ### 403 Forbidden
 ```json
 {
-  "error": "Attendee does not belong to authenticated user"
+  "error": "Forbidden",
+  "details": [
+    {
+      "field": "attendee",
+      "message": "Attendee token not allowed for this endpoint"
+    }
+  ]
 }
 ```
 
 ### 404 Not Found
 ```json
 {
-  "error": "Attendee not found"
-}
-```
-
-### 409 Conflict
-```json
-{
-  "error": "User already registered for this event"
+  "error": "Attendee not found",
+  "details": [
+    {
+      "field": "attendee",
+      "message": "Attendee not found or inactive"
+    }
+  ]
 }
 ```
 
@@ -596,8 +577,8 @@ This document outlines the API contract for attendee management, which includes 
   "error": "Answer validation failed",
   "details": [
     {
-      "questionId": "uuid",
-      "message": "Required question not answered"
+      "field": "questionId",
+      "message": "Question not in attendee's goals category"
     }
   ]
 }
@@ -609,19 +590,33 @@ This document outlines the API contract for attendee management, which includes 
 
 ### Security Considerations
 - For attendee registration: Support both authenticated and anonymous users
-- For visitors: Generate secure temporary tokens with limited scope
-- Verify attendee ownership before processing answers
+- For visitors: Generate secure temporary tokens with attendee scope only
+- Verify token authenticity and extract attendeeId automatically
 - Validate all foreign key relationships
 - Use database transactions for multi-answer submissions
-- Temporary tokens should have expiration and be tied to specific attendee/event
+- Visitor tokens should be tied to specific attendee/event combinations
 
 ### Performance Considerations  
 - Consider caching goals categories (relatively static data)
 - Batch answer submissions to reduce database calls
 - Index on frequently queried fields (attendee_id, question_id)
+- AI service calls are optimized with parallel processing
+
+### Token Management
+- User tokens are enhanced with `attendeeId` after event registration
+- Visitor tokens contain only attendee information
+- Authentication middleware automatically determines token type
+- All attendee-specific endpoints extract `attendeeId` from token
+
+### AI Integration
+- Submit answers endpoint triggers both training and recommendation calls
+- Get recommendations endpoint always calls AI service first
+- Fallback to stored recommendations if AI service unavailable
+- Recommendations are stored for caching and fallback purposes
 
 ### Future Enhancements
 - Add progress tracking to attendee model
 - Support partial answer submissions (draft mode)
 - Add question branching/conditional logic
 - Include question help text or descriptions
+- Add recommendation expiration and refresh logic
