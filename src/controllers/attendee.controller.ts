@@ -429,7 +429,7 @@ export const submitAnswers = async (
     console.log('Submit answers called with:', {
       attendeeId,
       answersCount: answers?.length,
-      hasAttendeeToken: !!attendeeToken
+      hasAttendeeToken: !!attendeeToken,
     });
 
     // ---- Simplified ownership check since attendeeId comes from token ----
@@ -464,7 +464,8 @@ export const submitAnswers = async (
         [
           {
             field: 'attendee',
-            message: 'Attendee must select a goals category before submitting answers',
+            message:
+              'Attendee must select a goals category before submitting answers',
           },
         ],
         400
@@ -474,7 +475,10 @@ export const submitAnswers = async (
 
     // ---- Validate questions belong to attendee's goals category ----
     const questionIds = Array.from(new Set(answers.map(a => a.questionId)));
-    console.log('Validating questions:', { questionIds, goalsCategoryId: currentAttendee.goals_category_id });
+    console.log('Validating questions:', {
+      questionIds,
+      goalsCategoryId: currentAttendee.goals_category_id,
+    });
 
     const validQuestions = await prisma.question.findMany({
       where: {
@@ -645,7 +649,7 @@ export const submitAnswers = async (
 
     console.log('Submit answers successful:', {
       answersProcessed: totalCreated,
-      recommendationsCount: recommendations.length
+      recommendationsCount: recommendations.length,
     });
 
     sendSuccess(res, 'Answers submitted successfully', payload, 200);
@@ -695,7 +699,10 @@ export const getRecommendations = async (
       return;
     }
 
-    console.log('Get recommendations called with attendeeId from token:', attendeeId);
+    console.log(
+      'Get recommendations called with attendeeId from token:',
+      attendeeId
+    );
 
     // ---- Build AI payload from current data ----
     const currentAttendee = await prisma.attendee.findUnique({
@@ -767,7 +774,11 @@ export const getRecommendations = async (
       const aiRecommendations = await getAIRecommendations(aiData);
 
       if (aiRecommendations?.recommendations?.length) {
-        console.log('Got', aiRecommendations.recommendations.length, 'AI recommendations');
+        console.log(
+          'Got',
+          aiRecommendations.recommendations.length,
+          'AI recommendations'
+        );
 
         // Deactivate prior active recs for this source (optional hygiene)
         await prisma.recommendation.updateMany({
@@ -820,7 +831,10 @@ export const getRecommendations = async (
         console.log('No AI recommendations received, falling back to stored');
       }
     } catch (aiError) {
-      console.error('AI service error, falling back to stored recommendations:', aiError);
+      console.error(
+        'AI service error, falling back to stored recommendations:',
+        aiError
+      );
     }
 
     // If no AI recs or AI failed, fallback to stored active recs
@@ -853,7 +867,7 @@ export const getRecommendations = async (
 
     console.log('Get recommendations successful:', {
       attendeeId,
-      recommendationsCount: recs.length
+      recommendationsCount: recs.length,
     });
 
     sendSuccess(res, 'Recommendations retrieved successfully', payload, 200);
