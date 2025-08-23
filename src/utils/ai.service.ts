@@ -1,7 +1,7 @@
 // ai.service.ts
 // Adjust the import paths below if your project structure differs.
-import { logger } from '../config/logger.js';
-import { env } from '../config/environment.js';
+// import { logger } from '../config/logger.js';
+// import { env } from '../config/environment.js';
 
 /** ---------- AI DTOs (shared) ---------- **/
 
@@ -76,10 +76,13 @@ class AIServiceManager {
   private processingEvents: Set<string> = new Set();
   private rateLimitDelay = 1000; // 1 second between AI calls
   private lastCallTime = 0;
-  private cache = new Map<string, { data: RecommendationsResponse; timestamp: number }>();
+  private cache = new Map<
+    string,
+    { data: RecommendationsResponse; timestamp: number }
+  >();
   private cacheTTL = 5 * 60 * 1000; // 5 minutes
 
-  private constructor() { }
+  private constructor() {}
 
   static getInstance(): AIServiceManager {
     if (!AIServiceManager.instance) {
@@ -106,14 +109,17 @@ class AIServiceManager {
 
     // Check if already processing for this event
     if (this.processingEvents.has(request.eventId)) {
-      log.info('Event already being processed, queuing request for:', request.eventId);
+      log.info(
+        'Event already being processed, queuing request for:',
+        request.eventId
+      );
       return new Promise((resolve, reject) => {
         this.processingQueue.set(cacheKey, {
           eventId: request.eventId,
           attendeeId: request.attendee.attendeeId,
           resolve,
           reject,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         });
       });
     }
@@ -126,7 +132,12 @@ class AIServiceManager {
       const now = Date.now();
       const timeSinceLastCall = now - this.lastCallTime;
       if (timeSinceLastCall < this.rateLimitDelay) {
-        await new Promise(resolve => setTimeout(resolve, this.rateLimitDelay - timeSinceLastCall));
+        await new Promise(resolve =>
+          globalThis.setTimeout(
+            resolve,
+            this.rateLimitDelay - timeSinceLastCall
+          )
+        );
       }
 
       log.info('Processing AI request for event:', request.eventId);
@@ -140,7 +151,7 @@ class AIServiceManager {
       // Cache the result
       this.cache.set(cacheKey, {
         data: recommendations,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
 
       // Resolve any pending requests for this event
@@ -159,7 +170,10 @@ class AIServiceManager {
     }
   }
 
-  private resolvePendingRequests(eventId: string, data: RecommendationsResponse) {
+  private resolvePendingRequests(
+    eventId: string,
+    data: RecommendationsResponse
+  ) {
     for (const [key, request] of this.processingQueue.entries()) {
       if (request.eventId === eventId) {
         request.resolve(data);
@@ -203,9 +217,15 @@ class AIServiceManager {
 // ---------- Minimal logger (replace with your logger if you have one) ----------
 
 const log = {
-  info: (...args: any[]) => console.log('[ai.service]', ...args),
-  warn: (...args: any[]) => console.warn('[ai.service]', ...args),
-  error: (...args: any[]) => console.error('[ai.service]', ...args),
+  info: (..._args: any[]) => {
+    // console.log('[ai.service]', ...args);
+  },
+  warn: (..._args: any[]) => {
+    // console.warn('[ai.service]', ...args);
+  },
+  error: (..._args: any[]) => {
+    // console.error('[ai.service]', ...args);
+  },
 };
 
 // ---------- Env + URL helpers ----------
@@ -237,18 +257,18 @@ function joinUrl(base: string, path: string): string {
 // ---------- Payload helpers ----------
 
 /** Remove keys whose value is undefined or null (shallow). */
-function prune<T extends Record<string, any>>(obj: T): T {
-  return Object.fromEntries(
-    Object.entries(obj).filter(([, v]) => v !== undefined && v !== null),
-  ) as T;
-}
+// function prune<T extends Record<string, any>>(obj: T): T {
+//   return Object.fromEntries(
+//     Object.entries(obj).filter(([, v]) => v !== undefined && v !== null)
+//   ) as T;
+// }
 
 /** Deeply remove undefined/null values from objects/arrays. */
 function pruneDeep<T>(value: T): T {
   if (Array.isArray(value)) {
     return value
-      .map((v) => pruneDeep(v))
-      .filter((v) => v !== undefined && v !== null) as unknown as T;
+      .map(v => pruneDeep(v))
+      .filter(v => v !== undefined && v !== null) as unknown as T;
   }
   if (value && typeof value === 'object') {
     const entries = Object.entries(value as Record<string, any>)
@@ -264,7 +284,7 @@ function pruneDeep<T>(value: T): T {
  * Throws with a clear message if critical fields are missing.
  */
 function normalizeProcessPayload(
-  input: ProcessAttendeeRequest,
+  input: ProcessAttendeeRequest
 ): ProcessAttendeeRequest {
   if (!input || typeof input !== 'object') {
     throw new Error('AI payload must be an object');
@@ -291,7 +311,7 @@ function normalizeProcessPayload(
 async function postJson<TResp>(
   url: string,
   body: unknown,
-  token: string,
+  token: string
 ): Promise<TResp> {
   const res = await fetch(url, {
     method: 'POST',
@@ -314,9 +334,11 @@ async function postJson<TResp>(
     }
     log.error(
       `AI service error: ${res.status} ${res.statusText} for ${url}`,
-      parsed ?? rawText,
+      parsed ?? rawText
     );
-    throw new Error(`AI service request failed: ${res.status} ${res.statusText}`);
+    throw new Error(
+      `AI service request failed: ${res.status} ${res.statusText}`
+    );
   }
 
   try {
@@ -344,13 +366,13 @@ const RECS_URL = joinUrl(AI_SERVICE_URL, RECS_PATH);
  * Mirrors POST /api/v1/ai/attendees/process
  */
 export async function processAttendee(
-  payload: ProcessAttendeeRequest,
+  payload: ProcessAttendeeRequest
 ): Promise<ProcessAttendeeResponse> {
   const clean = normalizeProcessPayload(payload);
   return postJson<ProcessAttendeeResponse>(
     PROCESS_URL,
     clean,
-    AI_SERVICE_TOKEN,
+    AI_SERVICE_TOKEN
   );
 }
 
@@ -359,7 +381,7 @@ export async function processAttendee(
  * Mirrors POST /api/v1/ai/attendees/recommendations
  */
 export async function getRecommendations(
-  payload: ProcessAttendeeRequest, // same schema as /process
+  payload: ProcessAttendeeRequest // same schema as /process
 ): Promise<RecommendationsResponse> {
   const clean = normalizeProcessPayload(payload);
   return postJson<RecommendationsResponse>(RECS_URL, clean, AI_SERVICE_TOKEN);
@@ -370,17 +392,22 @@ export async function getRecommendations(
  * of concurrent requests and proper caching
  */
 export async function getRecommendationsWithSingleton(
-  payload: ProcessAttendeeRequest,
+  payload: ProcessAttendeeRequest
 ): Promise<RecommendationsResponse> {
-  return AIServiceManager.getInstance().getRecommendationsWithSingleton(payload);
+  return AIServiceManager.getInstance().getRecommendationsWithSingleton(
+    payload
+  );
 }
 
 // ---------- Cleanup timer ----------
 
 // Clean up old cache entries and pending requests every 5 minutes
-setInterval(() => {
-  AIServiceManager.getInstance().cleanup();
-}, 5 * 60 * 1000);
+globalThis.setInterval(
+  () => {
+    AIServiceManager.getInstance().cleanup();
+  },
+  5 * 60 * 1000
+);
 
 // ---------- Optional: tiny smoke test helper (manual) ----------
 // Run with: node -e "import('./ai.service.js').then(m=>m.__smoke && m.__smoke())"

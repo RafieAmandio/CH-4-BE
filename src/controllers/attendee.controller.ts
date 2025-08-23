@@ -269,7 +269,7 @@ export const updateGoalsCategory = async (
     if (attendeeToken) {
       attendeeId = attendeeToken.id;
     } else {
-      console.log('No attendee ID found in token');
+      logger.warn('No attendee ID found in token');
       sendError(
         res,
         'Authentication required',
@@ -420,7 +420,7 @@ export const submitAnswers = async (
     if (attendeeToken) {
       attendeeId = attendeeToken.id;
     } else {
-      console.log('No attendee ID found in token');
+      logger.warn('No attendee ID found in token');
       sendError(
         res,
         'Authentication required',
@@ -430,7 +430,7 @@ export const submitAnswers = async (
       return;
     }
 
-    console.log('Submit answers called with:', {
+    logger.info('Submit answers called with:', {
       attendeeId,
       answersCount: answers?.length,
       hasAttendeeToken: !!attendeeToken,
@@ -447,7 +447,7 @@ export const submitAnswers = async (
     });
 
     if (!currentAttendee) {
-      console.log('Attendee not found:', attendeeId);
+      logger.warn('Attendee not found:', attendeeId);
       sendError(
         res,
         'Attendee not found',
@@ -458,7 +458,7 @@ export const submitAnswers = async (
     }
 
     if (!currentAttendee.goals_category_id) {
-      console.log('No goals category set:', attendeeId);
+      logger.warn('No goals category set:', attendeeId);
       sendError(
         res,
         'Goals category required',
@@ -476,7 +476,7 @@ export const submitAnswers = async (
 
     // ---- Validate questions belong to attendee's goals category ----
     const questionIds = Array.from(new Set(answers.map(a => a.questionId)));
-    console.log('Validating questions:', {
+    logger.info('Validating questions:', {
       questionIds,
       goalsCategoryId: currentAttendee.goals_category_id,
     });
@@ -494,7 +494,7 @@ export const submitAnswers = async (
     const invalid = questionIds.filter(id => !validSet.has(id));
 
     if (invalid.length > 0) {
-      console.log('Invalid questions found:', invalid);
+      logger.warn('Invalid questions found:', invalid);
       sendError(
         res,
         'Invalid question(s)',
@@ -541,14 +541,14 @@ export const submitAnswers = async (
       );
     }
 
-    console.log('Executing transaction with', txs.length, 'operations');
+    logger.info('Executing transaction with', txs.length, 'operations');
     const results = await prisma.$transaction(txs);
 
     for (const r of results) {
       if (typeof r?.count === 'number') totalCreated += r.count;
     }
 
-    console.log('Transaction completed. Created', totalCreated, 'answers');
+    logger.info('Transaction completed. Created', totalCreated, 'answers');
 
     // ---- Reload answers to build AI payload ----
     const attendeeAnswers = await prisma.attendeeAnswer.findMany({
@@ -592,7 +592,7 @@ export const submitAnswers = async (
           .filter((r: RecommendationItem) => r.targetAttendeeId !== attendeeId)
           .slice(0, 3);
 
-        console.log('Got', top.length, 'AI recommendations');
+        logger.info('Got', top.length, 'AI recommendations');
 
         for (const rec of top) {
           const target = await getEnrichedAttendeeData(rec.targetAttendeeId);
@@ -630,7 +630,7 @@ export const submitAnswers = async (
         }
       }
     } catch (aiError) {
-      console.error('AI processing error:', aiError);
+      logger.error('AI processing error:', aiError);
       // Continue without AI recommendations rather than failing completely
     }
 
@@ -639,14 +639,13 @@ export const submitAnswers = async (
       recommendations,
     };
 
-    console.log('Submit answers successful:', {
+    logger.info('Submit answers successful:', {
       answersProcessed: totalCreated,
       recommendationsCount: recommendations.length,
     });
 
     sendSuccess(res, 'Answers submitted successfully', payload, 200);
   } catch (error) {
-    console.error('Submit answers error:', error);
     logger.error('Submit answers error:', error);
     sendError(
       res,
@@ -681,7 +680,7 @@ export const getRecommendations = async (
     if (attendeeToken) {
       attendeeId = attendeeToken.id;
     } else {
-      console.log('No attendee ID found in token');
+      logger.warn('No attendee ID found in token');
       sendError(
         res,
         'Authentication required',
@@ -691,7 +690,7 @@ export const getRecommendations = async (
       return;
     }
 
-    console.log(
+    logger.info(
       'Get recommendations called with attendeeId from token:',
       attendeeId
     );
@@ -707,7 +706,7 @@ export const getRecommendations = async (
     });
 
     if (!currentAttendee) {
-      console.log('Attendee not found:', attendeeId);
+      logger.warn('Attendee not found:', attendeeId);
       sendError(
         res,
         'Attendee not found',
@@ -753,7 +752,7 @@ export const getRecommendations = async (
       const aiRecommendations = await getRecommendationsWithSingleton(aiData);
 
       if (aiRecommendations?.recommendations?.length) {
-        console.log(
+        logger.info(
           'Got',
           aiRecommendations.recommendations.length,
           'AI recommendations'
@@ -807,10 +806,10 @@ export const getRecommendations = async (
           }
         }
       } else {
-        console.log('No AI recommendations received, falling back to stored');
+        logger.info('No AI recommendations received, falling back to stored');
       }
     } catch (aiError) {
-      console.error(
+      logger.error(
         'AI service error, falling back to stored recommendations:',
         aiError
       );
@@ -818,7 +817,7 @@ export const getRecommendations = async (
 
     // If no AI recs or AI failed, fallback to stored active recs
     if (recs.length === 0) {
-      console.log('Using stored recommendations as fallback');
+      logger.info('Using stored recommendations as fallback');
       const stored = await prisma.recommendation.findMany({
         where: { source_attendee_id: attendeeId, is_active: true },
         orderBy: { score: 'desc' },
@@ -844,14 +843,13 @@ export const getRecommendations = async (
       recommendations: recs,
     };
 
-    console.log('Get recommendations successful:', {
+    logger.info('Get recommendations successful:', {
       attendeeId,
       recommendationsCount: recs.length,
     });
 
     sendSuccess(res, 'Recommendations retrieved successfully', payload, 200);
   } catch (error) {
-    console.error('Get recommendations error:', error);
     logger.error('Get recommendations error:', error);
     sendError(
       res,
@@ -1032,8 +1030,8 @@ export const validateEvent = async (
 function pruneDeep<T>(value: T): T {
   if (Array.isArray(value)) {
     return value
-      .map((v) => pruneDeep(v))
-      .filter((v) => v !== undefined && v !== null) as unknown as T;
+      .map(v => pruneDeep(v))
+      .filter(v => v !== undefined && v !== null) as unknown as T;
   }
   if (value && typeof value === 'object') {
     const entries = Object.entries(value as Record<string, any>)
@@ -1044,18 +1042,18 @@ function pruneDeep<T>(value: T): T {
   return value;
 }
 
-function pick<T extends Record<string, any>, K extends keyof T>(
-  obj: T,
-  keys: readonly K[],
-): Pick<T, K> {
-  const out: Partial<T> = {};
-  for (const k of keys) {
-    if (Object.prototype.hasOwnProperty.call(obj, k)) {
-      out[k] = obj[k];
-    }
-  }
-  return out as Pick<T, K>;
-}
+// function pick<T extends Record<string, any>, K extends keyof T>(
+//   obj: T,
+//   keys: readonly K[]
+// ): Pick<T, K> {
+//   const out: Partial<T> = {};
+//   for (const k of keys) {
+//     if (Object.prototype.hasOwnProperty.call(obj, k)) {
+//       out[k] = obj[k];
+//     }
+//   }
+//   return out as Pick<T, K>;
+// }
 
 // ---------- domain → AI mapping ----------
 
@@ -1119,81 +1117,68 @@ function toAiAttendeePayload(loose: any): AttendeePayload {
   const goals = loose?.goalsCategory ?? loose?.goal ?? {};
 
   const answersArray: any[] =
-    loose?.answers ??
-    loose?.attendeeAnswers ??
-    loose?.responses ??
-    [];
+    loose?.answers ?? loose?.attendeeAnswers ?? loose?.responses ?? [];
 
   const answers = Array.isArray(answersArray)
-    ? answersArray.map((ans) => {
-      // Many backends store different field names; normalize.
-      const question =
-        ans?.question?.question ??
-        ans?.questionText ??
-        ans?.question ??
-        '';
+    ? answersArray.map(ans => {
+        // Many backends store different field names; normalize.
+        const question =
+          ans?.question?.question ?? ans?.questionText ?? ans?.question ?? '';
 
-      const answerLabel =
-        ans?.answerLabel ??
-        ans?.optionLabel ??
-        ans?.answerOption?.label ??
-        undefined;
+        const answerLabel =
+          ans?.answerLabel ??
+          ans?.optionLabel ??
+          ans?.answerOption?.label ??
+          undefined;
 
-      // numbers can be strings; coerce where safe
-      const numberValueRaw =
-        ans?.numberValue ??
-        ans?.valueNumber ??
-        ans?.number_value ??
-        undefined;
+        // numbers can be strings; coerce where safe
+        const numberValueRaw =
+          ans?.numberValue ??
+          ans?.valueNumber ??
+          ans?.number_value ??
+          undefined;
 
-      const weightRaw = ans?.weight ?? ans?.answerWeight ?? undefined;
+        const weightRaw = ans?.weight ?? ans?.answerWeight ?? undefined;
 
-      const dateValueRaw =
-        ans?.dateValue ??
-        ans?.valueDate ??
-        ans?.date_value ??
-        undefined;
+        const dateValueRaw =
+          ans?.dateValue ?? ans?.valueDate ?? ans?.date_value ?? undefined;
 
-      const textValueRaw =
-        ans?.textValue ??
-        ans?.valueText ??
-        ans?.text_value ??
-        undefined;
+        const textValueRaw =
+          ans?.textValue ?? ans?.valueText ?? ans?.text_value ?? undefined;
 
-      const rankRaw = ans?.rank ?? undefined;
+        const rankRaw = ans?.rank ?? undefined;
 
-      return pruneDeep({
-        question,
-        questionType: mapQuestionType(
-          ans?.questionType ??
-          ans?.type ??
-          ans?.question?.type ??
-          ans?.question_type,
-        ),
-        answerLabel,
-        rank: rankRaw === '' ? undefined : rankRaw,
-        weight:
-          weightRaw === '' || weightRaw === null || weightRaw === undefined
-            ? undefined
-            : Number(weightRaw),
-        textValue: textValueRaw,
-        numberValue:
-          numberValueRaw === '' || numberValueRaw === null || numberValueRaw === undefined
-            ? undefined
-            : Number(numberValueRaw),
-        dateValue:
-          dateValueRaw instanceof Date
-            ? dateValueRaw.toISOString()
-            : dateValueRaw,
-      });
-    })
+        return pruneDeep({
+          question,
+          questionType: mapQuestionType(
+            ans?.questionType ??
+              ans?.type ??
+              ans?.question?.type ??
+              ans?.question_type
+          ),
+          answerLabel,
+          rank: rankRaw === '' ? undefined : rankRaw,
+          weight:
+            weightRaw === '' || weightRaw === null || weightRaw === undefined
+              ? undefined
+              : Number(weightRaw),
+          textValue: textValueRaw,
+          numberValue:
+            numberValueRaw === '' ||
+            numberValueRaw === null ||
+            numberValueRaw === undefined
+              ? undefined
+              : Number(numberValueRaw),
+          dateValue:
+            dateValueRaw instanceof Date
+              ? dateValueRaw.toISOString()
+              : dateValueRaw,
+        });
+      })
     : [];
 
   const attendeeId =
-    loose?.attendeeId ??
-    loose?.id ??
-    loose?.attendee_id ??
-    loose?.uuid;
+    loose?.attendeeId ?? loose?.id ?? loose?.attendee_id ?? loose?.uuid;
 
   const nickname = buildNickname(loose);
 
@@ -1214,11 +1199,7 @@ function toAiAttendeePayload(loose: any): AttendeePayload {
         undefined,
     },
     goalsCategory: {
-      name:
-        goals?.name ??
-        goals?.goal_name ??
-        goals?.categoryName ??
-        undefined,
+      name: goals?.name ?? goals?.goal_name ?? goals?.categoryName ?? undefined,
     },
     answers,
   });
@@ -1240,10 +1221,7 @@ function toProcessRequest(body: any): ProcessAttendeeRequest {
   }
 
   // Support both { eventId, attendee: {...} } and { eventId, ...attendeeFields }
-  const eventId =
-    body.eventId ??
-    body.event_id ??
-    body?.event?.id;
+  const eventId = body.eventId ?? body.event_id ?? body?.event?.id;
 
   const attendeeSource = body.attendee ? body.attendee : body;
 
@@ -1276,7 +1254,7 @@ function toProcessRequest(body: any): ProcessAttendeeRequest {
 export async function processAttendeeController(
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) {
   try {
     const aiReq = toProcessRequest(req.body);
@@ -1300,7 +1278,7 @@ export async function processAttendeeController(
 export async function getAttendeeRecommendationsController(
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) {
   try {
     const aiReq = toProcessRequest(req.body);
@@ -1322,13 +1300,15 @@ export async function getAttendeeRecommendationsController(
 export function requireEventAndAttendee(
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) {
   try {
     // This will throw if obviously broken.
     toProcessRequest(req.body);
     next();
   } catch (err: any) {
-    return res.status(400).json({ status: 'error', message: err?.message || 'Invalid payload' });
+    return res
+      .status(400)
+      .json({ status: 'error', message: err?.message || 'Invalid payload' });
   }
 }
