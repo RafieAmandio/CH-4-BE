@@ -15,7 +15,7 @@ export interface GetProfessionsResponse {
 }
 
 export interface CreateAttendeeInput {
-  eventId: string;
+  eventCode: string;
   nickname: string;
   userEmail?: string;
   professionId: string;
@@ -45,13 +45,13 @@ export interface QuestionResponse {
   id: string;
   question: string;
   type:
-    | 'SINGLE_CHOICE'
-    | 'MULTI_SELECT'
-    | 'RANKED_CHOICE'
-    | 'FREE_TEXT'
-    | 'NUMBER'
-    | 'SCALE'
-    | 'DATE';
+  | 'SINGLE_CHOICE'
+  | 'MULTI_SELECT'
+  | 'RANKED_CHOICE'
+  | 'FREE_TEXT'
+  | 'NUMBER'
+  | 'SCALE'
+  | 'DATE';
   placeholder?: string;
   displayOrder: number;
   isRequired: boolean;

@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { AuthRequest } from '../types/index.js';
 import { sendSuccess, sendError } from '../utils/response.js';
 import { logger } from '../config/logger.js';
@@ -18,9 +18,13 @@ import {
 import { CreateAttendeeInput } from '../types/attendee.types.js';
 import { generateToken } from '../utils/token.js';
 import {
-  processAttendeeWithAI,
-  getAIRecommendations,
-  AttendeeDataForAI,
+  processAttendee as aiProcessAttendee,
+  getRecommendations as aiGetRecommendations,
+  getRecommendationsWithSingleton,
+  type ProcessAttendeeRequest,
+  type AttendeePayload,
+  type QuestionType,
+  type RecommendationItem,
 } from '../utils/ai.service.js';
 
 /**
@@ -100,14 +104,14 @@ export const createAttendee = async (
 
     // Check if event exists and is active
     const event = await prisma.event.findUnique({
-      where: { id: attendeeData.eventId },
+      where: { code: attendeeData.eventCode },
     });
 
     if (!event || !event.is_active) {
       sendError(
         res,
         'Event not found',
-        [{ field: 'eventId', message: 'Event not found or inactive' }],
+        [{ field: 'eventCode', message: 'Event not found or inactive' }],
         404
       );
       return;
@@ -136,7 +140,7 @@ export const createAttendee = async (
     // Create the attendee
     const newAttendee = await prisma.attendee.create({
       data: {
-        event_id: attendeeData.eventId,
+        event_id: event.id,
         user_id: user?.id || null,
         user_email: attendeeData.userEmail || user?.email || null,
         nickname: attendeeData.nickname,
@@ -151,7 +155,7 @@ export const createAttendee = async (
 
     // Update event participant count
     await prisma.event.update({
-      where: { id: attendeeData.eventId },
+      where: { id: event.id },
       data: {
         current_participants: { increment: 1 },
       },
@@ -437,9 +441,6 @@ export const submitAnswers = async (
       where: { id: attendeeId, is_active: true },
       include: {
         event: true,
-        user: {
-          select: { id: true, email: true, username: true, name: true },
-        },
         profession: { include: { category: true } },
         goal: true,
       },
@@ -555,29 +556,19 @@ export const submitAnswers = async (
       include: { question: true, answerOption: true },
     });
 
-    const aiData = {
+    const aiData: ProcessAttendeeRequest = {
       eventId: currentAttendee.event_id,
       attendee: {
         attendeeId,
-        userId: currentAttendee.user?.id ?? undefined,
-        userName:
-          currentAttendee.nickname ||
-          currentAttendee.user?.username ||
-          currentAttendee.user?.name ||
-          currentAttendee.user?.email ||
-          '',
-        userEmail: currentAttendee.user?.email ?? undefined,
-        nickname: currentAttendee.nickname ?? undefined,
-        linkedinUsername: currentAttendee.linkedin_username ?? undefined,
-        photoLink: currentAttendee.photo_link ?? undefined,
+        nickname: currentAttendee.nickname || 'Guest',
         profession: {
-          name: currentAttendee.profession?.name || '',
-          categoryName: currentAttendee.profession?.category?.category || '',
+          name: currentAttendee.profession?.name,
+          categoryName: currentAttendee.profession?.category?.category,
         },
-        goalsCategory: { name: currentAttendee.goal?.name || '' },
+        goalsCategory: { name: currentAttendee.goal?.name },
         answers: attendeeAnswers.map(ans => ({
           question: ans.question.question,
-          questionType: String(ans.question.type),
+          questionType: String(ans.question.type) as QuestionType,
           answerLabel: ans.answerOption?.label ?? undefined,
           textValue: ans.text_value ?? undefined,
           numberValue:
@@ -587,17 +578,18 @@ export const submitAnswers = async (
           weight: ans.weight == null ? undefined : Number(ans.weight),
         })),
       },
-    } satisfies AttendeeDataForAI;
+    };
 
-    // ---- AI: train + get immediate recs (parallel) ----
+    // ---- AI: Use singleton pattern for efficient processing ----
     let recommendations: RecommendationResponse[] = [];
 
     try {
-      const aiRecommendations = await processAttendeeWithAI(aiData);
+      // Use singleton pattern - handles processing and recommendations in one call
+      const aiRecommendations = await getRecommendationsWithSingleton(aiData);
 
       if (aiRecommendations?.recommendations?.length) {
         const top = aiRecommendations.recommendations
-          .filter(r => r.targetAttendeeId !== attendeeId)
+          .filter((r: RecommendationItem) => r.targetAttendeeId !== attendeeId)
           .slice(0, 3);
 
         console.log('Got', top.length, 'AI recommendations');
@@ -709,9 +701,6 @@ export const getRecommendations = async (
       where: { id: attendeeId, is_active: true },
       include: {
         event: true,
-        user: {
-          select: { id: true, email: true, username: true, name: true },
-        },
         profession: { include: { category: true } },
         goal: true,
       },
@@ -733,29 +722,19 @@ export const getRecommendations = async (
       include: { question: true, answerOption: true },
     });
 
-    const aiData = {
+    const aiData: ProcessAttendeeRequest = {
       eventId: currentAttendee.event_id,
       attendee: {
         attendeeId,
-        userId: currentAttendee.user?.id ?? undefined,
-        userName:
-          currentAttendee.nickname ||
-          currentAttendee.user?.username ||
-          currentAttendee.user?.name ||
-          currentAttendee.user?.email ||
-          '',
-        userEmail: currentAttendee.user?.email ?? undefined,
-        nickname: currentAttendee.nickname ?? undefined,
-        linkedinUsername: currentAttendee.linkedin_username ?? undefined,
-        photoLink: currentAttendee.photo_link ?? undefined,
+        nickname: currentAttendee.nickname || 'Guest',
         profession: {
-          name: currentAttendee.profession?.name || '',
-          categoryName: currentAttendee.profession?.category?.category || '',
+          name: currentAttendee.profession?.name,
+          categoryName: currentAttendee.profession?.category?.category,
         },
-        goalsCategory: { name: currentAttendee.goal?.name || '' },
+        goalsCategory: { name: currentAttendee.goal?.name },
         answers: attendeeAnswers.map(ans => ({
           question: ans.question.question,
-          questionType: String(ans.question.type),
+          questionType: String(ans.question.type) as QuestionType,
           answerLabel: ans.answerOption?.label ?? undefined,
           textValue: ans.text_value ?? undefined,
           numberValue:
@@ -765,13 +744,13 @@ export const getRecommendations = async (
           weight: ans.weight == null ? undefined : Number(ans.weight),
         })),
       },
-    } satisfies AttendeeDataForAI;
+    };
 
     // ---- Always trigger fresh AI; fallback to stored if needed ----
     let recs: RecommendationResponse[] = [];
 
     try {
-      const aiRecommendations = await getAIRecommendations(aiData);
+      const aiRecommendations = await getRecommendationsWithSingleton(aiData);
 
       if (aiRecommendations?.recommendations?.length) {
         console.log(
@@ -1047,3 +1026,309 @@ export const validateEvent = async (
     );
   }
 };
+
+// ---------- small utils ----------
+
+function pruneDeep<T>(value: T): T {
+  if (Array.isArray(value)) {
+    return value
+      .map((v) => pruneDeep(v))
+      .filter((v) => v !== undefined && v !== null) as unknown as T;
+  }
+  if (value && typeof value === 'object') {
+    const entries = Object.entries(value as Record<string, any>)
+      .map(([k, v]) => [k, pruneDeep(v)])
+      .filter(([, v]) => v !== undefined && v !== null);
+    return Object.fromEntries(entries) as T;
+  }
+  return value;
+}
+
+function pick<T extends Record<string, any>, K extends keyof T>(
+  obj: T,
+  keys: readonly K[],
+): Pick<T, K> {
+  const out: Partial<T> = {};
+  for (const k of keys) {
+    if (Object.prototype.hasOwnProperty.call(obj, k)) {
+      out[k] = obj[k];
+    }
+  }
+  return out as Pick<T, K>;
+}
+
+// ---------- domain → AI mapping ----------
+
+/**
+ * Map various representations to the AI’s expected QuestionType literal.
+ * Supports numeric enums (0..n) and already-correct strings.
+ */
+function mapQuestionType(input: any): QuestionType {
+  // Adjust the numeric mapping if your enum is different:
+  const numericMap: Record<number, QuestionType> = {
+    0: 'FREE_TEXT',
+    1: 'NUMBER',
+    2: 'DATE',
+    3: 'SCALE',
+    4: 'MULTI_SELECT',
+  };
+
+  if (typeof input === 'number' && numericMap[input]) {
+    return numericMap[input];
+  }
+  if (typeof input === 'string') {
+    const up = input.toUpperCase();
+    if (
+      up === 'FREE_TEXT' ||
+      up === 'NUMBER' ||
+      up === 'DATE' ||
+      up === 'SCALE' ||
+      up === 'MULTI_SELECT'
+    ) {
+      return up as QuestionType;
+    }
+  }
+  // Last-resort coercion
+  return String(input).toUpperCase() as QuestionType;
+}
+
+/**
+ * Build a realistic nickname from whatever user info you may have.
+ * The AI service requires a “realistic” looking name.
+ */
+function buildNickname(attendee: any): string {
+  const nickname =
+    attendee?.nickname ||
+    attendee?.name ||
+    attendee?.fullName ||
+    attendee?.user?.name ||
+    attendee?.user?.username ||
+    (attendee?.user?.email ? attendee.user.email.split('@')[0] : '') ||
+    attendee?.email?.split?.('@')?.[0];
+
+  return (nickname && String(nickname).trim()) || 'Guest';
+}
+
+/**
+ * Accepts a loose attendee object (possibly your domain model or the frontend payload)
+ * and returns a strictly shaped AttendeePayload the AI service accepts.
+ */
+function toAiAttendeePayload(loose: any): AttendeePayload {
+  // profession/category can arrive in a lot of shapes; pick only what the AI expects
+  const profession = loose?.profession ?? loose?.job ?? {};
+  const goals = loose?.goalsCategory ?? loose?.goal ?? {};
+
+  const answersArray: any[] =
+    loose?.answers ??
+    loose?.attendeeAnswers ??
+    loose?.responses ??
+    [];
+
+  const answers = Array.isArray(answersArray)
+    ? answersArray.map((ans) => {
+      // Many backends store different field names; normalize.
+      const question =
+        ans?.question?.question ??
+        ans?.questionText ??
+        ans?.question ??
+        '';
+
+      const answerLabel =
+        ans?.answerLabel ??
+        ans?.optionLabel ??
+        ans?.answerOption?.label ??
+        undefined;
+
+      // numbers can be strings; coerce where safe
+      const numberValueRaw =
+        ans?.numberValue ??
+        ans?.valueNumber ??
+        ans?.number_value ??
+        undefined;
+
+      const weightRaw = ans?.weight ?? ans?.answerWeight ?? undefined;
+
+      const dateValueRaw =
+        ans?.dateValue ??
+        ans?.valueDate ??
+        ans?.date_value ??
+        undefined;
+
+      const textValueRaw =
+        ans?.textValue ??
+        ans?.valueText ??
+        ans?.text_value ??
+        undefined;
+
+      const rankRaw = ans?.rank ?? undefined;
+
+      return pruneDeep({
+        question,
+        questionType: mapQuestionType(
+          ans?.questionType ??
+          ans?.type ??
+          ans?.question?.type ??
+          ans?.question_type,
+        ),
+        answerLabel,
+        rank: rankRaw === '' ? undefined : rankRaw,
+        weight:
+          weightRaw === '' || weightRaw === null || weightRaw === undefined
+            ? undefined
+            : Number(weightRaw),
+        textValue: textValueRaw,
+        numberValue:
+          numberValueRaw === '' || numberValueRaw === null || numberValueRaw === undefined
+            ? undefined
+            : Number(numberValueRaw),
+        dateValue:
+          dateValueRaw instanceof Date
+            ? dateValueRaw.toISOString()
+            : dateValueRaw,
+      });
+    })
+    : [];
+
+  const attendeeId =
+    loose?.attendeeId ??
+    loose?.id ??
+    loose?.attendee_id ??
+    loose?.uuid;
+
+  const nickname = buildNickname(loose);
+
+  const aiPayload: AttendeePayload = pruneDeep({
+    attendeeId,
+    nickname,
+    profession: {
+      name:
+        profession?.name ??
+        profession?.title ??
+        profession?.profession_name ??
+        undefined,
+      categoryName:
+        profession?.categoryName ??
+        profession?.category?.category ??
+        profession?.category ??
+        profession?.industry ??
+        undefined,
+    },
+    goalsCategory: {
+      name:
+        goals?.name ??
+        goals?.goal_name ??
+        goals?.categoryName ??
+        undefined,
+    },
+    answers,
+  });
+
+  return aiPayload;
+}
+
+/**
+ * Converts an incoming request body to the strictly-typed ProcessAttendeeRequest
+ * expected by the AI service. It:
+ *   - accepts either a { eventId, attendee: {...} } shape, or
+ *     a { eventId, ...attendeeFields } shape (loose)
+ *   - strips unknown keys
+ *   - ensures nickname is present
+ */
+function toProcessRequest(body: any): ProcessAttendeeRequest {
+  if (!body || typeof body !== 'object') {
+    throw new Error('Body must be an object');
+  }
+
+  // Support both { eventId, attendee: {...} } and { eventId, ...attendeeFields }
+  const eventId =
+    body.eventId ??
+    body.event_id ??
+    body?.event?.id;
+
+  const attendeeSource = body.attendee ? body.attendee : body;
+
+  const attendee = toAiAttendeePayload(attendeeSource);
+
+  if (!eventId || !String(eventId).trim()) {
+    throw new Error('eventId is required');
+  }
+  if (!attendee.attendeeId || !String(attendee.attendeeId).trim()) {
+    throw new Error('attendee.attendeeId is required');
+  }
+  if (!attendee.nickname || !String(attendee.nickname).trim()) {
+    throw new Error('attendee.nickname is required');
+  }
+
+  const req: ProcessAttendeeRequest = {
+    eventId: String(eventId),
+    attendee,
+  };
+
+  return pruneDeep(req);
+}
+
+// ---------- controllers ----------
+
+/**
+ * POST /attendees/process
+ * Proxies the payload to AI /api/v1/ai/attendees/process after sanitizing.
+ */
+export async function processAttendeeController(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const aiReq = toProcessRequest(req.body);
+    const resp = await aiProcessAttendee(aiReq);
+    res.status(200).json(resp);
+  } catch (err: any) {
+    // Prefer specific status codes where possible
+    const message = err?.message || 'Failed to process attendee';
+    // If the error looks like a validation issue, return 400
+    if (/required/i.test(message) || /Body must be an object/i.test(message)) {
+      return res.status(400).json({ status: 'error', message });
+    }
+    next(err);
+  }
+}
+
+/**
+ * POST /attendees/recommendations
+ * Proxies the payload to AI /api/v1/ai/attendees/recommendations after sanitizing.
+ */
+export async function getAttendeeRecommendationsController(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const aiReq = toProcessRequest(req.body);
+    const resp = await aiGetRecommendations(aiReq);
+    res.status(200).json(resp);
+  } catch (err: any) {
+    const message = err?.message || 'Failed to get recommendations';
+    if (/required/i.test(message) || /Body must be an object/i.test(message)) {
+      return res.status(400).json({ status: 'error', message });
+    }
+    next(err);
+  }
+}
+
+// ---------- optional: schema-guard middleware (if you want a quick check) ----------
+// If you already have zod/celebrate/joi validators in attendee.validation.ts, keep using them.
+// This minimal guard catches obvious client mistakes before we touch the AI service.
+
+export function requireEventAndAttendee(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    // This will throw if obviously broken.
+    toProcessRequest(req.body);
+    next();
+  } catch (err: any) {
+    return res.status(400).json({ status: 'error', message: err?.message || 'Invalid payload' });
+  }
+}

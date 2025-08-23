@@ -6,11 +6,15 @@ export const getProfessionsValidation = [
 ];
 
 export const createAttendeeValidation = [
-  body('eventId')
+  body('eventCode')
     .notEmpty()
-    .withMessage('Event ID is required')
-    .isUUID()
-    .withMessage('Event ID must be a valid UUID'),
+    .withMessage('Event code is required')
+    .isString()
+    .withMessage('Event code must be a string')
+    .isLength({ min: 6, max: 6 })
+    .withMessage('Event code must be exactly 6 characters')
+    .matches(/^[0-9]{6}$/)
+    .withMessage('Event code must be a 6-digit number'),
 
   body('nickname')
     .notEmpty()
