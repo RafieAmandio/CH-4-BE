@@ -922,11 +922,12 @@ async function getEnrichedAttendeeData(targetAttendeeId: string) {
  * Validate event by code for attendee registration
  */
 export const validateEvent = async (
-  req: Request,
+  req: AuthRequest,
   res: Response
 ): Promise<void> => {
   try {
     const { code } = req.params;
+    const user = req.user; // Will be null for visitors
 
     // Find event by code
     const event = await prisma.event.findUnique({
@@ -981,6 +982,20 @@ export const validateEvent = async (
       return;
     }
 
+    // Check if user is already registered for this event
+    let isAlreadyIn = false;
+    if (user?.id) {
+      const existingAttendee = await prisma.attendee.findFirst({
+        where: {
+          event_id: event.id,
+          user_id: user.id,
+          is_active: true,
+          deleted_at: null,
+        },
+      });
+      isAlreadyIn = !!existingAttendee;
+    }
+
     // Transform the data to match the API contract
     const responseData: ValidateEventResponse = {
       id: event.id,
@@ -1006,7 +1021,25 @@ export const validateEvent = async (
         id: event.creator.id,
         name: event.creator.name,
       },
+      isAlreadyIn,
     };
+
+    // If user is already registered, return error with event details
+    if (isAlreadyIn) {
+      const errorResponse = {
+        success: false,
+        message: 'Already registered for this event',
+        data: responseData,
+        errors: [
+          {
+            field: 'registration',
+            message: 'You are already registered for this event',
+          },
+        ],
+      };
+      res.status(409).json(errorResponse);
+      return;
+    }
 
     sendSuccess(res, 'Event validated successfully', responseData, 200);
   } catch (error) {

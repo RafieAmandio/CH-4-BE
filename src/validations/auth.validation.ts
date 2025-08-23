@@ -1,10 +1,11 @@
 import { body } from 'express-validator';
 
 export const registerValidation = [
-  body('auth')
+  body('auth_provider')
     .optional()
     .isIn(['APPLE', 'LINKEDIN', 'EMAIL'])
-    .withMessage('Auth provider must be APPLE, LINKEDIN, or EMAIL'),
+    .withMessage('Auth provider must be APPLE, LINKEDIN, or EMAIL')
+    .default('EMAIL'),
 
   body('email')
     .notEmpty()
@@ -52,7 +53,8 @@ export const registerValidation = [
   body('is_active')
     .optional()
     .isBoolean()
-    .withMessage('is_active must be a boolean'),
+    .withMessage('is_active must be a boolean')
+    .default(true),
 ];
 
 export const loginValidation = [

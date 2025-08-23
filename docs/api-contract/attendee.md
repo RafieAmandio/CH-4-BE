@@ -6,14 +6,17 @@ This document outlines the API contract for attendee management, which includes 
 
 ## Flow
 
-1. **Get Professions** - Fetch available professions by category
-2. **Create Attendee** - Register for event (authenticated or visitor)
-3. **Get Goals Categories** - Fetch available goal categories
-4. **Update Attendee with Goals Category** - Choose a category and receive associated questions
-5. **Submit Answers** - Provide responses to the questionnaire
-6. **Get Recommendations** - Fetch AI-generated networking recommendations
+1. **Validate Event** - Validate event by code for registration
+2. **Get Professions** - Fetch available professions by category
+3. **Create Attendee** - Register for event (authenticated or visitor)
+4. **Get Goals Categories** - Fetch available goal categories
+5. **Update Attendee with Goals Category** - Choose a category and receive associated questions
+6. **Submit Answers** - Provide responses to the questionnaire
+7. **Get Recommendations** - Fetch AI-generated networking recommendations
 
 ---
+
+## Endpoints
 
 ### 1. Validate Event
 
@@ -49,9 +52,9 @@ This document outlines the API contract for attendee management, which includes 
     "code": "string",
     "creator": {
       "id": "uuid",
-      "name": "string",
-      "username": "string|null"
-    }
+      "name": "string"
+    },
+    "isAlreadyIn": "boolean|null"
   }
 }
 ```
@@ -59,11 +62,47 @@ This document outlines the API contract for attendee management, which includes 
 **Response (Event Not Found or Inactive):**
 ```json
 {
-  "error": "Event not found or inactive",
+  "error": "Event not found",
   "details": [
     {
       "field": "code",
-      "message": "Event with this code is not found, inactive, or not available for registration"
+      "message": "Event with this code does not exist"
+    }
+  ]
+}
+```
+
+**Response (Already Registered - 409 Conflict):**
+```json
+{
+  "success": false,
+  "message": "Already registered for this event",
+  "data": {
+    "id": "uuid",
+    "name": "string",
+    "start": "datetime",
+    "end": "datetime",
+    "detail": "string|null",
+    "photo_link": "string|null",
+    "location_name": "string|null",
+    "location_address": "string|null",
+    "location_link": "string|null",
+    "latitude": "decimal|null",
+    "longitude": "decimal|null",
+    "link": "string|null",
+    "status": "UPCOMING|ONGOING",
+    "current_participants": "number",
+    "code": "string",
+    "creator": {
+      "id": "uuid",
+      "name": "string"
+    },
+    "isAlreadyIn": true
+  },
+  "errors": [
+    {
+      "field": "registration",
+      "message": "You are already registered for this event"
     }
   ]
 }
@@ -76,10 +115,12 @@ This document outlines the API contract for attendee management, which includes 
 - Only returns active events (`is_active: true`)
 - Public endpoint - no authentication required
 - Creator email is excluded from public response
+- If user is authenticated, checks if they are already registered for the event
+- `isAlreadyIn` field indicates whether the authenticated user is already an attendee (null for unauthenticated users)
+- If user is already registered, returns 409 Conflict with event details and error message
+- Client can use the event details from the error response to display event information
 
 ---
-
-## Endpoints
 
 ### 2. Get Professions
 
@@ -93,6 +134,7 @@ This document outlines the API contract for attendee management, which includes 
 **Response:**
 ```json
 {
+  "message": "Professions retrieved successfully",
   "data": [
     {
       "categoryId": "uuid",
@@ -125,11 +167,12 @@ This document outlines the API contract for attendee management, which includes 
 
 **Headers:**
 - `Authorization: Bearer <token>` (optional - for authenticated users)
+- `Content-Type: application/json`
 
 **Request Body:**
 ```json
 {
-  "eventId": "uuid",
+  "eventCode": "string",
   "nickname": "string",
   "userEmail": "string|null", 
   "professionId": "uuid",
@@ -139,7 +182,7 @@ This document outlines the API contract for attendee management, which includes 
 ```
 
 **Request Fields:**
-- `eventId` - Event identifier (required)
+- `eventCode` - Event code (6-digit string) (required)
 - `nickname` - Attendee's display name (required) - can be real name or preferred name
 - `userEmail` - Attendee's email address (optional)
 - `professionId` - Selected profession from professions table (required)
@@ -184,6 +227,7 @@ This document outlines the API contract for attendee management, which includes 
 **Response:**
 ```json
 {
+  "message": "Goals categories retrieved successfully",
   "data": [
     {
       "id": "uuid",
@@ -211,6 +255,7 @@ This document outlines the API contract for attendee management, which includes 
 
 **Headers:**
 - `Authorization: Bearer <attendee_token>` (required - attendee token only)
+- `Content-Type: application/json`
 
 **Request Body:**
 ```json
@@ -285,6 +330,7 @@ This document outlines the API contract for attendee management, which includes 
 
 **Headers:**
 - `Authorization: Bearer <attendee_token>` (required - attendee token only)
+- `Content-Type: application/json`
 
 **Request Body:**
 ```json
@@ -377,6 +423,7 @@ This document outlines the API contract for attendee management, which includes 
 **Response:**
 ```json
 {
+  "message": "Recommendations retrieved successfully",
   "data": {
     "attendeeId": "uuid",
     "eventId": "uuid", 
@@ -525,8 +572,8 @@ This document outlines the API contract for attendee management, which includes 
   "error": "Validation failed",
   "details": [
     {
-      "field": "eventId",
-      "message": "Event not found or inactive"
+      "field": "eventCode",
+      "message": "Event code must be exactly 6 characters"
     }
   ]
 }
@@ -566,6 +613,23 @@ This document outlines the API contract for attendee management, which includes 
     {
       "field": "attendee",
       "message": "Attendee not found or inactive"
+    }
+  ]
+}
+```
+
+### 409 Conflict
+```json
+{
+  "success": false,
+  "message": "Already registered for this event",
+  "data": {
+    // Event details included in error response
+  },
+  "errors": [
+    {
+      "field": "registration",
+      "message": "You are already registered for this event"
     }
   ]
 }

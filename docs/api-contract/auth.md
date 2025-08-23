@@ -182,7 +182,7 @@ All authentication endpoints use the base path: `/api/auth`
       "is_active": "boolean",
       "created_at": "datetime",
       "updated_at": "datetime",
-      "isSignUp": true
+      "isFirst": true
     },
     "token": "jwt_token"
   }
@@ -195,13 +195,13 @@ All authentication endpoints use the base path: `/api/auth`
 3. **If existing user:**
    - Updates user information from OAuth provider
    - Returns 200 status with "Login successful" message
-   - Sets `isSignUp: false` in user response
+   - Sets `isFirst: false` in user response
 4. **If new user:**
    - Creates new user account with OAuth provider data
    - Determines auth_provider from Supabase metadata
    - Sets account as active by default
    - Returns 201 status with "User created and logged in successfully" message
-   - Sets `isSignUp: true` in user response
+   - Sets `isFirst: true` in user response
 5. Generates JWT token for session management
 6. Returns complete user profile with token and signup flag
 

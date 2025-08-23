@@ -16,7 +16,7 @@ const router = Router();
 
 /**
  * @route POST /api/auth/register
- * @desc Register a new user
+ * @desc Register a new user with email and password authentication
  * @access Public
  */
 router.post('/register', registerValidation, validate, authController.register);
@@ -99,14 +99,14 @@ router.post(
 
 /**
  * @route POST /api/auth/login
- * @desc Login a user
+ * @desc Authenticate a user with email and password
  * @access Public
  */
 router.post('/login', loginValidation, validate, authController.login);
 
 /**
  * @route GET /api/auth/profile
- * @desc Get current user profile
+ * @desc Retrieve the current authenticated user's profile information
  * @access Private
  */
 router.get('/profile', authenticate(['USER']), authController.getProfile);

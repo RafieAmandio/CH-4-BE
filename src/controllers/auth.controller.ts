@@ -8,6 +8,29 @@ import { logger } from '../config/logger.js';
 import prisma from '../config/database.js';
 
 /**
+ * Maps user data from database format (snake_case) to API response format (camelCase)
+ */
+const mapUserToApiResponse = (user: any, isFirstTime: boolean = false) => {
+  const { password_hash: _passwordHash, ...userWithoutPassword } = user;
+
+  // Map snake_case to camelCase for API response
+  const userResponse = {
+    ...userWithoutPassword,
+    linkedinUsername: userWithoutPassword.linkedin_username,
+    photoLink: userWithoutPassword.photo_link,
+    professionId: userWithoutPassword.profession_id,
+    ...(isFirstTime !== undefined && { isFirst: isFirstTime }),
+  };
+
+  // Remove snake_case fields
+  delete (userResponse as any).linkedin_username;
+  delete (userResponse as any).photo_link;
+  delete (userResponse as any).profession_id;
+
+  return userResponse;
+};
+
+/**
  * Register a new user
  */
 export const register = async (req: Request, res: Response): Promise<void> => {
@@ -35,12 +58,12 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     // Create the user
     const newUser = await prisma.user.create({
       data: {
-        auth_provider: userData.auth_provider,
+        auth_provider: userData.auth_provider ?? 'EMAIL', // Default to EMAIL if not provided
         email: userData.email,
         password_hash: hashedPassword,
         username: userData.username,
         name: userData.name,
-        is_active: userData.is_active,
+        is_active: userData.is_active ?? true, // Default to true if not provided
       },
     });
 
@@ -50,13 +73,13 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       email: newUser.email,
     });
 
-    // Return user data (excluding password)
-    const { password_hash: _passwordHash, ...userWithoutPassword } = newUser;
+    // Map user data to API response format
+    const userResponse = mapUserToApiResponse(newUser);
 
     sendSuccess(
       res,
       'User registered successfully',
-      { user: userWithoutPassword, token },
+      { user: userResponse, token },
       201
     );
   } catch (error) {
@@ -103,15 +126,10 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       email: user.email,
     });
 
-    // Return user data (excluding password)
-    const { password_hash: _passwordHash, ...userWithoutPassword } = user;
+    // Map user data to API response format
+    const userResponse = mapUserToApiResponse(user);
 
-    sendSuccess(
-      res,
-      'Login successful',
-      { user: userWithoutPassword, token },
-      200
-    );
+    sendSuccess(res, 'Login successful', { user: userResponse, token }, 200);
   } catch (error) {
     logger.error('Login error:', error);
     sendError(
@@ -143,15 +161,10 @@ export const getProfile = async (
       return;
     }
 
-    // Return user data (excluding password)
-    const { password_hash: _passwordHash, ...userWithoutPassword } = user;
+    // Map user data to API response format
+    const userResponse = mapUserToApiResponse(user);
 
-    sendSuccess(
-      res,
-      'Profile retrieved successfully',
-      userWithoutPassword,
-      200
-    );
+    sendSuccess(res, 'Profile retrieved successfully', userResponse, 200);
   } catch (error) {
     logger.error('Get profile error:', error);
     sendError(
@@ -313,14 +326,11 @@ export const callback = async (
       userId: user.id,
     });
 
-    // Return user data (excluding password)
-    const { password_hash: _passwordHash, ...userWithoutPassword } = user;
+    // Map user data to API response format
+    const userResponse = mapUserToApiResponse(user, isFirstTime);
 
     const responseData = {
-      user: {
-        ...userWithoutPassword,
-        isFirst: isFirstTime,
-      },
+      user: userResponse,
       token,
     };
 

@@ -1,10 +1,10 @@
 export interface RegisterInput {
-  auth_provider: 'APPLE' | 'LINKEDIN' | 'EMAIL';
+  auth_provider?: 'APPLE' | 'LINKEDIN' | 'EMAIL';
   email: string;
   password: string;
   username: string;
   name: string;
-  is_active: boolean;
+  is_active?: boolean;
 }
 
 export interface LoginInput {

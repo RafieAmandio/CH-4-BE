@@ -295,6 +295,9 @@ All fields are optional. Only include fields you want to update.
 **Path Parameters:**
 - `id` - Event UUID (required)
 
+**Query Parameters:**
+- `hard_delete` - Set to `true` for permanent deletion, otherwise soft delete (default: false)
+
 **Response (Success):**
 ```json
 {
@@ -305,8 +308,9 @@ All fields are optional. Only include fields you want to update.
 
 **Business Logic:**
 - Only event creator can delete the event
-- Performs soft delete (sets `is_active` to false)
-- Event data is preserved but hidden from queries
+- Performs soft delete (sets `is_active` to false) by default
+- Hard delete option available via query parameter
+- Event data is preserved but hidden from queries (soft delete)
 
 ---
 

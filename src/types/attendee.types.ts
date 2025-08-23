@@ -154,4 +154,5 @@ export interface ValidateEventResponse {
     id: string;
     name: string;
   };
+  isAlreadyIn?: boolean;
 }

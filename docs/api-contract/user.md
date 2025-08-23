@@ -10,6 +10,8 @@ All user endpoints use the base path: `/api/users`
 
 ---
 
+## Endpoints
+
 ### 1. Get Professions
 
 **Endpoint:** `GET /api/users/professions`
@@ -22,6 +24,7 @@ All user endpoints use the base path: `/api/users`
 **Response:**
 ```json
 {
+  "message": "Professions retrieved successfully",
   "data": [
     {
       "categoryId": "uuid",
@@ -101,8 +104,6 @@ All user endpoints use the base path: `/api/users`
 - User must be authenticated but can have incomplete profile initially
 
 ---
-
-## Endpoints
 
 ### 3. Get My Profile
 

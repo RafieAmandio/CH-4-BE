@@ -21,6 +21,7 @@ const router = Router();
  */
 router.get(
   '/professions',
+  authenticate(['USER', 'EMPTY']),
   getProfessionsValidation,
   validate,
   attendeeController.getProfessions
@@ -46,6 +47,7 @@ router.post(
  */
 router.get(
   '/validate-event/:code',
+  authenticate(['USER', 'EMPTY']),
   validateEventValidation,
   validate,
   attendeeController.validateEvent
