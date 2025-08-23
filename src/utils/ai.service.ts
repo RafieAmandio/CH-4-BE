@@ -50,7 +50,7 @@ export const submitAttendeeDataToAI = async (
 ): Promise<void> => {
   try {
     const response = await fetch(
-      `${env.AI_SERVICE_URL}/api/v1/ai/attendees/process`,
+      `${env.AI_SERVICE_URL}/v1/ai/attendees/process`,
       {
         method: 'POST',
         headers: {
@@ -77,7 +77,7 @@ export const getAIRecommendations = async (
 ): Promise<AIRecommendationResponse | null> => {
   try {
     const response = await fetch(
-      `${env.AI_SERVICE_URL}/api/v1/ai/attendees/recommendations`,
+      `${env.AI_SERVICE_URL}/v1/ai/attendees/recommendations`,
       {
         method: 'POST',
         headers: {
