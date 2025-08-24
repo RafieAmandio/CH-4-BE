@@ -38,25 +38,25 @@ router.get(
 );
 
 /**
- * @route GET /api/events/:id
- * @desc Get a single event by ID
+ * @route GET /api/events/:code
+ * @desc Get a single event by code
  * @access Private (authenticated users only)
  */
 router.get(
-  '/:id',
+  '/:code',
   authenticate(['USER']),
   getEventValidation,
   validate,
-  eventController.getEventById
+  eventController.getEventByCode
 );
 
 /**
- * @route PUT /api/events/:id
- * @desc Update an event by ID
+ * @route PUT /api/events/:code
+ * @desc Update an event by code
  * @access Private (event creator only)
  */
 router.put(
-  '/:id',
+  '/:code',
   authenticate(['USER']),
   updateEventValidation,
   validate,
@@ -64,13 +64,13 @@ router.put(
 );
 
 /**
- * @route DELETE /api/events/:id
- * @desc Delete/Disable an event by ID
+ * @route DELETE /api/events/:code
+ * @desc Delete/Disable an event by code
  * @access Private (event creator only)
  * @query hard_delete=true for permanent deletion, otherwise soft delete (disable)
  */
 router.delete(
-  '/:id',
+  '/:code',
   authenticate(['USER']),
   getEventValidation,
   validate,

@@ -725,6 +725,28 @@ export const getRecommendations = async (
       return;
     }
 
+    // Check if event is ongoing
+    if (currentAttendee.event.status !== 'ONGOING') {
+      logger.warn('Event not ongoing for recommendations:', {
+        attendeeId,
+        eventId: currentAttendee.event_id,
+        eventStatus: currentAttendee.event.status,
+      });
+      sendError(
+        res,
+        'Event not ongoing',
+        [
+          {
+            field: 'event',
+            message:
+              'Recommendations are only available when the event is ongoing',
+          },
+        ],
+        505
+      );
+      return;
+    }
+
     const attendeeAnswers = await prisma.attendeeAnswer.findMany({
       where: { attendee_id: attendeeId, is_active: true },
       include: { question: true, answerOption: true },

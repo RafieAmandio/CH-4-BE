@@ -59,16 +59,44 @@ All authentication endpoints use the base path: `/api/auth`
       "created_at": "datetime",
       "updated_at": "datetime"
     },
-    "token": "jwt_token"
+    "token": "jwt_token",
+    "activeEvent": {
+      "attendeeId": "uuid",
+      "event": {
+        "id": "uuid",
+        "name": "string",
+        "start": "datetime",
+        "end": "datetime",
+        "detail": "string|null",
+        "photo_link": "string|null",
+        "location_name": "string|null",
+        "location_address": "string|null",
+        "location_link": "string|null",
+        "latitude": "decimal|null",
+        "longitude": "decimal|null",
+        "link": "string|null",
+        "status": "ONGOING",
+        "current_participants": "number",
+        "code": "string",
+        "creator": {
+          "id": "uuid",
+          "name": "string"
+        }
+      }
+    }
   }
 }
 ```
+
+**Note:** The `activeEvent` field is only included when the user is currently attending an ongoing event. If the user is not in an active event, this field will not be present in the response.
 
 **Business Logic:**
 - Validates email uniqueness
 - Hashes password before storage
 - Generates JWT token for immediate authentication
-- Returns complete user profile with token
+- Checks if user is currently attending an ongoing event
+- If user is in an active event, includes event details and attendee ID in token
+- Returns complete user profile with token and active event information (if applicable)
 
 ---
 
@@ -111,16 +139,44 @@ All authentication endpoints use the base path: `/api/auth`
       "created_at": "datetime",
       "updated_at": "datetime"
     },
-    "token": "jwt_token"
+    "token": "jwt_token",
+    "activeEvent": {
+      "attendeeId": "uuid",
+      "event": {
+        "id": "uuid",
+        "name": "string",
+        "start": "datetime",
+        "end": "datetime",
+        "detail": "string|null",
+        "photo_link": "string|null",
+        "location_name": "string|null",
+        "location_address": "string|null",
+        "location_link": "string|null",
+        "latitude": "decimal|null",
+        "longitude": "decimal|null",
+        "link": "string|null",
+        "status": "ONGOING",
+        "current_participants": "number",
+        "code": "string",
+        "creator": {
+          "id": "uuid",
+          "name": "string"
+        }
+      }
+    }
   }
 }
 ```
 
+**Note:** The `activeEvent` field is only included when the user is currently attending an ongoing event. If the user is not in an active event, this field will not be present in the response.
+
 **Business Logic:**
 - Validates email and password combination
 - Checks if user account is active
+- Checks if user is currently attending an ongoing event
+- If user is in an active event, includes event details and attendee ID in token
 - Generates JWT token for session management
-- Returns complete user profile with token
+- Returns complete user profile with token and active event information (if applicable)
 
 ---
 
@@ -160,10 +216,36 @@ All authentication endpoints use the base path: `/api/auth`
       "updated_at": "datetime",
       "isFirst": false
     },
-    "token": "jwt_token"
+    "token": "jwt_token",
+    "activeEvent": {
+      "attendeeId": "uuid",
+      "event": {
+        "id": "uuid",
+        "name": "string",
+        "start": "datetime",
+        "end": "datetime",
+        "detail": "string|null",
+        "photo_link": "string|null",
+        "location_name": "string|null",
+        "location_address": "string|null",
+        "location_link": "string|null",
+        "latitude": "decimal|null",
+        "longitude": "decimal|null",
+        "link": "string|null",
+        "status": "ONGOING",
+        "current_participants": "number",
+        "code": "string",
+        "creator": {
+          "id": "uuid",
+          "name": "string"
+        }
+      }
+    }
   }
 }
 ```
+
+**Note:** The `activeEvent` field is only included when the user is currently attending an ongoing event. If the user is not in an active event, this field will not be present in the response.
 
 **Response (New User):**
 ```json
@@ -184,10 +266,36 @@ All authentication endpoints use the base path: `/api/auth`
       "updated_at": "datetime",
       "isFirst": true
     },
-    "token": "jwt_token"
+    "token": "jwt_token",
+    "activeEvent": {
+      "attendeeId": "uuid",
+      "event": {
+        "id": "uuid",
+        "name": "string",
+        "start": "datetime",
+        "end": "datetime",
+        "detail": "string|null",
+        "photo_link": "string|null",
+        "location_name": "string|null",
+        "location_address": "string|null",
+        "location_link": "string|null",
+        "latitude": "decimal|null",
+        "longitude": "decimal|null",
+        "link": "string|null",
+        "status": "ONGOING",
+        "current_participants": "number",
+        "code": "string",
+        "creator": {
+          "id": "uuid",
+          "name": "string"
+        }
+      }
+    }
   }
 }
 ```
+
+**Note:** The `activeEvent` field is only included when the user is currently attending an ongoing event. If the user is not in an active event, this field will not be present in the response.
 
 **Business Logic:**
 1. Verifies Supabase token and extracts user data
@@ -202,8 +310,10 @@ All authentication endpoints use the base path: `/api/auth`
    - Sets account as active by default
    - Returns 201 status with "User created and logged in successfully" message
    - Sets `isFirst: true` in user response
-5. Generates JWT token for session management
-6. Returns complete user profile with token and signup flag
+5. Checks if user is currently attending an ongoing event
+6. If user is in an active event, includes event details and attendee ID in token
+7. Generates JWT token for session management
+8. Returns complete user profile with token, signup flag, and active event information (if applicable)
 
 ---
 
@@ -325,9 +435,27 @@ All authentication endpoints use the base path: `/api/auth`
 ## Token Management
 
 ### JWT Token Structure
-- **Payload**: Contains user ID and email
+- **Payload**: Contains user ID, email, and attendee ID (if user is in active event)
 - **Expiration**: Set according to security policy
 - **Usage**: Include in Authorization header as `Bearer <token>`
+
+### Token Payload Examples
+**Standard Token (User not in active event):**
+```json
+{
+  "id": "user_uuid",
+  "email": "user@example.com"
+}
+```
+
+**Token with Active Event (User in ongoing event):**
+```json
+{
+  "id": "user_uuid",
+  "email": "user@example.com",
+  "attendeeId": "attendee_uuid"
+}
+```
 
 ### Supabase Token Handling
 - **OAuth Callback**: Accepts Supabase token in Authorization header
@@ -364,6 +492,22 @@ All authentication endpoints use the base path: `/api/auth`
 - JWT token generation is lightweight
 - Supabase token verification is cached where possible
 - User profile data is efficiently structured
+- Active event queries are optimized with proper indexing
+
+### Active Event Integration
+The authentication system now includes active event detection for users currently attending ongoing events:
+
+**Active Event Detection:**
+- Automatically checks if user is attending an event with status "ONGOING"
+- Includes attendee ID in JWT token for event-specific operations
+- Returns complete event details including creator information
+- Only includes active event data when user is actually in an ongoing event
+
+**Use Cases:**
+- Immediate access to event details upon login/registration
+- Automatic attendee context for event-specific features
+- Creator information for event management
+- Seamless transition from authentication to event participation
 
 ### Future Enhancements
 - Refresh token implementation
@@ -372,3 +516,5 @@ All authentication endpoints use the base path: `/api/auth`
 - Account linking across providers
 - Session management improvements
 - Password reset functionality
+- Real-time event status updates
+- Multiple active event support
