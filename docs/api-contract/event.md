@@ -157,17 +157,17 @@ GET /api/events?search=conference&filter=all&sortBy=start&sortOrder=asc
 
 ---
 
-### 3. Get Event by ID
+### 3. Get Event by Code
 
-**Endpoint:** `GET /api/events/{id}`
+**Endpoint:** `GET /api/events/{code}`
 
-**Description:** Retrieves a single event by its ID.
+**Description:** Retrieves a single event by its unique code.
 
 **Headers:**
 - `Authorization: Bearer <token>` (required)
 
 **Path Parameters:**
-- `id` - Event UUID (required)
+- `code` - Event unique code (required)
 
 **Response (Success):**
 ```json
@@ -203,7 +203,7 @@ GET /api/events?search=conference&filter=all&sortBy=start&sortOrder=asc
 
 ### 4. Update Event
 
-**Endpoint:** `PUT /api/events/{id}`
+**Endpoint:** `PUT /api/events/{code}`
 
 **Description:** Updates an existing event. Only the event creator can update their events.
 
@@ -212,7 +212,7 @@ GET /api/events?search=conference&filter=all&sortBy=start&sortOrder=asc
 - `Content-Type: application/json`
 
 **Path Parameters:**
-- `id` - Event UUID (required)
+- `code` - Event unique code (required)
 
 **Request Body:**
 ```json
@@ -285,7 +285,7 @@ All fields are optional. Only include fields you want to update.
 
 ### 5. Delete Event
 
-**Endpoint:** `DELETE /api/events/{id}`
+**Endpoint:** `DELETE /api/events/{code}`
 
 **Description:** Soft deletes an event by setting `is_active` to false. Only the event creator can delete their events.
 
@@ -293,7 +293,7 @@ All fields are optional. Only include fields you want to update.
 - `Authorization: Bearer <token>` (required)
 
 **Path Parameters:**
-- `id` - Event UUID (required)
+- `code` - Event unique code (required)
 
 **Query Parameters:**
 - `hard_delete` - Set to `true` for permanent deletion, otherwise soft delete (default: false)
@@ -372,8 +372,8 @@ All fields are optional. Only include fields you want to update.
   "error": "Event not found",
   "details": [
     {
-      "field": "id",
-      "message": "Event with specified ID does not exist"
+      "field": "code",
+      "message": "Event with specified code does not exist"
     }
   ]
 }

@@ -86,11 +86,13 @@ export const createEventValidation = [
 ];
 
 export const updateEventValidation = [
-  param('id')
+  param('code')
     .notEmpty()
-    .withMessage('Event ID is required')
+    .withMessage('Event code is required')
     .isString()
-    .withMessage('Event ID must be a valid UUID'),
+    .withMessage('Event code must be a string')
+    .isLength({ min: 6, max: 6 })
+    .withMessage('Event code must be exactly 6 characters'),
 
   body('name')
     .optional()
@@ -176,11 +178,13 @@ export const updateEventValidation = [
 ];
 
 export const getEventValidation = [
-  param('id')
+  param('code')
     .notEmpty()
-    .withMessage('Event ID is required')
+    .withMessage('Event code is required')
     .isString()
-    .withMessage('Event ID must be a valid UUID'),
+    .withMessage('Event code must be a string')
+    .isLength({ min: 6, max: 6 })
+    .withMessage('Event code must be exactly 6 characters'),
 ];
 
 export const getEventsValidation = [

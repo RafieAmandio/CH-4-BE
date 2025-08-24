@@ -200,17 +200,17 @@ export const getEvents = async (
 };
 
 /**
- * Get an event by ID
+ * Get an event by code
  */
-export const getEventById = async (
+export const getEventByCode = async (
   req: AuthRequest,
   res: Response
 ): Promise<void> => {
   try {
-    const { id } = req.params;
+    const { code } = req.params;
 
     const event = await prisma.event.findUnique({
-      where: { id },
+      where: { code },
       include: {
         creator: {
           select: {
@@ -227,7 +227,12 @@ export const getEventById = async (
       sendError(
         res,
         'Event not found',
-        [{ field: 'id', message: 'Event with specified ID does not exist' }],
+        [
+          {
+            field: 'code',
+            message: 'Event with specified code does not exist',
+          },
+        ],
         404
       );
       return;
@@ -251,14 +256,14 @@ export const getEventById = async (
 };
 
 /**
- * Update an event by ID
+ * Update an event by code
  */
 export const updateEvent = async (
   req: AuthRequest,
   res: Response
 ): Promise<void> => {
   try {
-    const { id } = req.params;
+    const { code } = req.params;
     const eventData: UpdateEventInput = req.body;
     const userId = req.user?.id;
 
@@ -274,7 +279,7 @@ export const updateEvent = async (
 
     // Check if event exists and user has permission to update
     const existingEvent = await prisma.event.findUnique({
-      where: { id },
+      where: { code },
     });
 
     if (!existingEvent || !existingEvent.is_active) {
@@ -283,8 +288,8 @@ export const updateEvent = async (
         'Event not found',
         [
           {
-            field: 'id',
-            message: 'Event with the specified ID does not exist',
+            field: 'code',
+            message: 'Event with the specified code does not exist',
           },
         ],
         404
@@ -335,7 +340,7 @@ export const updateEvent = async (
 
     // Update the event
     const updatedEvent = await prisma.event.update({
-      where: { id },
+      where: { code },
       data: updateData,
       include: {
         creator: {
@@ -367,14 +372,14 @@ export const updateEvent = async (
 };
 
 /**
- * Delete an event by ID (soft delete)
+ * Delete an event by code (soft delete)
  */
 export const deleteEvent = async (
   req: AuthRequest,
   res: Response
 ): Promise<void> => {
   try {
-    const { id } = req.params;
+    const { code } = req.params;
     const userId = req.user?.id;
 
     if (!userId) {
@@ -389,7 +394,7 @@ export const deleteEvent = async (
 
     // Check if event exists and user has permission to delete
     const existingEvent = await prisma.event.findUnique({
-      where: { id },
+      where: { code },
     });
 
     if (!existingEvent || !existingEvent.is_active) {
@@ -398,8 +403,8 @@ export const deleteEvent = async (
         'Event not found',
         [
           {
-            field: 'id',
-            message: 'Event with the specified ID does not exist',
+            field: 'code',
+            message: 'Event with the specified code does not exist',
           },
         ],
         404
@@ -425,7 +430,7 @@ export const deleteEvent = async (
 
     // Soft delete by setting is_active to false
     await prisma.event.update({
-      where: { id },
+      where: { code },
       data: { is_active: false },
     });
 
