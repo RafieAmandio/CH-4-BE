@@ -8,6 +8,58 @@ import { logger } from '../config/logger.js';
 import prisma from '../config/database.js';
 
 /**
+ * Helper function to check if user is in an active event and get attendee info
+ */
+const checkActiveEventForUser = async (userId: string) => {
+  try {
+    const activeAttendee = await prisma.attendee.findFirst({
+      where: {
+        user_id: userId,
+        is_active: true,
+        deleted_at: null,
+        event: {
+          status: 'ONGOING',
+          is_active: true,
+          deleted_at: null,
+        },
+      },
+      include: {
+        event: {
+          select: {
+            id: true,
+            name: true,
+            start: true,
+            end: true,
+            detail: true,
+            photo_link: true,
+            location_name: true,
+            location_address: true,
+            location_link: true,
+            latitude: true,
+            longitude: true,
+            link: true,
+            status: true,
+            current_participants: true,
+            code: true,
+            creator: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return activeAttendee;
+  } catch (error) {
+    logger.error('Error checking active event for user:', error);
+    return null;
+  }
+};
+
+/**
  * Maps user data from database format (snake_case) to API response format (camelCase)
  */
 const mapUserToApiResponse = (user: any, isFirstTime: boolean = false) => {
@@ -67,21 +119,65 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       },
     });
 
-    // Generate token
-    const token = generateToken({
+    // Check if user is in an active event
+    const activeAttendee = await checkActiveEventForUser(newUser.id);
+
+    // Prepare token payload
+    const tokenPayload: any = {
       id: newUser.id,
       email: newUser.email,
-    });
+    };
+
+    // Include attendee ID if user is in an active event
+    if (activeAttendee) {
+      tokenPayload.attendeeId = activeAttendee.id;
+    }
+
+    // Generate token
+    const token = generateToken(tokenPayload);
 
     // Map user data to API response format
     const userResponse = mapUserToApiResponse(newUser);
 
-    sendSuccess(
-      res,
-      'User registered successfully',
-      { user: userResponse, token },
-      201
-    );
+    // Prepare response data
+    const responseData: any = {
+      user: userResponse,
+      token,
+    };
+
+    // Include active event data if user is in an ongoing event
+    if (activeAttendee) {
+      responseData.activeEvent = {
+        attendeeId: activeAttendee.id,
+        event: {
+          id: activeAttendee.event.id,
+          name: activeAttendee.event.name,
+          start: activeAttendee.event.start,
+          end: activeAttendee.event.end,
+          detail: activeAttendee.event.detail,
+          photo_link: activeAttendee.event.photo_link,
+          location_name: activeAttendee.event.location_name,
+          location_address: activeAttendee.event.location_address,
+          location_link: activeAttendee.event.location_link,
+          latitude: activeAttendee.event.latitude,
+          longitude: activeAttendee.event.longitude,
+          link: activeAttendee.event.link,
+          status: activeAttendee.event.status,
+          current_participants: activeAttendee.event.current_participants,
+          code: activeAttendee.event.code,
+          creator: {
+            id: activeAttendee.event.creator.id,
+            name: activeAttendee.event.creator.name,
+          },
+        },
+      };
+    }
+
+    const successMessage = activeAttendee
+      ? 'User registered successfully - You are currently in an active event'
+      : 'User registered successfully';
+
+    sendSuccess(res, successMessage, responseData, 201);
   } catch (error) {
     logger.error('Registration error:', error);
     sendError(
@@ -120,16 +216,65 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    // Generate token
-    const token = generateToken({
+    // Check if user is in an active event
+    const activeAttendee = await checkActiveEventForUser(user.id);
+
+    // Prepare token payload
+    const tokenPayload: any = {
       id: user.id,
       email: user.email,
-    });
+    };
+
+    // Include attendee ID if user is in an active event
+    if (activeAttendee) {
+      tokenPayload.attendeeId = activeAttendee.id;
+    }
+
+    // Generate token
+    const token = generateToken(tokenPayload);
 
     // Map user data to API response format
     const userResponse = mapUserToApiResponse(user);
 
-    sendSuccess(res, 'Login successful', { user: userResponse, token }, 200);
+    // Prepare response data
+    const responseData: any = {
+      user: userResponse,
+      token,
+    };
+
+    // Include active event data if user is in an ongoing event
+    if (activeAttendee) {
+      responseData.activeEvent = {
+        attendeeId: activeAttendee.id,
+        event: {
+          id: activeAttendee.event.id,
+          name: activeAttendee.event.name,
+          start: activeAttendee.event.start,
+          end: activeAttendee.event.end,
+          detail: activeAttendee.event.detail,
+          photo_link: activeAttendee.event.photo_link,
+          location_name: activeAttendee.event.location_name,
+          location_address: activeAttendee.event.location_address,
+          location_link: activeAttendee.event.location_link,
+          latitude: activeAttendee.event.latitude,
+          longitude: activeAttendee.event.longitude,
+          link: activeAttendee.event.link,
+          status: activeAttendee.event.status,
+          current_participants: activeAttendee.event.current_participants,
+          code: activeAttendee.event.code,
+          creator: {
+            id: activeAttendee.event.creator.id,
+            name: activeAttendee.event.creator.name,
+          },
+        },
+      };
+    }
+
+    const successMessage = activeAttendee
+      ? 'Login successful - You are currently in an active event'
+      : 'Login successful';
+
+    sendSuccess(res, successMessage, responseData, 200);
   } catch (error) {
     logger.error('Login error:', error);
     sendError(
@@ -315,24 +460,70 @@ export const callback = async (
       email: user.email,
     });
 
-    // Generate our JWT token for the user
-    const token = generateToken({
+    // Check if user is in an active event
+    const activeAttendee = await checkActiveEventForUser(user.id);
+
+    // Prepare token payload
+    const tokenPayload: any = {
       id: user.id,
       email: user.email,
-    });
+    };
+
+    // Include attendee ID if user is in an active event
+    if (activeAttendee) {
+      tokenPayload.attendeeId = activeAttendee.id;
+      logger.info('User is in active event, including attendee ID in token:', {
+        attendeeId: activeAttendee.id,
+        eventName: activeAttendee.event.name,
+        eventCreator: activeAttendee.event.creator.name,
+      });
+    }
+
+    // Generate our JWT token for the user
+    const token = generateToken(tokenPayload);
 
     logger.info('JWT token generated successfully', {
       tokenLength: token.length,
       userId: user.id,
+      hasAttendeeId: !!activeAttendee,
     });
 
     // Map user data to API response format
     const userResponse = mapUserToApiResponse(user, isFirstTime);
 
-    const responseData = {
+    // Prepare response data
+    const responseData: any = {
       user: userResponse,
       token,
     };
+
+    // Include active event data if user is in an ongoing event
+    if (activeAttendee) {
+      responseData.activeEvent = {
+        attendeeId: activeAttendee.id,
+        event: {
+          id: activeAttendee.event.id,
+          name: activeAttendee.event.name,
+          start: activeAttendee.event.start,
+          end: activeAttendee.event.end,
+          detail: activeAttendee.event.detail,
+          photo_link: activeAttendee.event.photo_link,
+          location_name: activeAttendee.event.location_name,
+          location_address: activeAttendee.event.location_address,
+          location_link: activeAttendee.event.location_link,
+          latitude: activeAttendee.event.latitude,
+          longitude: activeAttendee.event.longitude,
+          link: activeAttendee.event.link,
+          status: activeAttendee.event.status,
+          current_participants: activeAttendee.event.current_participants,
+          code: activeAttendee.event.code,
+          creator: {
+            id: activeAttendee.event.creator.id,
+            name: activeAttendee.event.creator.name,
+          },
+        },
+      };
+    }
 
     const processingTime = Date.now() - startTime;
     logger.info('Callback authentication completed successfully:', {
@@ -342,14 +533,15 @@ export const callback = async (
       responseStatus: existingUser ? 200 : 201,
     });
 
-    sendSuccess(
-      res,
-      existingUser
-        ? 'Login successful'
-        : 'User created and logged in successfully',
-      responseData,
-      existingUser ? 200 : 201
-    );
+    const successMessage = existingUser
+      ? activeAttendee
+        ? 'Login successful - You are currently in an active event'
+        : 'Login successful'
+      : activeAttendee
+        ? 'User created and logged in successfully - You are currently in an active event'
+        : 'User created and logged in successfully';
+
+    sendSuccess(res, successMessage, responseData, existingUser ? 200 : 201);
 
     logger.info('=== CALLBACK AUTHENTICATION COMPLETED ===');
   } catch (error) {
