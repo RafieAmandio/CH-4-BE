@@ -100,7 +100,10 @@ export const completeUserRegistration = async (
     }
 
     // Normalize linkedinUsername to handle edge cases from frontend
-    if (otherData.linkedinUsername === 'null' || otherData.linkedinUsername === '') {
+    if (
+      otherData.linkedinUsername === 'null' ||
+      otherData.linkedinUsername === ''
+    ) {
       otherData.linkedinUsername = null;
     }
 
@@ -164,10 +167,10 @@ export const completeUserRegistration = async (
       photoLink: userWithProfession!.photo_link,
       profession: userWithProfession!.profession
         ? {
-          id: userWithProfession!.profession.id,
-          name: userWithProfession!.profession.name,
-          categoryName: userWithProfession!.profession.category.category,
-        }
+            id: userWithProfession!.profession.id,
+            name: userWithProfession!.profession.name,
+            categoryName: userWithProfession!.profession.category.category,
+          }
         : null,
     };
 
@@ -240,10 +243,10 @@ export const getMyProfile = async (
       photoLink: userWithProfession.photo_link,
       profession: userWithProfession.profession
         ? {
-          id: userWithProfession.profession.id,
-          name: userWithProfession.profession.name,
-          categoryName: userWithProfession.profession.category.category,
-        }
+            id: userWithProfession.profession.id,
+            name: userWithProfession.profession.name,
+            categoryName: userWithProfession.profession.category.category,
+          }
         : null,
     };
 
@@ -390,10 +393,10 @@ export const updateMyProfile = async (
       photoLink: updatedUser.photo_link,
       profession: updatedUser.profession
         ? {
-          id: updatedUser.profession.id,
-          name: updatedUser.profession.name,
-          categoryName: updatedUser.profession.category.category,
-        }
+            id: updatedUser.profession.id,
+            name: updatedUser.profession.name,
+            categoryName: updatedUser.profession.category.category,
+          }
         : null,
     };
 
@@ -459,9 +462,9 @@ export const getUserProfile = async (
       photoLink: user.photo_link,
       profession: user.profession
         ? {
-          name: user.profession.name,
-          categoryName: user.profession.category.category,
-        }
+            name: user.profession.name,
+            categoryName: user.profession.category.category,
+          }
         : null,
     };
 

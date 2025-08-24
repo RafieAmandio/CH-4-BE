@@ -27,9 +27,14 @@ export const updateProfileValidation = [
 
   body('linkedinUsername')
     .optional({ nullable: true })
-    .custom((value) => {
+    .custom(value => {
       // Handle various "null" cases that frontend might send
-      if (value === null || value === undefined || value === '' || value === 'null') {
+      if (
+        value === null ||
+        value === undefined ||
+        value === '' ||
+        value === 'null'
+      ) {
         return true; // Allow null/undefined/empty/"null" values
       }
       if (typeof value !== 'string') {
@@ -39,11 +44,15 @@ export const updateProfileValidation = [
         throw new Error('LinkedIn username cannot be empty');
       }
       if (value.trim().length > 50) {
-        throw new Error('LinkedIn username must be between 1 and 50 characters');
+        throw new Error(
+          'LinkedIn username must be between 1 and 50 characters'
+        );
       }
       return true;
     })
-    .withMessage('LinkedIn username must be a valid string between 1 and 50 characters'),
+    .withMessage(
+      'LinkedIn username must be a valid string between 1 and 50 characters'
+    ),
 
   body('photoLink')
     .optional()
@@ -82,9 +91,14 @@ export const completeRegistrationValidation = [
 
   body('linkedinUsername')
     .optional({ nullable: true })
-    .custom((value) => {
+    .custom(value => {
       // Handle various "null" cases that frontend might send
-      if (value === null || value === undefined || value === '' || value === 'null') {
+      if (
+        value === null ||
+        value === undefined ||
+        value === '' ||
+        value === 'null'
+      ) {
         return true; // Allow null/undefined/empty/"null" values
       }
       if (typeof value !== 'string') {
@@ -94,11 +108,15 @@ export const completeRegistrationValidation = [
         throw new Error('LinkedIn username cannot be empty');
       }
       if (value.trim().length > 50) {
-        throw new Error('LinkedIn username must be between 1 and 50 characters');
+        throw new Error(
+          'LinkedIn username must be between 1 and 50 characters'
+        );
       }
       return true;
     })
-    .withMessage('LinkedIn username must be a valid string between 1 and 50 characters'),
+    .withMessage(
+      'LinkedIn username must be a valid string between 1 and 50 characters'
+    ),
 
   body('photoLink')
     .notEmpty()

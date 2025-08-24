@@ -24,7 +24,7 @@ import {
   type ProcessAttendeeRequest,
   type AttendeePayload,
   type QuestionType,
-  type RecommendationItem,
+  // type RecommendationItem, // Commented out as no longer used
 } from '../utils/ai.service.js';
 
 /**
@@ -103,7 +103,10 @@ export const createAttendee = async (
     const user = req.user; // Will be null for visitors
 
     // Normalize linkedinUsername to handle edge cases from frontend
-    if (attendeeData.linkedinUsername === 'null' || attendeeData.linkedinUsername === '') {
+    if (
+      attendeeData.linkedinUsername === 'null' ||
+      attendeeData.linkedinUsername === ''
+    ) {
       attendeeData.linkedinUsername = undefined;
     }
 
@@ -556,34 +559,34 @@ export const submitAnswers = async (
     logger.info('Transaction completed. Created', totalCreated, 'answers');
 
     // ---- Reload answers to build AI payload ----
-    const attendeeAnswers = await prisma.attendeeAnswer.findMany({
-      where: { attendee_id: attendeeId, is_active: true },
-      include: { question: true, answerOption: true },
-    });
+    // const attendeeAnswers = await prisma.attendeeAnswer.findMany({ // Commented out as no longer used
+    //   where: { attendee_id: attendeeId, is_active: true },
+    //   include: { question: true, answerOption: true },
+    // });
 
-    const aiData: ProcessAttendeeRequest = {
-      eventId: currentAttendee.event_id,
-      attendee: {
-        attendeeId,
-        nickname: currentAttendee.nickname || 'Guest',
-        profession: {
-          name: currentAttendee.profession?.name,
-          categoryName: currentAttendee.profession?.category?.category,
-        },
-        goalsCategory: { name: currentAttendee.goal?.name },
-        answers: attendeeAnswers.map(ans => ({
-          question: ans.question.question,
-          questionType: String(ans.question.type) as QuestionType,
-          answerLabel: ans.answerOption?.label ?? undefined,
-          textValue: ans.text_value ?? undefined,
-          numberValue:
-            ans.number_value == null ? undefined : Number(ans.number_value),
-          dateValue: ans.date_value ? ans.date_value.toISOString() : undefined,
-          rank: ans.rank ?? undefined,
-          weight: ans.weight == null ? undefined : Number(ans.weight),
-        })),
-      },
-    };
+    // const aiData: ProcessAttendeeRequest = { // Commented out as no longer used
+    //   eventId: currentAttendee.event_id,
+    //   attendee: {
+    //     attendeeId,
+    //     nickname: currentAttendee.nickname || 'Guest',
+    //     profession: {
+    //       name: currentAttendee.profession?.name,
+    //       categoryName: currentAttendee.profession?.category?.category,
+    //     },
+    //     goalsCategory: { name: currentAttendee.goal?.name },
+    //     answers: attendeeAnswers.map(ans => ({
+    //       question: ans.question.question,
+    //       questionType: String(ans.question.type) as QuestionType,
+    //       answerLabel: ans.answerOption?.label ?? undefined,
+    //       textValue: ans.text_value ?? undefined,
+    //       numberValue:
+    //         ans.number_value == null ? undefined : Number(ans.number_value),
+    //       dateValue: ans.date_value ? ans.date_value.toISOString() : undefined,
+    //       rank: ans.rank ?? undefined,
+    //       weight: ans.weight == null ? undefined : Number(ans.weight),
+    //       })),
+    //   },
+    // };
 
     // ---- AI: Use singleton pattern for efficient processing ----
     // DISABLED: Recommendation functionality commented out
@@ -1160,60 +1163,60 @@ function toAiAttendeePayload(loose: any): AttendeePayload {
 
   const answers = Array.isArray(answersArray)
     ? answersArray.map(ans => {
-      // Many backends store different field names; normalize.
-      const question =
-        ans?.question?.question ?? ans?.questionText ?? ans?.question ?? '';
+        // Many backends store different field names; normalize.
+        const question =
+          ans?.question?.question ?? ans?.questionText ?? ans?.question ?? '';
 
-      const answerLabel =
-        ans?.answerLabel ??
-        ans?.optionLabel ??
-        ans?.answerOption?.label ??
-        undefined;
+        const answerLabel =
+          ans?.answerLabel ??
+          ans?.optionLabel ??
+          ans?.answerOption?.label ??
+          undefined;
 
-      // numbers can be strings; coerce where safe
-      const numberValueRaw =
-        ans?.numberValue ??
-        ans?.valueNumber ??
-        ans?.number_value ??
-        undefined;
+        // numbers can be strings; coerce where safe
+        const numberValueRaw =
+          ans?.numberValue ??
+          ans?.valueNumber ??
+          ans?.number_value ??
+          undefined;
 
-      const weightRaw = ans?.weight ?? ans?.answerWeight ?? undefined;
+        const weightRaw = ans?.weight ?? ans?.answerWeight ?? undefined;
 
-      const dateValueRaw =
-        ans?.dateValue ?? ans?.valueDate ?? ans?.date_value ?? undefined;
+        const dateValueRaw =
+          ans?.dateValue ?? ans?.valueDate ?? ans?.date_value ?? undefined;
 
-      const textValueRaw =
-        ans?.textValue ?? ans?.valueText ?? ans?.text_value ?? undefined;
+        const textValueRaw =
+          ans?.textValue ?? ans?.valueText ?? ans?.text_value ?? undefined;
 
-      const rankRaw = ans?.rank ?? undefined;
+        const rankRaw = ans?.rank ?? undefined;
 
-      return pruneDeep({
-        question,
-        questionType: mapQuestionType(
-          ans?.questionType ??
-          ans?.type ??
-          ans?.question?.type ??
-          ans?.question_type
-        ),
-        answerLabel,
-        rank: rankRaw === '' ? undefined : rankRaw,
-        weight:
-          weightRaw === '' || weightRaw === null || weightRaw === undefined
-            ? undefined
-            : Number(weightRaw),
-        textValue: textValueRaw,
-        numberValue:
-          numberValueRaw === '' ||
+        return pruneDeep({
+          question,
+          questionType: mapQuestionType(
+            ans?.questionType ??
+              ans?.type ??
+              ans?.question?.type ??
+              ans?.question_type
+          ),
+          answerLabel,
+          rank: rankRaw === '' ? undefined : rankRaw,
+          weight:
+            weightRaw === '' || weightRaw === null || weightRaw === undefined
+              ? undefined
+              : Number(weightRaw),
+          textValue: textValueRaw,
+          numberValue:
+            numberValueRaw === '' ||
             numberValueRaw === null ||
             numberValueRaw === undefined
-            ? undefined
-            : Number(numberValueRaw),
-        dateValue:
-          dateValueRaw instanceof Date
-            ? dateValueRaw.toISOString()
-            : dateValueRaw,
-      });
-    })
+              ? undefined
+              : Number(numberValueRaw),
+          dateValue:
+            dateValueRaw instanceof Date
+              ? dateValueRaw.toISOString()
+              : dateValueRaw,
+        });
+      })
     : [];
 
   const attendeeId =

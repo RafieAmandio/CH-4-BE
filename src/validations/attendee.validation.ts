@@ -39,9 +39,14 @@ export const createAttendeeValidation = [
 
   body('linkedinUsername')
     .optional({ nullable: true })
-    .custom((value) => {
+    .custom(value => {
       // Handle various "null" cases that frontend might send
-      if (value === null || value === undefined || value === '' || value === 'null') {
+      if (
+        value === null ||
+        value === undefined ||
+        value === '' ||
+        value === 'null'
+      ) {
         return true; // Allow null/undefined/empty/"null" values
       }
       if (typeof value !== 'string') {
@@ -55,7 +60,9 @@ export const createAttendeeValidation = [
       }
       return true;
     })
-    .withMessage('LinkedIn username must be a valid string not exceeding 50 characters'),
+    .withMessage(
+      'LinkedIn username must be a valid string not exceeding 50 characters'
+    ),
 
   body('photoLink')
     .notEmpty()
