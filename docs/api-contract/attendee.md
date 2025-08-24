@@ -479,12 +479,14 @@ This document outlines the API contract for attendee management, which includes 
 
 **Business Logic:**
 1. Extract attendeeId from token
-2. Always call AI service endpoint `/ai/attendees/recommendations` with current attendee data
-3. If AI service returns recommendations:
+2. Validate that the event is ongoing (status must be `ONGOING`)
+3. If event is not ongoing, return 400 error with message "Recommendations are only available when the event is ongoing"
+4. Always call AI service endpoint `/ai/attendees/recommendations` with current attendee data
+5. If AI service returns recommendations:
    - Deactivate previous stored recommendations
    - Store new recommendations in database
    - Return fresh recommendations with scores
-4. If AI service is unavailable:
+6. If AI service is unavailable:
    - Fallback to stored recommendations from database
    - Return stored recommendations with scores
 
@@ -574,6 +576,19 @@ This document outlines the API contract for attendee management, which includes 
     {
       "field": "eventCode",
       "message": "Event code must be exactly 6 characters"
+    }
+  ]
+}
+```
+
+**Event Not Ongoing (505 Bad Request):**
+```json
+{
+  "error": "Event not ongoing",
+  "details": [
+    {
+      "field": "event",
+      "message": "Recommendations are only available when the event is ongoing"
     }
   ]
 }
