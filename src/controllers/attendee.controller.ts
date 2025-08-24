@@ -98,9 +98,14 @@ export const createAttendee = async (
   res: Response
 ): Promise<void> => {
   try {
-    const attendeeData: CreateAttendeeInput = req.body;
+    let attendeeData: CreateAttendeeInput = req.body;
 
     const user = req.user; // Will be null for visitors
+
+    // Normalize linkedinUsername to handle edge cases from frontend
+    if (attendeeData.linkedinUsername === 'null' || attendeeData.linkedinUsername === '') {
+      attendeeData.linkedinUsername = undefined;
+    }
 
     // Check if event exists and is active
     const event = await prisma.event.findUnique({
@@ -581,58 +586,59 @@ export const submitAnswers = async (
     };
 
     // ---- AI: Use singleton pattern for efficient processing ----
+    // DISABLED: Recommendation functionality commented out
     let recommendations: RecommendationResponse[] = [];
 
-    try {
-      // Use singleton pattern - handles processing and recommendations in one call
-      const aiRecommendations = await getRecommendationsWithSingleton(aiData);
+    // try {
+    //   // Use singleton pattern - handles processing and recommendations in one call
+    //   const aiRecommendations = await getRecommendationsWithSingleton(aiData);
 
-      if (aiRecommendations?.recommendations?.length) {
-        const top = aiRecommendations.recommendations
-          .filter((r: RecommendationItem) => r.targetAttendeeId !== attendeeId)
-          .slice(0, 3);
+    //   if (aiRecommendations?.recommendations?.length) {
+    //     const top = aiRecommendations.recommendations
+    //       .filter((r: RecommendationItem) => r.targetAttendeeId !== attendeeId)
+    //       .slice(0, 3);
 
-        logger.info('Got', top.length, 'AI recommendations');
+    //     logger.info('Got', top.length, 'AI recommendations');
 
-        for (const rec of top) {
-          const target = await getEnrichedAttendeeData(rec.targetAttendeeId);
-          if (!target) continue;
+    //     for (const rec of top) {
+    //       const target = await getEnrichedAttendeeData(rec.targetAttendeeId);
+    //       if (!target) continue;
 
-          recommendations.push({
-            targetAttendeeId: rec.targetAttendeeId,
-            reasoning: rec.reasoning,
-            targetAttendee: target,
-          });
+    //       recommendations.push({
+    //         targetAttendeeId: rec.targetAttendeeId,
+    //         reasoning: rec.reasoning,
+    //         targetAttendee: target,
+    //       });
 
-          // Persist recommendations
-          await prisma.recommendation.upsert({
-            where: {
-              event_id_source_attendee_id_target_attendee_id: {
-                event_id: currentAttendee.event_id,
-                source_attendee_id: attendeeId,
-                target_attendee_id: rec.targetAttendeeId,
-              },
-            },
-            update: {
-              score: rec.score,
-              reasoning: rec.reasoning,
-              is_active: true,
-            },
-            create: {
-              event_id: currentAttendee.event_id,
-              source_attendee_id: attendeeId,
-              target_attendee_id: rec.targetAttendeeId,
-              score: rec.score,
-              reasoning: rec.reasoning,
-              is_active: true,
-            },
-          });
-        }
-      }
-    } catch (aiError) {
-      logger.error('AI processing error:', aiError);
-      // Continue without AI recommendations rather than failing completely
-    }
+    //       // Persist recommendations
+    //       await prisma.recommendation.upsert({
+    //         where: {
+    //           event_id_source_attendee_id_target_attendee_id: {
+    //             event_id: currentAttendee.event_id,
+    //             source_attendee_id: attendeeId,
+    //             target_attendee_id: rec.targetAttendeeId,
+    //           },
+    //         },
+    //         update: {
+    //           score: rec.score,
+    //           reasoning: rec.reasoning,
+    //           is_active: true,
+    //         },
+    //         create: {
+    //           event_id: currentAttendee.event_id,
+    //           source_attendee_id: attendeeId,
+    //           target_attendee_id: rec.targetAttendeeId,
+    //           score: rec.score,
+    //           reasoning: rec.reasoning,
+    //           is_active: true,
+    //         },
+    //       });
+    //     }
+    //   }
+    // } catch (aiError) {
+    //   logger.error('AI processing error:', aiError);
+    //   // Continue without AI recommendations rather than failing completely
+    // }
 
     const payload: SubmitAnswersResponse = {
       answersProcessed: totalCreated,
@@ -1154,60 +1160,60 @@ function toAiAttendeePayload(loose: any): AttendeePayload {
 
   const answers = Array.isArray(answersArray)
     ? answersArray.map(ans => {
-        // Many backends store different field names; normalize.
-        const question =
-          ans?.question?.question ?? ans?.questionText ?? ans?.question ?? '';
+      // Many backends store different field names; normalize.
+      const question =
+        ans?.question?.question ?? ans?.questionText ?? ans?.question ?? '';
 
-        const answerLabel =
-          ans?.answerLabel ??
-          ans?.optionLabel ??
-          ans?.answerOption?.label ??
-          undefined;
+      const answerLabel =
+        ans?.answerLabel ??
+        ans?.optionLabel ??
+        ans?.answerOption?.label ??
+        undefined;
 
-        // numbers can be strings; coerce where safe
-        const numberValueRaw =
-          ans?.numberValue ??
-          ans?.valueNumber ??
-          ans?.number_value ??
-          undefined;
+      // numbers can be strings; coerce where safe
+      const numberValueRaw =
+        ans?.numberValue ??
+        ans?.valueNumber ??
+        ans?.number_value ??
+        undefined;
 
-        const weightRaw = ans?.weight ?? ans?.answerWeight ?? undefined;
+      const weightRaw = ans?.weight ?? ans?.answerWeight ?? undefined;
 
-        const dateValueRaw =
-          ans?.dateValue ?? ans?.valueDate ?? ans?.date_value ?? undefined;
+      const dateValueRaw =
+        ans?.dateValue ?? ans?.valueDate ?? ans?.date_value ?? undefined;
 
-        const textValueRaw =
-          ans?.textValue ?? ans?.valueText ?? ans?.text_value ?? undefined;
+      const textValueRaw =
+        ans?.textValue ?? ans?.valueText ?? ans?.text_value ?? undefined;
 
-        const rankRaw = ans?.rank ?? undefined;
+      const rankRaw = ans?.rank ?? undefined;
 
-        return pruneDeep({
-          question,
-          questionType: mapQuestionType(
-            ans?.questionType ??
-              ans?.type ??
-              ans?.question?.type ??
-              ans?.question_type
-          ),
-          answerLabel,
-          rank: rankRaw === '' ? undefined : rankRaw,
-          weight:
-            weightRaw === '' || weightRaw === null || weightRaw === undefined
-              ? undefined
-              : Number(weightRaw),
-          textValue: textValueRaw,
-          numberValue:
-            numberValueRaw === '' ||
+      return pruneDeep({
+        question,
+        questionType: mapQuestionType(
+          ans?.questionType ??
+          ans?.type ??
+          ans?.question?.type ??
+          ans?.question_type
+        ),
+        answerLabel,
+        rank: rankRaw === '' ? undefined : rankRaw,
+        weight:
+          weightRaw === '' || weightRaw === null || weightRaw === undefined
+            ? undefined
+            : Number(weightRaw),
+        textValue: textValueRaw,
+        numberValue:
+          numberValueRaw === '' ||
             numberValueRaw === null ||
             numberValueRaw === undefined
-              ? undefined
-              : Number(numberValueRaw),
-          dateValue:
-            dateValueRaw instanceof Date
-              ? dateValueRaw.toISOString()
-              : dateValueRaw,
-        });
-      })
+            ? undefined
+            : Number(numberValueRaw),
+        dateValue:
+          dateValueRaw instanceof Date
+            ? dateValueRaw.toISOString()
+            : dateValueRaw,
+      });
+    })
     : [];
 
   const attendeeId =

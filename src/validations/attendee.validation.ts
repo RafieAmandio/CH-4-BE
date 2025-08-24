@@ -38,12 +38,24 @@ export const createAttendeeValidation = [
     .withMessage('Profession ID must be a valid UUID'),
 
   body('linkedinUsername')
-    .optional()
-    .isString()
-    .withMessage('LinkedIn username must be a string')
-    .trim()
-    .isLength({ max: 50 })
-    .withMessage('LinkedIn username must not exceed 50 characters'),
+    .optional({ nullable: true })
+    .custom((value) => {
+      // Handle various "null" cases that frontend might send
+      if (value === null || value === undefined || value === '' || value === 'null') {
+        return true; // Allow null/undefined/empty/"null" values
+      }
+      if (typeof value !== 'string') {
+        throw new Error('LinkedIn username must be a string');
+      }
+      if (value.trim().length === 0) {
+        throw new Error('LinkedIn username cannot be empty');
+      }
+      if (value.trim().length > 50) {
+        throw new Error('LinkedIn username must not exceed 50 characters');
+      }
+      return true;
+    })
+    .withMessage('LinkedIn username must be a valid string not exceeding 50 characters'),
 
   body('photoLink')
     .notEmpty()
