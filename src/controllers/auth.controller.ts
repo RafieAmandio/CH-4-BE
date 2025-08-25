@@ -62,7 +62,7 @@ const checkActiveEventForUser = async (userId: string) => {
 /**
  * Maps user data from database format (snake_case) to API response format (camelCase)
  */
-const mapUserToApiResponse = (user: any, isFirstTime: boolean = false) => {
+const mapUserToApiResponse = (user: any, isFirstTime: boolean = false): any => {
   const { password_hash: _passwordHash, ...userWithoutPassword } = user;
 
   // Map snake_case to camelCase for API response
@@ -78,6 +78,17 @@ const mapUserToApiResponse = (user: any, isFirstTime: boolean = false) => {
   delete (userResponse as any).linkedin_username;
   delete (userResponse as any).photo_link;
   delete (userResponse as any).profession_id;
+
+  // Add profession details if available
+  if (userWithoutPassword.profession) {
+    userResponse.profession = {
+      id: userWithoutPassword.profession.id,
+      name: userWithoutPassword.profession.name,
+      categoryName: userWithoutPassword.profession.category.category,
+    };
+  } else {
+    userResponse.profession = null;
+  }
 
   return userResponse;
 };
@@ -116,6 +127,13 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         username: userData.username,
         name: userData.name,
         is_active: userData.is_active ?? true, // Default to true if not provided
+      },
+      include: {
+        profession: {
+          include: {
+            category: true,
+          },
+        },
       },
     });
 
@@ -199,6 +217,13 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     // Find user by email
     const user = await prisma.user.findUnique({
       where: { email },
+      include: {
+        profession: {
+          include: {
+            category: true,
+          },
+        },
+      },
     });
 
     // Check if user exists and password is correct
@@ -306,8 +331,30 @@ export const getProfile = async (
       return;
     }
 
+    // Get fresh user data with profession details
+    const freshUser = await prisma.user.findUnique({
+      where: { id: user.id },
+      include: {
+        profession: {
+          include: {
+            category: true,
+          },
+        },
+      },
+    });
+
+    if (!freshUser) {
+      sendError(
+        res,
+        'Profile not found',
+        [{ field: 'user', message: 'User profile not found' }],
+        404
+      );
+      return;
+    }
+
     // Map user data to API response format
-    const userResponse = mapUserToApiResponse(user);
+    const userResponse = mapUserToApiResponse(freshUser);
 
     sendSuccess(res, 'Profile retrieved successfully', userResponse, 200);
   } catch (error) {
@@ -383,6 +430,13 @@ export const callback = async (
     // Check if user exists in our User table by email
     const existingUser = await prisma.user.findUnique({
       where: { email: supabaseUser.email },
+      include: {
+        profession: {
+          include: {
+            category: true,
+          },
+        },
+      },
     });
 
     logger.info('Database user lookup result:', {
@@ -411,6 +465,13 @@ export const callback = async (
       user = await prisma.user.update({
         where: { email: supabaseUser.email },
         data: updateData,
+        include: {
+          profession: {
+            include: {
+              category: true,
+            },
+          },
+        },
       });
 
       logger.info('User updated successfully:', {
@@ -446,6 +507,13 @@ export const callback = async (
 
       user = await prisma.user.create({
         data: createData,
+        include: {
+          profession: {
+            include: {
+              category: true,
+            },
+          },
+        },
       });
 
       logger.info('New user created successfully:', {

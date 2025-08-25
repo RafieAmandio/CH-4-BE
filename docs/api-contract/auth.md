@@ -55,6 +55,11 @@ All authentication endpoints use the base path: `/api/auth`
       "linkedinUsername": "string|null",
       "photoLink": "string|null",
       "professionId": "uuid|null",
+      "profession": {
+        "id": "uuid",
+        "name": "string",
+        "categoryName": "string"
+      }|null,
       "is_active": "boolean",
       "created_at": "datetime",
       "updated_at": "datetime"
@@ -135,6 +140,11 @@ All authentication endpoints use the base path: `/api/auth`
       "linkedinUsername": "string|null",
       "photoLink": "string|null",
       "professionId": "uuid|null",
+      "profession": {
+        "id": "uuid",
+        "name": "string",
+        "categoryName": "string"
+      }|null,
       "is_active": "boolean",
       "created_at": "datetime",
       "updated_at": "datetime"
@@ -211,6 +221,11 @@ All authentication endpoints use the base path: `/api/auth`
       "linkedinUsername": "string|null",
       "photoLink": "string|null",
       "professionId": "uuid|null",
+      "profession": {
+        "id": "uuid",
+        "name": "string",
+        "categoryName": "string"
+      }|null,
       "is_active": "boolean",
       "created_at": "datetime",
       "updated_at": "datetime",
@@ -261,6 +276,11 @@ All authentication endpoints use the base path: `/api/auth`
       "linkedinUsername": "string|null",
       "photoLink": "string|null",
       "professionId": "uuid|null",
+      "profession": {
+        "id": "uuid",
+        "name": "string",
+        "categoryName": "string"
+      }|null,
       "is_active": "boolean",
       "created_at": "datetime",
       "updated_at": "datetime",
@@ -339,6 +359,11 @@ All authentication endpoints use the base path: `/api/auth`
     "linkedinUsername": "string|null",
     "photoLink": "string|null",
     "professionId": "uuid|null",
+    "profession": {
+      "id": "uuid",
+      "name": "string",
+      "categoryName": "string"
+    }|null,
     "is_active": "boolean",
     "created_at": "datetime",
     "updated_at": "datetime"
